@@ -1,0 +1,92 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
+  darkMode: 'media',
+  theme: {
+    extend: {
+      colors: {
+        navy: {
+          DEFAULT: '#0C1B33',
+          50: '#E8EDF5',
+          100: '#C5D1E8',
+          200: '#8FA4CC',
+          300: '#5977B0',
+          400: '#2D4D8E',
+          500: '#0C1B33',
+          600: '#091526',
+          700: '#060F1A',
+          800: '#03080D',
+          900: '#010204',
+        },
+        civic: {
+          DEFAULT: '#1B4F8A',
+          50: '#E8F0F9',
+          100: '#C5D8EF',
+          200: '#8AB2DF',
+          300: '#4F8CCF',
+          400: '#2B6AB0',
+          500: '#1B4F8A',
+          600: '#153D6B',
+          700: '#0F2C4D',
+          800: '#091A2E',
+          900: '#04090F',
+        },
+        gold: {
+          DEFAULT: '#D97706',
+          50: '#FDF3E0',
+          100: '#FAE0B3',
+          200: '#F5C166',
+          300: '#EFA33A',
+          400: '#E88A1C',
+          500: '#D97706',
+          600: '#AA5D05',
+          700: '#7B4304',
+          800: '#4D2A02',
+          900: '#1F1001',
+        },
+        sky: {
+          DEFAULT: '#DBEAFE',
+          50: '#F0F7FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1D4ED8',
+          800: '#1E40AF',
+          900: '#1E3A8A',
+        },
+      },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Playfair Display"', 'ui-serif', 'Georgia', 'serif'],
+      },
+      typography: (theme) => ({
+        DEFAULT: {
+          css: {
+            '--tw-prose-body': theme('colors.navy.500'),
+            '--tw-prose-headings': theme('colors.navy.500'),
+            '--tw-prose-links': theme('colors.civic.500'),
+            '--tw-prose-bold': theme('colors.navy.500'),
+            '--tw-prose-code': theme('colors.civic.500'),
+            maxWidth: 'none',
+            h1: { fontFamily: '"Playfair Display", serif' },
+            h2: { fontFamily: '"Playfair Display", serif' },
+            h3: { fontFamily: '"Plus Jakarta Sans", sans-serif', fontWeight: '700' },
+          },
+        },
+        invert: {
+          css: {
+            '--tw-prose-body': theme('colors.sky.100'),
+            '--tw-prose-headings': '#ffffff',
+            '--tw-prose-links': theme('colors.gold.DEFAULT'),
+          },
+        },
+      }),
+    },
+  },
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
+};

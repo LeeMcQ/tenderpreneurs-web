@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Disallow app subdomain routes (handled separately)
+Disallow: /api/
+
+Sitemap: https://tenderpreneur.co.za/sitemap-index.xml

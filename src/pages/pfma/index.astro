@@ -1,0 +1,167 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SEO from '@components/SEO.astro';
+
+const seoData = {
+  title: 'PFMA Knowledge Base — Master South African Government Procurement | Tenderpreneur',
+  description:
+    'Free, comprehensive guide to the Public Finance Management Act, PPPFA, B-BBEE, SCM regulations, thresholds, and SBD forms. Plain language with legislative citations.',
+  canonical: 'https://tenderpreneur.co.za/pfma',
+  ogImage: 'https://tenderpreneur.co.za/og-pfma.png',
+};
+
+const topics = [
+  {
+    slug: 'pfma-overview',
+    title: 'PFMA Overview',
+    description: 'Act 1 of 1999 explained — chapters, schedules, Section 217 procurement mandate.',
+    icon: '📋',
+    badge: 'Start here',
+  },
+  {
+    slug: '80-20-system',
+    title: '80/20 Preference System',
+    description: 'How the 80/20 and 90/10 scoring systems work under the 2022 PPPFA Regulations.',
+    icon: '🎯',
+  },
+  {
+    slug: 'b-bbee',
+    title: 'B-BBEE in Procurement',
+    description: 'B-BBEE certificates, affidavits, subcontracting rules, and fronting consequences.',
+    icon: '🤝',
+  },
+  {
+    slug: 'scm-regulations',
+    title: 'SCM Regulations (Chapter 16A)',
+    description: 'Supply chain management framework — roles, committees, delegation, and oversight.',
+    icon: '⚙️',
+  },
+  {
+    slug: 'csd',
+    title: 'Central Supplier Database',
+    description: 'CSD registration, mandatory fields, tax compliance, and how organs of state verify.',
+    icon: '🗄️',
+  },
+  {
+    slug: 'cidb',
+    title: 'CIDB & Construction Tenders',
+    description: 'CIDB grading, contractor registers, and how they interact with PFMA procurement.',
+    icon: '🏗️',
+  },
+  {
+    slug: 'appeals',
+    title: 'Appeals & Objections',
+    description: 'How to object to an award, the appeals process, and your rights as a bidder.',
+    icon: '⚖️',
+  },
+  {
+    slug: 'irregular-expenditure',
+    title: 'Irregular Expenditure',
+    description: 'Definition, common causes, audit consequences, and how to protect your business.',
+    icon: '⚠️',
+  },
+  {
+    slug: 'thresholds',
+    title: 'Procurement Thresholds',
+    description: 'All current PFMA and MFMA procurement thresholds, advertising rules, and limits.',
+    icon: '💰',
+  },
+  {
+    slug: 'sbd-forms',
+    title: 'SBD Forms Explained',
+    description: 'SBD 1 through SBD 9 — what each form is, when it\'s required, and how to complete it.',
+    icon: '📄',
+  },
+  {
+    slug: 'mfma',
+    title: 'MFMA & Municipal Tenders',
+    description: 'How the Municipal Finance Management Act differs from PFMA for municipal bids.',
+    icon: '🏙️',
+  },
+];
+---
+
+<BaseLayout>
+  <SEO slot="head" {...seoData} />
+
+  <!-- Page Hero -->
+  <section class="bg-gradient-to-br from-navy-900 to-civic-800 py-20 text-white">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6">
+      <nav aria-label="Breadcrumb" class="breadcrumb mb-6">
+        <ol class="flex items-center gap-2 text-sm text-sky-300">
+          <li><a href="/" class="hover:text-white">Home</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page" class="text-white">PFMA Guide</li>
+        </ol>
+      </nav>
+      <h1 class="font-display text-4xl font-bold text-white sm:text-5xl">
+        Master the PFMA
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-sky-200">
+        A free, comprehensive guide to South African government procurement legislation.
+        Every topic cites the actual Act, Regulation, or Treasury Instruction.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-3 text-sm">
+        <span class="rounded-full bg-white/10 px-3 py-1">11 topics</span>
+        <span class="rounded-full bg-white/10 px-3 py-1">Plain language</span>
+        <span class="rounded-full bg-white/10 px-3 py-1">Legislative citations</span>
+        <span class="rounded-full bg-white/10 px-3 py-1">Updated 2025</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Topics Grid -->
+  <section class="bg-white py-16 dark:bg-navy-950" aria-labelledby="topics-heading">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <h2 id="topics-heading" class="sr-only">PFMA topics</h2>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          topics.map((topic) => (
+            <a
+              href={`/pfma/${topic.slug}`}
+              class="card group flex flex-col transition hover:-translate-y-1 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-civic-500"
+            >
+              <div class="flex items-start justify-between">
+                <span class="text-3xl" role="img" aria-hidden="true">{topic.icon}</span>
+                {topic.badge && (
+                  <span class="badge badge-gold text-xs">{topic.badge}</span>
+                )}
+              </div>
+              <h2 class="mt-3 font-display text-lg font-semibold text-navy-900 group-hover:text-civic-700 dark:text-white dark:group-hover:text-sky-400">
+                {topic.title}
+              </h2>
+              <p class="mt-2 flex-1 text-sm text-gray-600 dark:text-gray-300">
+                {topic.description}
+              </p>
+              <span class="mt-4 text-sm font-medium text-civic-600 dark:text-sky-400">
+                Read guide →
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Assistant CTA -->
+  <section class="bg-sky-50 py-16 dark:bg-navy-900" aria-labelledby="assistant-cta">
+    <div class="mx-auto max-w-4xl px-4 text-center sm:px-6">
+      <h2
+        id="assistant-cta"
+        class="font-display text-2xl font-bold text-navy-900 dark:text-white sm:text-3xl"
+      >
+        Still have questions?
+      </h2>
+      <p class="mx-auto mt-4 max-w-xl text-gray-600 dark:text-gray-300">
+        The Tenderpreneur PFMA Assistant answers your procurement questions instantly — with
+        citations to the actual legislation. Free for all users.
+      </p>
+      <a
+        href="https://app.tenderpreneur.co.za/assistant"
+        class="btn-primary mt-6 inline-flex"
+      >
+        Ask the PFMA Assistant
+      </a>
+    </div>
+  </section>
+</BaseLayout>

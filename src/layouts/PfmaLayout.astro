@@ -1,0 +1,412 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export interface Props {
+  title: string;
+  description: string;
+  slug: string;
+  publishedDate?: Date;
+  modifiedDate?: Date;
+  faqs?: Array<{ question: string; answer: string }>;
+  relatedTopics?: string[];
+}
+
+const {
+  title,
+  description,
+  slug,
+  publishedDate = new Date(),
+  modifiedDate,
+  faqs = [],
+  relatedTopics = [],
+} = Astro.props;
+
+const canonicalUrl = `https://tenderpreneur.co.za/pfma/${slug}`;
+const isoDate = publishedDate.toISOString();
+const isoModified = (modifiedDate ?? publishedDate).toISOString();
+
+// Get all pfma topics for related sidebar
+let allTopics: any[] = [];
+try {
+  allTopics = await getCollection('pfma');
+} catch (e) {
+  allTopics = [];
+}
+
+const relatedTopicEntries = allTopics.filter(
+  (t) => t.slug !== slug && (relatedTopics.length === 0 || relatedTopics.includes(t.slug))
+).slice(0, 5);
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  url: canonicalUrl,
+  datePublished: isoDate,
+  dateModified: isoModified,
+  author: {
+    '@type': 'Organization',
+    name: 'Tenderpreneur',
+    url: 'https://tenderpreneur.co.za',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Tenderpreneur',
+    url: 'https://tenderpreneur.co.za',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://tenderpreneur.co.za/logo.png',
+    },
+  },
+  about: {
+    '@type': 'Thing',
+    name: 'Public Finance Management Act (PFMA)',
+  },
+};
+
+const faqSchema = faqs.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((faq) => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: faq.answer,
+        },
+      })),
+    }
+  : null;
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneur.co.za' },
+    { '@type': 'ListItem', position: 2, name: 'PFMA Guide', item: 'https://tenderpreneur.co.za/pfma' },
+    { '@type': 'ListItem', position: 3, name: title, item: canonicalUrl },
+  ],
+};
+
+const schemas = [articleSchema, breadcrumbSchema, ...(faqSchema ? [faqSchema] : [])];
+
+const allTopicLinks = [
+  { slug: 'pfma-overview', label: 'PFMA Overview' },
+  { slug: '80-20-system', label: '80/20 System' },
+  { slug: 'b-bbee', label: 'B-BBEE' },
+  { slug: 'scm-regulations', label: 'SCM Regulations' },
+  { slug: 'csd', label: 'Supplier Database (CSD)' },
+  { slug: 'cidb', label: 'CIDB' },
+  { slug: 'appeals', label: 'Appeals Process' },
+  { slug: 'irregular-expenditure', label: 'Irregular Expenditure' },
+  { slug: 'thresholds', label: 'Procurement Thresholds' },
+  { slug: 'sbd-forms', label: 'SBD Forms' },
+  { slug: 'mfma', label: 'MFMA' },
+];
+---
+
+<BaseLayout
+  title={`${title} | PFMA Guide`}
+  description={description}
+  canonical={canonicalUrl}
+  ogType="article"
+  publishedTime={isoDate}
+  modifiedTime={isoModified}
+  schema={schemas}
+>
+  <div class="pfma-layout">
+    <div class="container">
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb py-4" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <a href="/pfma">PFMA Guide</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span aria-current="page">{title}</span>
+      </nav>
+
+      <div class="pfma-grid">
+        <!-- Sidebar: Topic Nav -->
+        <nav class="pfma-sidebar" aria-label="PFMA topics">
+          <div class="pfma-sidebar-sticky">
+            <h3 class="sidebar-heading">PFMA Topics</h3>
+            <ul class="pfma-topic-list" role="list">
+              {allTopicLinks.map((topic) => (
+                <li>
+                  <a
+                    href={`/pfma/${topic.slug}`}
+                    class={`pfma-topic-link ${slug === topic.slug ? 'pfma-topic-link--active' : ''}`}
+                    aria-current={slug === topic.slug ? 'page' : undefined}
+                  >
+                    {topic.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            <div class="sidebar-cta-box">
+              <p class="sidebar-cta-text">Have a question about procurement?</p>
+              <a href="https://app.tenderpreneur.co.za" class="btn btn-primary text-sm">
+                Ask the AI Assistant
+              </a>
+            </div>
+          </div>
+        </nav>
+
+        <!-- Main content -->
+        <article class="pfma-article" itemscope itemtype="https://schema.org/Article">
+          <header class="pfma-header">
+            <div class="pfma-badge">
+              <span class="badge badge-civic">PFMA Reference</span>
+            </div>
+            <h1 class="pfma-title" itemprop="headline">{title}</h1>
+            <p class="pfma-description">{description}</p>
+            <div class="pfma-meta">
+              <span>
+                Last updated: <time datetime={isoModified} itemprop="dateModified">
+                  {(modifiedDate ?? publishedDate).toLocaleDateString('en-ZA', { year: 'numeric', month: 'long' })}
+                </time>
+              </span>
+              <span>·</span>
+              <span>South African Government Procurement Reference</span>
+            </div>
+          </header>
+
+          <div class="prose-tp pfma-body" itemprop="articleBody">
+            <slot />
+          </div>
+
+          <!-- FAQs -->
+          {faqs.length > 0 && (
+            <section class="pfma-faqs" aria-labelledby="faq-heading">
+              <h2 id="faq-heading">Frequently Asked Questions</h2>
+              <dl>
+                {faqs.map((faq, i) => (
+                  <div class="faq-item">
+                    <dt class="faq-question" id={`faq-${i}`}>{faq.question}</dt>
+                    <dd class="faq-answer">{faq.answer}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+
+          <!-- PFMA Assistant CTA -->
+          <aside class="pfma-assistant-cta" aria-label="AI assistant">
+            <div class="pfma-cta-icon" aria-hidden="true">🤖</div>
+            <div class="pfma-cta-body">
+              <h3>Still have questions about {title}?</h3>
+              <p>Ask our AI-powered PFMA Assistant. Free answers with legislative citations, available 24/7.</p>
+              <a href="https://app.tenderpreneur.co.za" class="btn btn-primary mt-4" rel="noopener">
+                Ask the PFMA Assistant →
+              </a>
+            </div>
+          </aside>
+        </article>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .pfma-layout {
+    background: var(--color-surface-2, #F8FAFC);
+    padding-bottom: 4rem;
+  }
+
+  .pfma-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    .pfma-grid {
+      grid-template-columns: 260px 1fr;
+    }
+  }
+
+  /* Sidebar */
+  .pfma-sidebar {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .pfma-sidebar {
+      display: block;
+    }
+  }
+
+  .pfma-sidebar-sticky {
+    position: sticky;
+    top: 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .sidebar-heading {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+    padding: 0;
+  }
+
+  .pfma-topic-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface);
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+
+  .pfma-topic-link {
+    display: block;
+    padding: 0.625rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .pfma-topic-link:last-child {
+    border-bottom: none;
+  }
+
+  .pfma-topic-link:hover {
+    color: #1B4F8A;
+    background: rgba(27, 79, 138, 0.04);
+  }
+
+  .pfma-topic-link--active {
+    color: #1B4F8A;
+    background: rgba(27, 79, 138, 0.07);
+    font-weight: 600;
+    border-left: 3px solid #1B4F8A;
+    padding-left: calc(1rem - 3px);
+  }
+
+  .sidebar-cta-box {
+    background: linear-gradient(135deg, #0C1B33, #1B4F8A);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .sidebar-cta-text {
+    font-size: 0.8125rem;
+    color: rgba(219, 234, 254, 0.85);
+    line-height: 1.5;
+  }
+
+  /* Article */
+  .pfma-article {
+    background: var(--color-surface);
+    border-radius: 1rem;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  @media (min-width: 640px) {
+    .pfma-article {
+      padding: 3rem;
+    }
+  }
+
+  .pfma-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .pfma-badge {
+    margin-bottom: 1rem;
+  }
+
+  .pfma-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 700;
+    color: #0C1B33;
+    line-height: 1.2;
+    margin-bottom: 0.875rem;
+  }
+
+  .pfma-description {
+    font-size: 1.125rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .pfma-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+  }
+
+  .pfma-body {
+    min-height: 300px;
+  }
+
+  /* FAQs */
+  .pfma-faqs {
+    margin-top: 3rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .pfma-faqs h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0C1B33;
+    margin-bottom: 1.5rem;
+  }
+
+  /* CTA */
+  .pfma-assistant-cta {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    background: linear-gradient(135deg, #0C1B33, #1B4F8A);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-top: 3rem;
+    color: white;
+  }
+
+  .pfma-cta-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+  }
+
+  .pfma-cta-body h3 {
+    font-weight: 700;
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+    color: white;
+  }
+
+  .pfma-cta-body p {
+    font-size: 0.9375rem;
+    color: rgba(219, 234, 254, 0.8);
+    line-height: 1.6;
+  }
+</style>

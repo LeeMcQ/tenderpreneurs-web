@@ -1,0 +1,240 @@
+---
+const features = [
+  {
+    icon: '🔍',
+    title: 'Browse All Tenders',
+    description: '7,841+ tenders from etenders.gov.za updated every 4 hours. Filter by province, sector, value, B-BBEE level, and closing date.',
+    color: '#1B4F8A',
+    lightColor: '#DBEAFE',
+    link: '/tenders',
+    linkLabel: 'Browse Tenders →',
+    highlights: ['9 provinces covered', 'All sectors', 'Real-time updates'],
+  },
+  {
+    icon: '🎯',
+    title: 'Win Probability Score',
+    description: 'Our AI scores your tender odds across 6 dimensions: B-BBEE, CSD, technical, experience, financial, pricing. Know before you bid.',
+    color: '#D97706',
+    lightColor: '#FEF3C7',
+    link: 'https://app.tenderpreneur.co.za',
+    linkLabel: 'Try AI Scoring →',
+    highlights: ['6-dimension scoring', 'B-BBEE analysis', 'Bid/no-bid guidance'],
+  },
+  {
+    icon: '📚',
+    title: 'PFMA Assistant',
+    description: 'Ask questions about PFMA, PPPFA, B-BBEE, Treasury Regs. Instant answers with citations. Free.',
+    color: '#059669',
+    lightColor: '#D1FAE5',
+    link: '/pfma',
+    linkLabel: 'Explore PFMA Guide →',
+    highlights: ['Instant answers', 'Legislative citations', 'Always free'],
+  },
+];
+---
+
+<section class="features section" aria-labelledby="features-heading">
+  <div class="container">
+    <div class="features-header">
+      <p class="features-eyebrow">Platform Features</p>
+      <h2 class="features-title" id="features-heading">
+        Everything you need to win government tenders
+      </h2>
+      <p class="features-subtitle">
+        From discovering opportunities to submitting compliant bids — Tenderpreneur gives South African SMMEs the tools and intelligence to compete.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      {features.map((feature, i) => (
+        <article
+          class="feature-card"
+          style={`--feature-color: ${feature.color}; --feature-light: ${feature.lightColor}; animation-delay: ${i * 0.1}s;`}
+        >
+          <div class="feature-icon-wrap" aria-hidden="true">
+            <span class="feature-icon">{feature.icon}</span>
+          </div>
+
+          <div class="feature-body">
+            <h3 class="feature-title">{feature.title}</h3>
+            <p class="feature-description">{feature.description}</p>
+
+            <ul class="feature-highlights" role="list">
+              {feature.highlights.map((hl) => (
+                <li class="feature-highlight">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M11.5 3.5L5.5 9.5L2.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  {hl}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <a href={feature.link} class="feature-link" rel={feature.link.startsWith('http') ? 'noopener' : undefined}>
+            {feature.linkLabel}
+          </a>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .features {
+    background: var(--color-surface-2, #F8FAFC);
+  }
+
+  .features-header {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 3.5rem;
+  }
+
+  .features-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-gold, #D97706);
+    margin-bottom: 0.75rem;
+  }
+
+  .features-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 700;
+    color: #0C1B33;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+
+  .features-subtitle {
+    font-size: 1.0625rem;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .features-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .feature-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #E2E8F0);
+    border-radius: 1.25rem;
+    padding: 2rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--feature-color);
+    border-radius: 1.25rem 1.25rem 0 0;
+  }
+
+  .feature-card:hover {
+    box-shadow: 0 8px 40px rgba(12, 27, 51, 0.12);
+    transform: translateY(-4px);
+  }
+
+  .feature-icon-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--feature-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .feature-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+  }
+
+  .feature-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .feature-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0C1B33;
+    line-height: 1.3;
+  }
+
+  .feature-description {
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+    line-height: 1.65;
+  }
+
+  .feature-highlights {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .feature-highlight {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--feature-color);
+  }
+
+  .feature-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--feature-color);
+    text-decoration: none;
+    border-top: 1px solid var(--color-border, #E2E8F0);
+    padding-top: 1.25rem;
+    margin-top: auto;
+    transition: gap 0.15s;
+    gap: 0.25rem;
+  }
+
+  .feature-link:hover {
+    gap: 0.5rem;
+    text-decoration: underline;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .features { background: #112043; }
+    .feature-card { background: #0C1B33; border-color: rgba(255,255,255,0.06); }
+    .feature-title { color: #fff; }
+    .features-title { color: #fff; }
+    .feature-icon-wrap { opacity: 0.85; }
+  }
+</style>

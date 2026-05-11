@@ -1,0 +1,290 @@
+---
+const navLinks = [
+  { label: 'Tenders', href: '/tenders' },
+  { label: 'PFMA Guide', href: '/pfma' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'About', href: '/about' },
+];
+
+const currentPath = Astro.url.pathname;
+
+function isActive(href: string) {
+  if (href === '/') return currentPath === '/';
+  return currentPath.startsWith(href);
+}
+---
+
+<header class="header" role="banner" id="site-header">
+  <div class="container">
+    <nav class="nav" aria-label="Main navigation">
+      <!-- Logo -->
+      <a href="/" class="logo" aria-label="Tenderpreneur — home">
+        <span class="logo-mark" aria-hidden="true">TP</span>
+        <span class="logo-text">
+          <span class="logo-main">Tenderpreneur</span>
+          <span class="logo-sub">.co.za</span>
+        </span>
+      </a>
+
+      <!-- Desktop Nav -->
+      <ul class="nav-list" role="list">
+        {navLinks.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class={`nav-link ${isActive(link.href) ? 'nav-link--active' : ''}`}
+              aria-current={isActive(link.href) ? 'page' : undefined}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <!-- CTA -->
+      <div class="nav-cta">
+        <a href="https://app.tenderpreneur.co.za" class="btn btn-primary" rel="noopener">
+          Get Started Free
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Mobile toggle -->
+      <button
+        class="mobile-toggle"
+        id="mobile-menu-toggle"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        aria-label="Open navigation menu"
+      >
+        <span class="sr-only">Menu</span>
+        <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <svg class="icon-close hidden" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu hidden" id="mobile-menu" role="dialog" aria-label="Navigation menu">
+    <div class="container">
+      <ul class="mobile-nav-list" role="list">
+        {navLinks.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class={`mobile-nav-link ${isActive(link.href) ? 'mobile-nav-link--active' : ''}`}
+              aria-current={isActive(link.href) ? 'page' : undefined}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+        <li>
+          <a href="https://app.tenderpreneur.co.za" class="btn btn-primary w-full mt-2" rel="noopener">
+            Get Started Free
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(12, 27, 51, 0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    height: 68px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #D97706, #F59E0B);
+    border-radius: 8px;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+
+  .logo-main {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: rgba(219, 234, 254, 0.6);
+    letter-spacing: 0.5px;
+    margin-top: 1px;
+  }
+
+  .nav-list {
+    display: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.25rem;
+    flex: 1;
+    justify-content: center;
+  }
+
+  @media (min-width: 768px) {
+    .nav-list {
+      display: flex;
+    }
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(219, 234, 254, 0.75);
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+    text-decoration: none;
+  }
+
+  .nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .nav-link--active {
+    color: #fff;
+    background: rgba(217, 119, 6, 0.15);
+  }
+
+  .nav-cta {
+    display: none;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 768px) {
+    .nav-cta {
+      display: flex;
+    }
+  }
+
+  .mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    padding: 0.5rem;
+    color: rgba(219, 234, 254, 0.85);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .mobile-toggle:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  @media (min-width: 768px) {
+    .mobile-toggle {
+      display: none;
+    }
+  }
+
+  .mobile-menu {
+    background: #0C1B33;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 1rem 0 1.5rem;
+  }
+
+  .mobile-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .mobile-nav-link {
+    display: block;
+    padding: 0.75rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(219, 234, 254, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: color 0.15s;
+  }
+
+  .mobile-nav-link:hover {
+    color: #fff;
+  }
+
+  .mobile-nav-link--active {
+    color: #D97706;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  const toggle = document.getElementById('mobile-menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  const iconMenu = toggle?.querySelector('.icon-menu');
+  const iconClose = toggle?.querySelector('.icon-close');
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = !menu?.classList.contains('hidden');
+    menu?.classList.toggle('hidden', isOpen);
+    toggle.setAttribute('aria-expanded', String(!isOpen));
+    toggle.setAttribute('aria-label', isOpen ? 'Open navigation menu' : 'Close navigation menu');
+    iconMenu?.classList.toggle('hidden', !isOpen);
+    iconClose?.classList.toggle('hidden', isOpen);
+  });
+</script>

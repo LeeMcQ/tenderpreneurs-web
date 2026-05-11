@@ -1,0 +1,262 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SEO from '@components/SEO.astro';
+import PricingCard from '@components/PricingCard.astro';
+
+const seoData = {
+  title: 'Pricing — Tenderpreneur | Free PFMA Tools + Professional Tender Tracking',
+  description:
+    'Free forever for PFMA research and compliance guidance. Upgrade to Professional (R299/mo) for live tender tracking, AI win-probability scoring, and email alerts.',
+  canonical: 'https://tenderpreneur.co.za/pricing',
+  ogImage: 'https://tenderpreneur.co.za/og-pricing.png',
+  schema: {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Tenderpreneur Pricing Plans',
+    itemListElement: [
+      {
+        '@type': 'Product',
+        position: 1,
+        name: 'Tenderpreneur Free',
+        description: 'PFMA knowledge base, compliance checklists, SBD form library',
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'ZAR',
+          availability: 'https://schema.org/InStock',
+        },
+      },
+      {
+        '@type': 'Product',
+        position: 2,
+        name: 'Tenderpreneur Professional',
+        description: 'Full tender feed, AI win-probability scoring, email alerts',
+        offers: {
+          '@type': 'Offer',
+          price: '299',
+          priceCurrency: 'ZAR',
+          priceSpecification: {
+            '@type': 'UnitPriceSpecification',
+            price: '299',
+            priceCurrency: 'ZAR',
+            unitText: 'MONTH',
+          },
+          availability: 'https://schema.org/InStock',
+        },
+      },
+    ],
+  },
+};
+
+const featureRows = [
+  { feature: 'PFMA knowledge base (11 topics)', free: true, pro: true, enterprise: true },
+  { feature: 'SBD form library', free: true, pro: true, enterprise: true },
+  { feature: 'Compliance checklist (CSD, Tax, B-BBEE)', free: true, pro: true, enterprise: true },
+  { feature: 'PFMA AI Assistant (basic)', free: true, pro: true, enterprise: true },
+  { feature: 'Live tender feed (7,841+ tenders)', free: false, pro: true, enterprise: true },
+  { feature: 'Province & sector filters', free: false, pro: true, enterprise: true },
+  { feature: 'Save searches + email alerts', free: false, pro: true, enterprise: true },
+  { feature: 'AI win-probability scoring', free: false, pro: true, enterprise: true },
+  { feature: 'B-BBEE preference calculator', free: false, pro: true, enterprise: true },
+  { feature: 'Tender document downloads', free: false, pro: true, enterprise: true },
+  { feature: 'Unlimited AI assistant queries', free: false, pro: true, enterprise: true },
+  { feature: 'Team seats', free: false, pro: false, enterprise: true },
+  { feature: 'API access', free: false, pro: false, enterprise: true },
+  { feature: 'Dedicated account manager', free: false, pro: false, enterprise: true },
+  { feature: 'Custom tender alerts', free: false, pro: false, enterprise: true },
+  { feature: 'SLA & priority support', free: false, pro: false, enterprise: true },
+];
+---
+
+<BaseLayout>
+  <SEO slot="head" {...seoData} />
+
+  <!-- Page Hero -->
+  <section class="bg-gradient-to-br from-navy-900 to-civic-800 py-20 text-white">
+    <div class="mx-auto max-w-4xl px-4 text-center sm:px-6">
+      <nav aria-label="Breadcrumb" class="breadcrumb mb-6 flex justify-center">
+        <ol class="flex items-center gap-2 text-sm text-sky-300">
+          <li><a href="/" class="hover:text-white">Home</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page" class="text-white">Pricing</li>
+        </ol>
+      </nav>
+      <h1 class="font-display text-4xl font-bold text-white sm:text-5xl">
+        Simple, transparent pricing
+      </h1>
+      <p class="mt-4 text-lg text-sky-200">
+        Start free. Upgrade when you're ready to track live tenders.
+      </p>
+    </div>
+  </section>
+
+  <!-- Pricing Cards -->
+  <section class="bg-white py-16 dark:bg-navy-950" aria-labelledby="plans-heading">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <h2 id="plans-heading" class="sr-only">Pricing plans</h2>
+      <div class="grid gap-8 sm:grid-cols-3">
+        <PricingCard
+          tier="Free"
+          price="R0"
+          period="forever"
+          description="Everything you need to get procurement-ready."
+          features={[
+            'PFMA knowledge base (11 topics)',
+            'SBD form library',
+            'Compliance checklist',
+            'PFMA AI Assistant (basic)',
+            'CSD registration guide',
+          ]}
+          cta="Create free account"
+          ctaHref="https://app.tenderpreneur.co.za/register"
+        />
+        <PricingCard
+          tier="Professional"
+          price="R299"
+          period="per month"
+          description="For SMMEs actively pursuing government tenders."
+          badge="Most popular"
+          featured={true}
+          features={[
+            'Everything in Free',
+            'Live tender feed (7,841+ tenders)',
+            'Province & sector filters',
+            'Save searches + email alerts',
+            'AI win-probability scoring',
+            'B-BBEE preference calculator',
+            'Tender document downloads',
+            'Unlimited AI assistant queries',
+          ]}
+          cta="Start 14-day free trial"
+          ctaHref="https://app.tenderpreneur.co.za/register?plan=pro"
+        />
+        <PricingCard
+          tier="Enterprise"
+          price="Custom"
+          period="contact us"
+          description="For procurement teams, advisors, and large suppliers."
+          features={[
+            'Everything in Professional',
+            'Team seats (unlimited)',
+            'API access',
+            'Dedicated account manager',
+            'Custom tender alert rules',
+            'SLA & priority support',
+            'Invoice billing',
+          ]}
+          cta="Contact sales"
+          ctaHref="mailto:sales@tenderpreneur.co.za"
+        />
+      </div>
+
+      <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        Payments processed securely via
+        <a
+          href="https://www.payfast.co.za"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-medium text-civic-600 hover:underline dark:text-sky-400"
+        >
+          PayFast
+        </a>. Cancel anytime — no lock-in contracts.
+      </p>
+    </div>
+  </section>
+
+  <!-- Feature Comparison Table -->
+  <section class="bg-sky-50 py-16 dark:bg-navy-900" aria-labelledby="compare-heading">
+    <div class="mx-auto max-w-5xl px-4 sm:px-6">
+      <h2
+        id="compare-heading"
+        class="mb-8 text-center font-display text-2xl font-bold text-navy-900 dark:text-white"
+      >
+        Full feature comparison
+      </h2>
+      <div class="overflow-x-auto rounded-xl shadow">
+        <table class="w-full text-sm" aria-label="Feature comparison across pricing tiers">
+          <thead class="bg-navy-900 text-white">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-left font-medium">Feature</th>
+              <th scope="col" class="px-4 py-3 text-center font-medium">Free</th>
+              <th scope="col" class="px-4 py-3 text-center font-medium">Professional</th>
+              <th scope="col" class="px-4 py-3 text-center font-medium">Enterprise</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white dark:divide-navy-700 dark:bg-navy-800">
+            {
+              featureRows.map((row) => (
+                <tr>
+                  <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{row.feature}</td>
+                  <td class="px-4 py-3 text-center" aria-label={row.free ? 'Included' : 'Not included'}>
+                    {row.free ? (
+                      <span class="text-green-600 dark:text-green-400" aria-hidden="true">✓</span>
+                    ) : (
+                      <span class="text-gray-300 dark:text-gray-600" aria-hidden="true">–</span>
+                    )}
+                  </td>
+                  <td class="px-4 py-3 text-center" aria-label={row.pro ? 'Included' : 'Not included'}>
+                    {row.pro ? (
+                      <span class="text-green-600 dark:text-green-400" aria-hidden="true">✓</span>
+                    ) : (
+                      <span class="text-gray-300 dark:text-gray-600" aria-hidden="true">–</span>
+                    )}
+                  </td>
+                  <td class="px-4 py-3 text-center" aria-label={row.enterprise ? 'Included' : 'Not included'}>
+                    {row.enterprise ? (
+                      <span class="text-green-600 dark:text-green-400" aria-hidden="true">✓</span>
+                    ) : (
+                      <span class="text-gray-300 dark:text-gray-600" aria-hidden="true">–</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="bg-white py-16 dark:bg-navy-950" aria-labelledby="pricing-faq-heading">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6">
+      <h2
+        id="pricing-faq-heading"
+        class="mb-8 text-center font-display text-2xl font-bold text-navy-900 dark:text-white"
+      >
+        Frequently asked questions
+      </h2>
+      <dl class="space-y-6">
+        {
+          [
+            {
+              q: 'Can I cancel my Professional subscription at any time?',
+              a: 'Yes. Cancel from your account settings at any time. Your subscription remains active until the end of the billing period. No cancellation fees.',
+            },
+            {
+              q: 'Do you offer discounts for non-profits or co-operatives?',
+              a: 'Yes — registered NPOs and agricultural co-operatives can apply for a 50% discount. Email hello@tenderpreneur.co.za with your NPO registration number.',
+            },
+            {
+              q: 'Is my payment information secure?',
+              a: 'We never store your card details. All payments are processed by PayFast, a PCI-DSS compliant South African payment gateway. We receive only a tokenised confirmation.',
+            },
+            {
+              q: 'What happens to my saved tenders if I downgrade to Free?',
+              a: 'Your saved tenders are retained for 90 days. You can export them as a CSV before downgrading. After 90 days, the list is cleared.',
+            },
+            {
+              q: 'Does Professional cover multiple users?',
+              a: 'Professional covers a single user. For team access, the Enterprise plan supports unlimited seats. Contact sales@tenderpreneur.co.za for a quote.',
+            },
+          ].map((faq) => (
+            <div>
+              <dt class="font-semibold text-navy-900 dark:text-white">{faq.q}</dt>
+              <dd class="mt-2 text-sm text-gray-600 dark:text-gray-300">{faq.a}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+</BaseLayout>

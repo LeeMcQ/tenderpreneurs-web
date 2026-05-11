@@ -1,0 +1,143 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SEO from '@components/SEO.astro';
+
+const seoData = {
+  title: 'About Tenderpreneur — Built for South African SMMEs',
+  description:
+    'Tenderpreneur was built by developers who understand government procurement. Learn who we are and why we built SA\'s leading tender intelligence platform.',
+  canonical: 'https://tenderpreneur.co.za/about',
+  ogImage: 'https://tenderpreneur.co.za/og-about.png',
+};
+
+const values = [
+  {
+    title: 'Accessible by design',
+    body: 'Government procurement is complex enough. We strip away the jargon and give every SMME — regardless of size — the same intelligence that large corporates enjoy.',
+    icon: '🏛️',
+  },
+  {
+    title: 'Grounded in legislation',
+    body: 'Everything we build traces back to actual law: the PFMA, PPPFA, B-BBEE Act, Treasury Regulations. No guesswork, no outdated advice.',
+    icon: '⚖️',
+  },
+  {
+    title: 'Built for the 9 provinces',
+    body: 'From eThekwini to Polokwane, from the Northern Cape to Mpumalanga — tender opportunities exist everywhere. We cover all of them.',
+    icon: '🗺️',
+  },
+  {
+    title: 'Privacy first',
+    body: 'We comply with POPIA. Your data helps only you. We never sell supplier information or bidding behaviour to third parties.',
+    icon: '🔒',
+  },
+];
+---
+
+<BaseLayout>
+  <SEO slot="head" {...seoData} />
+
+  <!-- Page Hero -->
+  <section class="bg-gradient-to-br from-navy-900 to-civic-800 py-20 text-white">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6">
+      <nav aria-label="Breadcrumb" class="breadcrumb mb-6">
+        <ol class="flex items-center gap-2 text-sm text-sky-300">
+          <li><a href="/" class="hover:text-white">Home</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page" class="text-white">About</li>
+        </ol>
+      </nav>
+      <h1 class="font-display text-4xl font-bold text-white sm:text-5xl">
+        About Tenderpreneur
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-sky-200">
+        Built for SA SMMEs by developers who understand government procurement.
+      </p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="bg-white py-16 dark:bg-navy-950">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6">
+      <div class="prose prose-tp mx-auto">
+        <h2>Why we built Tenderpreneur</h2>
+        <p>
+          Government procurement in South Africa is worth more than R800 billion a year. Yet most of
+          that money flows to a small number of established suppliers, not because small businesses
+          lack the capability to deliver, but because they lack the information and tools to compete.
+        </p>
+        <p>
+          We built Tenderpreneur to change that. Our team has spent years working with SMMEs across
+          South Africa — watching capable suppliers miss deadlines because they didn't know a tender
+          existed, get disqualified because their CSD profile had a single expired document, or walk
+          away from opportunities because the PFMA compliance requirements felt impenetrable.
+        </p>
+        <p>
+          Tenderpreneur is our answer to that problem. It aggregates tender opportunities from
+          eTenders, provincial portals, and municipality websites into a single searchable feed.
+          It pairs that with a plain-language PFMA knowledge base — every regulation explained,
+          every SBD form documented, every threshold table up to date. And it layers AI on top to
+          give you win-probability scores, compliance gap analysis, and instant answers to your
+          procurement questions.
+        </p>
+
+        <h2>Who we're for</h2>
+        <p>
+          We built Tenderpreneur for South African SMMEs — the construction company with five
+          employees in Limpopo, the IT consultancy in Durban trying to break into the public sector,
+          the catering business in the Northern Cape that wants to supply school nutrition. If
+          you're registered on the CSD and you want to win government work, Tenderpreneur is for you.
+        </p>
+        <p>
+          We also built it for the procurement professionals on the other side — tender evaluators,
+          SCM officials, and advisors who need quick answers to PFMA questions without trawling
+          through Treasury Regulation PDFs.
+        </p>
+
+        <h2>Our approach</h2>
+        <p>
+          We don't guess. Every piece of content in our PFMA knowledge base is cited to the actual
+          legislation — the Public Finance Management Act 1 of 1999, the Preferential Procurement
+          Policy Framework Act, the B-BBEE Act, Treasury Regulations, and CIDB Regulations. When
+          legislation changes, we update our content.
+        </p>
+        <p>
+          Our AI assistant uses that same verified knowledge base. It won't hallucinate procurement
+          thresholds or invent B-BBEE rules. When it's uncertain, it says so and points you to the
+          primary source.
+        </p>
+      </div>
+
+      <!-- Values Grid -->
+      <div class="mt-16 grid gap-6 sm:grid-cols-2">
+        {
+          values.map((v) => (
+            <div class="card">
+              <span class="text-3xl" role="img" aria-hidden="true">{v.icon}</span>
+              <h3 class="mt-3 font-display text-lg font-semibold text-navy-900 dark:text-white">
+                {v.title}
+              </h3>
+              <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{v.body}</p>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- CTA -->
+      <div class="mt-16 rounded-2xl bg-sky-50 p-8 text-center dark:bg-navy-900">
+        <h2 class="font-display text-2xl font-bold text-navy-900 dark:text-white">
+          Ready to start winning tenders?
+        </h2>
+        <p class="mt-2 text-gray-600 dark:text-gray-300">
+          Create your free account and access the PFMA knowledge base instantly.
+        </p>
+        <div class="mt-6 flex flex-wrap justify-center gap-4">
+          <a href="https://app.tenderpreneur.co.za/register" class="btn-primary">
+            Get started free
+          </a>
+          <a href="/pricing" class="btn-secondary">See pricing</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

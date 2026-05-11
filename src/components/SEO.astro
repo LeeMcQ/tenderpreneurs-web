@@ -1,0 +1,87 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  noIndex?: boolean;
+  schema?: object | object[];
+  publishedTime?: string;
+  modifiedTime?: string;
+  author?: string;
+  section?: string;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  ogImage = 'https://tenderpreneur.co.za/og-default.jpg',
+  ogType = 'website',
+  noIndex = false,
+  schema,
+  publishedTime,
+  modifiedTime,
+  author = 'Tenderpreneur',
+  section,
+} = Astro.props;
+
+const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).toString();
+const fullTitle = title.includes('Tenderpreneur') ? title : `${title} | Tenderpreneur`;
+
+const schemaArray = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
+const schemaScript = schemaArray.length > 0 ? JSON.stringify(schemaArray.length === 1 ? schemaArray[0] : { '@context': 'https://schema.org', '@graph': schemaArray }) : null;
+---
+
+<!-- Primary Meta -->
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+{noIndex && <meta name="robots" content="noindex,nofollow" />}
+{!noIndex && <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />}
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Tenderpreneur" />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:type" content={ogType} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={title} />
+<meta property="og:locale" content="en_ZA" />
+
+{ogType === 'article' && publishedTime && (
+  <meta property="article:published_time" content={publishedTime} />
+)}
+{ogType === 'article' && modifiedTime && (
+  <meta property="article:modified_time" content={modifiedTime} />
+)}
+{ogType === 'article' && author && (
+  <meta property="article:author" content={author} />
+)}
+{ogType === 'article' && section && (
+  <meta property="article:section" content={section} />
+)}
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@tenderpreneur" />
+<meta name="twitter:creator" content="@tenderpreneur" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+<meta name="twitter:image:alt" content={title} />
+
+<!-- Additional -->
+<meta name="author" content={author} />
+<meta name="geo.region" content="ZA" />
+<meta name="geo.country" content="South Africa" />
+<meta name="language" content="English" />
+
+<!-- Structured Data -->
+{schemaScript && (
+  <script type="application/ld+json" set:html={schemaScript} />
+)}

@@ -1,0 +1,25 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import PfmaLayout from '@layouts/PfmaLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('pfma');
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+
+// Build related topics list (all topics except current)
+const allTopics = await getCollection('pfma');
+const related = allTopics
+  .filter((t) => t.slug !== entry.slug)
+  .slice(0, 6);
+---
+
+<PfmaLayout entry={entry} related={related}>
+  <Content />
+</PfmaLayout>

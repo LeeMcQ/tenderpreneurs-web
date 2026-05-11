@@ -1,0 +1,256 @@
+---
+export interface Props {
+  tier: string;
+  price: string;
+  period?: string;
+  description: string;
+  features: string[];
+  cta: string;
+  ctaHref: string;
+  highlighted?: boolean;
+  badge?: string;
+  icon?: string;
+}
+
+const {
+  tier,
+  price,
+  period = '/month',
+  description,
+  features,
+  cta,
+  ctaHref,
+  highlighted = false,
+  badge,
+  icon = '📦',
+} = Astro.props;
+---
+
+<article
+  class={`pricing-card ${highlighted ? 'pricing-card--featured' : ''}`}
+  aria-label={`${tier} plan`}
+>
+  {badge && (
+    <div class="pricing-badge" role="note">
+      {badge}
+    </div>
+  )}
+
+  <header class="pricing-header">
+    <div class="pricing-icon" aria-hidden="true">{icon}</div>
+    <h3 class="pricing-tier">{tier}</h3>
+    <div class="pricing-price">
+      <span class="pricing-amount">{price}</span>
+      {price !== 'Free' && price !== 'Contact Us' && (
+        <span class="pricing-period">{period}</span>
+      )}
+    </div>
+    <p class="pricing-description">{description}</p>
+  </header>
+
+  <ul class="pricing-features" role="list" aria-label={`${tier} plan features`}>
+    {features.map((feature) => (
+      <li class="pricing-feature">
+        <svg
+          class="pricing-check"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="8" cy="8" r="8" fill="currentColor" opacity="0.1"/>
+          <path d="M11 5.5L6.5 10L4.5 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>{feature}</span>
+      </li>
+    ))}
+  </ul>
+
+  <a
+    href={ctaHref}
+    class={`pricing-cta ${highlighted ? 'btn btn-primary' : 'btn btn-outline'}`}
+    rel={ctaHref.startsWith('http') ? 'noopener' : undefined}
+    aria-label={`${cta} — ${tier} plan`}
+  >
+    {cta}
+  </a>
+</article>
+
+<style>
+  .pricing-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #E2E8F0);
+    border-radius: 1.25rem;
+    padding: 2rem;
+    position: relative;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+
+  .pricing-card:hover {
+    box-shadow: 0 8px 40px rgba(12, 27, 51, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .pricing-card--featured {
+    border-color: #1B4F8A;
+    border-width: 2px;
+    box-shadow: 0 8px 40px rgba(27, 79, 138, 0.15);
+    background: linear-gradient(160deg, #0C1B33 0%, #1B4F8A 100%);
+    color: white;
+  }
+
+  .pricing-card--featured:hover {
+    box-shadow: 0 12px 50px rgba(27, 79, 138, 0.25);
+    transform: translateY(-4px);
+  }
+
+  .pricing-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #D97706, #F59E0B);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.875rem;
+    border-radius: 9999px;
+    white-space: nowrap;
+  }
+
+  .pricing-header {
+    margin-bottom: 1.75rem;
+  }
+
+  .pricing-icon {
+    font-size: 2rem;
+    margin-bottom: 0.875rem;
+    display: block;
+  }
+
+  .pricing-tier {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: inherit;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+  }
+
+  .pricing-card--featured .pricing-tier {
+    opacity: 0.7;
+  }
+
+  .pricing-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .pricing-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #0C1B33;
+    line-height: 1;
+  }
+
+  .pricing-card--featured .pricing-amount {
+    color: white;
+  }
+
+  .pricing-period {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  .pricing-card--featured .pricing-period {
+    color: rgba(219, 234, 254, 0.65);
+  }
+
+  .pricing-description {
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+
+  .pricing-card--featured .pricing-description {
+    color: rgba(219, 234, 254, 0.75);
+  }
+
+  .pricing-features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    flex: 1;
+    border-top: 1px solid var(--color-border, #E2E8F0);
+    padding-top: 1.5rem;
+  }
+
+  .pricing-card--featured .pricing-features {
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .pricing-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    line-height: 1.4;
+  }
+
+  .pricing-card--featured .pricing-feature {
+    color: rgba(219, 234, 254, 0.9);
+  }
+
+  .pricing-check {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #1B4F8A;
+  }
+
+  .pricing-card--featured .pricing-check {
+    color: #F59E0B;
+  }
+
+  .pricing-cta {
+    width: 100%;
+    text-align: center;
+    margin-top: auto;
+  }
+
+  .pricing-card--featured .pricing-cta {
+    background: linear-gradient(135deg, #D97706, #F59E0B);
+    border: none;
+    color: #0C1B33;
+  }
+
+  .pricing-card--featured .pricing-cta:hover {
+    background: linear-gradient(135deg, #B45309, #D97706);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .pricing-card:not(.pricing-card--featured) {
+      background: #0C1B33;
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    .pricing-amount {
+      color: #fff;
+    }
+
+    .pricing-feature {
+      color: rgba(219,234,254,0.85);
+    }
+  }
+</style>

@@ -1,0 +1,145 @@
+---
+export const prerender = false;
+
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SEO from '@components/SEO.astro';
+
+const provinces = [
+  'Eastern Cape',
+  'Free State',
+  'Gauteng',
+  'KwaZulu-Natal',
+  'Limpopo',
+  'Mpumalanga',
+  'North West',
+  'Northern Cape',
+  'Western Cape',
+];
+
+const seoData = {
+  title: 'Browse Government Tenders — 7,841+ Opportunities | Tenderpreneur',
+  description:
+    'Browse 7,841+ open South African government tenders from etenders.gov.za. Filter by province, sector, value, and B-BBEE level. Updated every 4 hours.',
+  canonical: 'https://tenderpreneur.co.za/tenders',
+  ogImage: 'https://tenderpreneur.co.za/og-tenders.png',
+};
+---
+
+<BaseLayout>
+  <SEO slot="head" {...seoData} />
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-navy-900 to-civic-800 py-20 text-white">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6">
+      <nav aria-label="Breadcrumb" class="breadcrumb mb-6">
+        <ol class="flex items-center gap-2 text-sm text-sky-300">
+          <li><a href="/" class="hover:text-white">Home</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page" class="text-white">Tenders</li>
+        </ol>
+      </nav>
+      <h1 class="font-display text-4xl font-bold text-white sm:text-5xl">
+        7,841+ open tenders<br />from etenders.gov.za
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-sky-200">
+        Updated every 4 hours. Filter by province, sector, value, B-BBEE level, and closing
+        date. Full live feed available on Professional plan.
+      </p>
+    </div>
+  </section>
+
+  <!-- Province Filters -->
+  <section class="border-b border-gray-200 bg-white py-6 dark:border-navy-700 dark:bg-navy-950">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <div class="flex flex-wrap gap-2" role="group" aria-label="Filter tenders by province">
+        <button
+          class="rounded-full border border-civic-500 bg-civic-500 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-civic-600"
+          aria-pressed="true"
+        >
+          All provinces
+        </button>
+        {
+          provinces.map((p) => (
+            <button
+              class="rounded-full border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:border-civic-400 hover:bg-sky-50 dark:border-navy-600 dark:text-gray-300 dark:hover:bg-navy-800"
+              aria-pressed="false"
+            >
+              {p}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Phase 2 Placeholder -->
+  <section class="bg-sky-50 py-24 dark:bg-navy-900" aria-labelledby="coming-soon-heading">
+    <div class="mx-auto max-w-2xl px-4 text-center sm:px-6">
+      <div class="mb-6 text-6xl" role="img" aria-hidden="true">🚀</div>
+      <h2
+        id="coming-soon-heading"
+        class="font-display text-3xl font-bold text-navy-900 dark:text-white"
+      >
+        Live tender feed coming soon
+      </h2>
+      <p class="mx-auto mt-4 max-w-lg text-gray-600 dark:text-gray-300">
+        We're integrating with etenders.gov.za, provincial procurement portals, and 257
+        municipal websites. Sign up now and we'll notify you the moment the full feed
+        goes live.
+      </p>
+
+      <!-- Email Capture -->
+      <form
+        class="mt-8 flex flex-col gap-3 sm:flex-row"
+        action="https://app.tenderpreneur.co.za/waitlist"
+        method="POST"
+        aria-label="Join tender feed waitlist"
+      >
+        <label for="waitlist-email" class="sr-only">Your email address</label>
+        <input
+          id="waitlist-email"
+          type="email"
+          name="email"
+          required
+          placeholder="your@email.co.za"
+          class="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-civic-500 focus:ring-2 focus:ring-civic-200 dark:border-navy-600 dark:bg-navy-800 dark:text-white"
+        />
+        <button type="submit" class="btn-primary whitespace-nowrap">
+          Notify me
+        </button>
+      </form>
+      <p class="mt-2 text-xs text-gray-400">
+        POPIA compliant. No spam. Unsubscribe anytime.
+      </p>
+
+      <!-- What's Coming -->
+      <div class="mt-12 grid gap-4 text-left sm:grid-cols-2">
+        {
+          [
+            {
+              title: 'Full tender feed',
+              body: '7,841+ tenders from etenders.gov.za, 9 provincial portals, and 257 municipalities.',
+            },
+            {
+              title: 'Smart filters',
+              body: 'Filter by province, sector, CIDB grade, B-BBEE level, value range, and closing date.',
+            },
+            {
+              title: 'Email alerts',
+              body: 'Save search filters and get notified when matching tenders are published.',
+            },
+            {
+              title: 'AI win-probability',
+              body: 'Get a score from 0–100 based on your B-BBEE, CSD status, experience, and pricing.',
+            },
+          ].map((item) => (
+            <div class="card">
+              <h3 class="font-semibold text-navy-900 dark:text-white">{item.title}</h3>
+              <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{item.body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</BaseLayout>

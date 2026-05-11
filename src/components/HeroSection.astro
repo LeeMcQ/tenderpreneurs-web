@@ -1,0 +1,492 @@
+---
+export interface Props {
+  headline?: string;
+  subheadline?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  secondaryLabel?: string;
+  secondaryHref?: string;
+  badge?: string;
+}
+
+const {
+  headline = 'Win More Government Tenders',
+  subheadline = 'Tenderpreneur uses AI to help South African SMMEs navigate PFMA procurement, track opportunities, and submit winning bids.',
+  ctaLabel = 'Get Started Free',
+  ctaHref = 'https://app.tenderpreneur.co.za',
+  secondaryLabel = 'Explore PFMA Guide',
+  secondaryHref = '/pfma',
+  badge = '🇿🇦 Built for SA SMMEs',
+} = Astro.props;
+---
+
+<section class="hero" aria-label="Hero">
+  <!-- Background decoration -->
+  <div class="hero-bg" aria-hidden="true">
+    <div class="hero-grid-pattern"></div>
+    <div class="hero-blob-1"></div>
+    <div class="hero-blob-2"></div>
+  </div>
+
+  <div class="container hero-container">
+    <div class="hero-content">
+      {badge && (
+        <div class="hero-badge animate-fade-in">
+          <span>{badge}</span>
+          <span class="hero-badge-sep" aria-hidden="true">·</span>
+          <span class="hero-badge-live">
+            <span class="live-dot" aria-hidden="true"></span>
+            Live tender data
+          </span>
+        </div>
+      )}
+
+      <h1 class="hero-headline animate-fade-up" style="animation-delay: 0.1s;">
+        {headline}
+        <em class="hero-headline-em">with AI Intelligence</em>
+      </h1>
+
+      <p class="hero-subheadline animate-fade-up" style="animation-delay: 0.2s;">
+        {subheadline}
+      </p>
+
+      <div class="hero-actions animate-fade-up" style="animation-delay: 0.3s;">
+        <a href={ctaHref} class="btn btn-primary hero-cta-primary" rel="noopener">
+          {ctaLabel}
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="M3.75 9h10.5M9.75 4.5l4.5 4.5-4.5 4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href={secondaryHref} class="btn btn-ghost hero-cta-secondary">
+          {secondaryLabel}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Trust signals -->
+      <div class="hero-trust animate-fade-up" style="animation-delay: 0.4s;">
+        <div class="trust-item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M13.5 4.5l-7 7L3 8" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Free to start</span>
+        </div>
+        <div class="trust-sep" aria-hidden="true">·</div>
+        <div class="trust-item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M13.5 4.5l-7 7L3 8" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>No credit card required</span>
+        </div>
+        <div class="trust-sep" aria-hidden="true">·</div>
+        <div class="trust-item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M13.5 4.5l-7 7L3 8" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>POPIA compliant</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero stats / visual -->
+    <div class="hero-stats animate-fade-up" style="animation-delay: 0.35s;" aria-label="Platform statistics">
+      <div class="stats-card">
+        <div class="stats-header">
+          <div class="stats-header-dot" aria-hidden="true"></div>
+          <span class="stats-header-text">Live Tender Feed</span>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-number">7,841<span class="stat-plus">+</span></span>
+            <span class="stat-label">Open Tenders</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">9</span>
+            <span class="stat-label">Provinces</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">4hr</span>
+            <span class="stat-label">Update Cycle</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">R2.4B<span class="stat-plus">+</span></span>
+            <span class="stat-label">Tender Value</span>
+          </div>
+        </div>
+        <div class="stats-sample">
+          <div class="sample-tender">
+            <span class="sample-tender-dot" aria-hidden="true"></span>
+            <div>
+              <div class="sample-tender-title">Supply of PPE Equipment — KZN DoH</div>
+              <div class="sample-tender-meta">R500K–R2M · Closes in 14 days · KwaZulu-Natal</div>
+            </div>
+            <span class="sample-tender-score" aria-label="Win probability 78%">78%</span>
+          </div>
+          <div class="sample-tender">
+            <span class="sample-tender-dot sample-tender-dot--orange" aria-hidden="true"></span>
+            <div>
+              <div class="sample-tender-title">IT Infrastructure Refresh — SARS</div>
+              <div class="sample-tender-meta">R1M–R5M · Closes in 7 days · National</div>
+            </div>
+            <span class="sample-tender-score" aria-label="Win probability 61%">61%</span>
+          </div>
+          <div class="sample-tender">
+            <span class="sample-tender-dot sample-tender-dot--red" aria-hidden="true"></span>
+            <div>
+              <div class="sample-tender-title">Construction: RDP Housing — GP DHS</div>
+              <div class="sample-tender-meta">R10M+ · Closes in 3 days · Gauteng</div>
+            </div>
+            <span class="sample-tender-score" aria-label="Win probability 43%">43%</span>
+          </div>
+        </div>
+        <div class="stats-footer">
+          <span>Powered by etenders.gov.za + AI scoring</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(160deg, #0C1B33 0%, #112043 40%, #1B4F8A 100%);
+    padding: 5rem 0 6rem;
+    color: white;
+  }
+
+  @media (min-width: 768px) {
+    .hero {
+      padding: 7rem 0 8rem;
+    }
+  }
+
+  /* Background decoration */
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .hero-grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .hero-blob-1 {
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(217, 119, 6, 0.12) 0%, transparent 70%);
+    animation: float 8s ease-in-out infinite;
+  }
+
+  .hero-blob-2 {
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(27, 79, 138, 0.3) 0%, transparent 70%);
+    animation: float 10s ease-in-out infinite reverse;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-20px) scale(1.02); }
+  }
+
+  /* Layout */
+  .hero-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-container {
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+    }
+  }
+
+  /* Content */
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 9999px;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgba(219, 234, 254, 0.9);
+    margin-bottom: 1.5rem;
+    width: fit-content;
+  }
+
+  .hero-badge-sep {
+    color: rgba(255,255,255,0.3);
+  }
+
+  .hero-badge-live {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: #86EFAC;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #86EFAC;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.25rem, 5vw, 3.75rem);
+    font-weight: 700;
+    line-height: 1.12;
+    color: white;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero-headline-em {
+    display: block;
+    font-style: italic;
+    color: #F59E0B;
+    background: linear-gradient(135deg, #D97706, #F59E0B, #FBBF24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subheadline {
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
+    color: rgba(219, 234, 254, 0.82);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    max-width: 52ch;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.875rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .hero-cta-primary {
+    background: linear-gradient(135deg, #D97706, #F59E0B);
+    color: #0C1B33;
+    font-weight: 700;
+    padding: 0.875rem 1.75rem;
+    font-size: 0.9375rem;
+    box-shadow: 0 4px 20px rgba(217, 119, 6, 0.35);
+  }
+
+  .hero-cta-primary:hover {
+    background: linear-gradient(135deg, #B45309, #D97706);
+    box-shadow: 0 6px 28px rgba(217, 119, 6, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .hero-cta-secondary {
+    color: rgba(219, 234, 254, 0.85);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9375rem;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .hero-cta-secondary:hover {
+    color: white;
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.25);
+  }
+
+  .hero-trust {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: rgba(219, 234, 254, 0.65);
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .trust-sep {
+    color: rgba(255,255,255,0.2);
+  }
+
+  /* Stats card */
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+  }
+
+  .stats-card {
+    width: 100%;
+    max-width: 440px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 1rem;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+
+  .stats-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+  }
+
+  .stats-header-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #86EFAC;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .stats-header-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(219, 234, 254, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    padding: 1.25rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .stat-item:last-child {
+    border-right: none;
+  }
+
+  .stat-number {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: white;
+    line-height: 1;
+  }
+
+  .stat-plus {
+    font-size: 0.875rem;
+    color: #F59E0B;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    color: rgba(219, 234, 254, 0.5);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .stats-sample {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem 1.25rem;
+    gap: 0.625rem;
+  }
+
+  .sample-tender {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .sample-tender:last-child {
+    border-bottom: none;
+  }
+
+  .sample-tender-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #86EFAC;
+    flex-shrink: 0;
+  }
+
+  .sample-tender-dot--orange { background: #FBBF24; }
+  .sample-tender-dot--red { background: #F87171; }
+
+  .sample-tender-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(219,234,254,0.9);
+    line-height: 1.3;
+  }
+
+  .sample-tender-meta {
+    font-size: 0.65rem;
+    color: rgba(219,234,254,0.45);
+  }
+
+  .sample-tender-score {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #F59E0B;
+    flex-shrink: 0;
+  }
+
+  .stats-footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.65rem;
+    color: rgba(219, 234, 254, 0.35);
+    text-align: center;
+    background: rgba(255,255,255,0.02);
+  }
+</style>

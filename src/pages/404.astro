@@ -1,0 +1,68 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SEO from '@components/SEO.astro';
+
+const seoData = {
+  title: '404 — Page Not Found | Tenderpreneur',
+  description: 'The page you were looking for doesn\'t exist. Return to Tenderpreneur to browse government tenders and PFMA guides.',
+  canonical: 'https://tenderpreneur.co.za/404',
+  ogImage: 'https://tenderpreneur.co.za/og-default.png',
+};
+
+const quickLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/pfma', label: 'PFMA Knowledge Base' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/tenders', label: 'Browse Tenders' },
+  { href: '/pricing', label: 'Pricing' },
+];
+---
+
+<BaseLayout>
+  <SEO slot="head" {...seoData} />
+
+  <section class="flex min-h-[70vh] items-center bg-white py-20 dark:bg-navy-950">
+    <div class="mx-auto max-w-2xl px-4 text-center sm:px-6">
+      <!-- Illustrated number -->
+      <p class="font-display text-[8rem] font-bold leading-none text-sky-100 dark:text-navy-800" aria-hidden="true">
+        404
+      </p>
+      <div class="-mt-8">
+        <h1 class="font-display text-3xl font-bold text-navy-900 dark:text-white sm:text-4xl">
+          Page not found
+        </h1>
+        <p class="mx-auto mt-4 max-w-md text-gray-600 dark:text-gray-300">
+          Sorry, we couldn't find that page. It may have moved, been removed, or the URL
+          might have a typo.
+        </p>
+
+        <!-- Quick links -->
+        <nav aria-label="Helpful links" class="mt-8">
+          <p class="mb-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+            Try one of these instead:
+          </p>
+          <ul class="flex flex-wrap justify-center gap-2">
+            {
+              quickLinks.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    class="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-navy-900 transition hover:border-civic-400 hover:bg-sky-50 hover:text-civic-700 dark:border-navy-700 dark:bg-navy-800 dark:text-white dark:hover:bg-navy-700"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+
+        <div class="mt-10">
+          <a href="/" class="btn-primary">
+            ← Back to Tenderpreneur
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

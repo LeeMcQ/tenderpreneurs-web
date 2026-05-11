@@ -1,0 +1,242 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SEO from '@components/SEO.astro';
+import HeroSection from '@components/HeroSection.astro';
+import FeatureGrid from '@components/FeatureGrid.astro';
+
+const stats = [
+  { value: '7,841+', label: 'Active tenders' },
+  { value: '9', label: 'Provinces covered' },
+  { value: '4hrs', label: 'Update frequency' },
+  { value: 'Free', label: 'PFMA Assistant' },
+];
+
+const testimonials = [
+  {
+    quote: 'We won our first government tender within three months of using Tenderpreneur. The PFMA Assistant saved us hours of research.',
+    author: 'Nomvula D.',
+    company: 'NovaBuild Construction, Gauteng',
+  },
+  {
+    quote: 'The win probability score helped us decide which tenders were worth pursuing. Our success rate doubled.',
+    author: 'Sipho M.',
+    company: 'TechServe Solutions, Western Cape',
+  },
+  {
+    quote: 'Finally a platform built for SMMEs, not just big corporates. The CSD compliance checker alone is worth it.',
+    author: 'Lerato K.',
+    company: 'Kganya Catering, Limpopo',
+  },
+];
+
+const seoData = {
+  title: 'Tenderpreneur — AI-Powered Government Tender Intelligence for South Africa',
+  description:
+    'Win more government tenders. Tenderpreneur uses AI to help South African SMMEs navigate PFMA procurement, track 7,841+ opportunities, and submit winning bids.',
+  canonical: 'https://tenderpreneur.co.za/',
+  ogImage: 'https://tenderpreneur.co.za/og-home.png',
+  schema: {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': 'https://tenderpreneur.co.za/#org',
+        name: 'Tenderpreneur',
+        url: 'https://tenderpreneur.co.za',
+        logo: 'https://tenderpreneur.co.za/logo.png',
+        sameAs: [
+          'https://twitter.com/tenderpreneur',
+          'https://linkedin.com/company/tenderpreneur',
+        ],
+        contactPoint: {
+          '@type': 'ContactPoint',
+          email: 'hello@tenderpreneur.co.za',
+          contactType: 'customer support',
+          availableLanguage: ['English', 'Afrikaans', 'Zulu'],
+        },
+      },
+      {
+        '@type': 'LocalBusiness',
+        '@id': 'https://tenderpreneur.co.za/#business',
+        name: 'Tenderpreneur',
+        description:
+          'AI-powered government tender intelligence platform for South African SMMEs.',
+        url: 'https://tenderpreneur.co.za',
+        priceRange: 'R0–R299/mo',
+        areaServed: {
+          '@type': 'Country',
+          name: 'South Africa',
+        },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': 'https://tenderpreneur.co.za/#website',
+        url: 'https://tenderpreneur.co.za',
+        name: 'Tenderpreneur',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: 'https://tenderpreneur.co.za/tenders?q={search_term_string}',
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  },
+};
+---
+
+<BaseLayout>
+  <SEO slot="head" {...seoData} />
+
+  <HeroSection />
+  <FeatureGrid />
+
+  <!-- Stats Section -->
+  <section class="bg-navy-900 py-16 text-white" aria-labelledby="stats-heading">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <h2
+        id="stats-heading"
+        class="mb-12 text-center font-display text-3xl font-bold text-white"
+      >
+        Built for South African procurement
+      </h2>
+      <div class="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        {
+          stats.map((stat) => (
+            <div class="text-center">
+              <p class="font-display text-4xl font-bold text-gold-400">{stat.value}</p>
+              <p class="mt-1 text-sm text-sky-200">{stat.label}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="bg-white py-20 dark:bg-navy-950" aria-labelledby="how-heading">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <div class="mb-14 text-center">
+        <h2
+          id="how-heading"
+          class="font-display text-3xl font-bold text-navy-900 dark:text-white sm:text-4xl"
+        >
+          From registration to winning bid
+        </h2>
+        <p class="mx-auto mt-4 max-w-2xl text-gray-600 dark:text-gray-300">
+          Tenderpreneur walks you through every step of the government procurement journey.
+        </p>
+      </div>
+      <ol class="grid gap-8 sm:grid-cols-3" role="list">
+        {
+          [
+            {
+              step: '01',
+              title: 'Get compliant',
+              body: 'Register on the Central Supplier Database (CSD), get your Tax Clearance Pin, and update your B-BBEE certificate. Our compliance checker tells you exactly what's missing.',
+            },
+            {
+              step: '02',
+              title: 'Find the right tenders',
+              body: 'Filter 7,841+ open tenders by province, sector, rand value, B-BBEE preference level, and closing date. Save searches and get email alerts.',
+            },
+            {
+              step: '03',
+              title: 'Submit a winning bid',
+              body: 'Use our AI win-probability score to prioritise your pipeline. The PFMA Assistant answers your compliance questions. Download the right SBD forms instantly.',
+            },
+          ].map((item) => (
+            <li class="card relative">
+              <span class="font-display text-5xl font-bold text-sky-100 dark:text-navy-800">
+                {item.step}
+              </span>
+              <h3 class="mt-2 font-display text-xl font-semibold text-navy-900 dark:text-white">
+                {item.title}
+              </h3>
+              <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{item.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="bg-sky-50 py-20 dark:bg-navy-900" aria-labelledby="testimonials-heading">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <h2
+        id="testimonials-heading"
+        class="mb-12 text-center font-display text-3xl font-bold text-navy-900 dark:text-white"
+      >
+        Trusted by South African SMMEs
+      </h2>
+      <div class="grid gap-8 sm:grid-cols-3">
+        {
+          testimonials.map((t) => (
+            <blockquote class="card">
+              <p class="text-sm italic text-gray-600 dark:text-gray-300">"{t.quote}"</p>
+              <footer class="mt-4">
+                <p class="font-semibold text-navy-900 dark:text-white">{t.author}</p>
+                <p class="text-xs text-gray-500">{t.company}</p>
+              </footer>
+            </blockquote>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- PFMA Teaser -->
+  <section class="bg-white py-20 dark:bg-navy-950" aria-labelledby="pfma-teaser-heading">
+    <div class="mx-auto max-w-4xl px-4 text-center sm:px-6">
+      <h2
+        id="pfma-teaser-heading"
+        class="font-display text-3xl font-bold text-navy-900 dark:text-white sm:text-4xl"
+      >
+        Confused by PFMA, PPPFA, or B-BBEE?
+      </h2>
+      <p class="mx-auto mt-4 max-w-2xl text-gray-600 dark:text-gray-300">
+        Our free PFMA knowledge base covers every aspect of South African government
+        procurement legislation — with plain-language explanations, real examples, and
+        citations to the actual regulations.
+      </p>
+      <div class="mt-8 flex flex-wrap justify-center gap-4">
+        <a href="/pfma" class="btn-primary">Explore PFMA Guide</a>
+        <a href="/blog" class="btn-secondary">Read our blog</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section
+    class="bg-gradient-to-br from-civic-700 to-navy-900 py-20 text-white"
+    aria-labelledby="cta-heading"
+  >
+    <div class="mx-auto max-w-4xl px-4 text-center sm:px-6">
+      <h2
+        id="cta-heading"
+        class="font-display text-3xl font-bold text-white sm:text-4xl"
+      >
+        Start winning tenders today
+      </h2>
+      <p class="mx-auto mt-4 max-w-xl text-sky-200">
+        Free forever for PFMA research. Upgrade to Professional for live tender tracking and
+        AI win-probability scoring.
+      </p>
+      <div class="mt-8 flex flex-wrap justify-center gap-4">
+        <a
+          href="https://app.tenderpreneur.co.za/register"
+          class="inline-flex items-center gap-2 rounded-lg bg-gold-500 px-8 py-3 font-semibold text-white shadow-lg transition hover:bg-gold-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-400"
+        >
+          Get started free
+        </a>
+        <a
+          href="/pricing"
+          class="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-8 py-3 font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+        >
+          View pricing
+        </a>
+      </div>
+      <p class="mt-4 text-xs text-sky-300">No credit card required. Cancel anytime.</p>
+    </div>
+  </section>
+</BaseLayout>
