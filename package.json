@@ -17,15 +17,24 @@
     "@astrojs/rss": "^4.0.7",
     "@astrojs/sitemap": "^3.7.2",
     "@astrojs/tailwind": "^5.1.0",
+    "@sentry/node": "^10.53.1",
     "@tailwindcss/typography": "^0.5.19",
     "astro": "^4.15.9",
     "date-fns": "^4.1.0",
     "docx": "^9.6.1",
+    "node-cron": "^4.2.1",
+    "resend": "^6.12.3",
     "sharp": "^0.33.4",
     "tailwindcss": "^3.4.10"
   },
   "devDependencies": {
     "@types/node": "^22.5.4",
-    "typescript": "^5.5.4"
+    "@vite-pwa/astro": "^1.2.0",
+    "typescript": "^5.5.4",
+    "workbox-background-sync": "^7.4.1",
+    "workbox-core": "^7.4.1",
+    "workbox-precaching": "^7.4.1",
+    "workbox-routing": "^7.4.1",
+    "workbox-strategies": "^7.4.1"
   }
 }
