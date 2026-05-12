@@ -1,0 +1,202 @@
+[
+  {
+    "id": 1,
+    "title": "Construction of Water Reticulation Scheme in Mqanduli",
+    "entity": "Department of Water and Sanitation",
+    "province": "Eastern Cape",
+    "sector": "construction",
+    "value": "R 14,200,000",
+    "closing_date": "2026-06-30",
+    "status": "open"
+  },
+  {
+    "id": 2,
+    "title": "Provision of ICT Network Infrastructure for Free State Schools",
+    "entity": "Free State Department of Education",
+    "province": "Free State",
+    "sector": "ICT",
+    "value": "R 8,750,000",
+    "closing_date": "2026-07-15",
+    "status": "open"
+  },
+  {
+    "id": 3,
+    "title": "Supply and Delivery of Medical PPE for Gauteng Hospitals",
+    "entity": "Gauteng Department of Health",
+    "province": "Gauteng",
+    "sector": "health",
+    "value": "R 22,000,000",
+    "closing_date": "2026-06-22",
+    "status": "open"
+  },
+  {
+    "id": 4,
+    "title": "Upgrades to Stormwater Drainage in eThekwini CBD",
+    "entity": "eThekwini Metropolitan Municipality",
+    "province": "KwaZulu-Natal",
+    "sector": "construction",
+    "value": "R 35,400,000",
+    "closing_date": "2026-08-05",
+    "status": "open"
+  },
+  {
+    "id": 5,
+    "title": "Supply of School Furniture to Limpopo Primary Schools",
+    "entity": "Limpopo Department of Education",
+    "province": "Limpopo",
+    "sector": "education",
+    "value": "R 5,100,000",
+    "closing_date": "2026-06-18",
+    "status": "open"
+  },
+  {
+    "id": 6,
+    "title": "Rehabilitation of Rural Access Road D438 in Mpumalanga",
+    "entity": "Mpumalanga Department of Public Works, Roads and Transport",
+    "province": "Mpumalanga",
+    "sector": "transport",
+    "value": "R 28,900,000",
+    "closing_date": "2026-07-29",
+    "status": "open"
+  },
+  {
+    "id": 7,
+    "title": "Installation of Solar-Powered Boreholes in John Taolo Gaetsewe",
+    "entity": "Northern Cape Department of Agriculture, Environmental Affairs and Land Reform",
+    "province": "Northern Cape",
+    "sector": "agriculture",
+    "value": "R 11,600,000",
+    "closing_date": "2026-08-12",
+    "status": "open"
+  },
+  {
+    "id": 8,
+    "title": "Building Maintenance and Repairs for North West Government Offices",
+    "entity": "North West Department of Public Works and Roads",
+    "province": "North West",
+    "sector": "construction",
+    "value": "R 9,300,000",
+    "closing_date": "2026-06-25",
+    "status": "open"
+  },
+  {
+    "id": 9,
+    "title": "Supply and Commissioning of Medical Equipment for Tygerberg Hospital",
+    "entity": "Western Cape Department of Health",
+    "province": "Western Cape",
+    "sector": "health",
+    "value": "R 17,800,000",
+    "closing_date": "2026-07-08",
+    "status": "open"
+  },
+  {
+    "id": 10,
+    "title": "Refurbishment of Early Childhood Development Centres in Soweto",
+    "entity": "City of Johannesburg",
+    "province": "Gauteng",
+    "sector": "education",
+    "value": "R 6,200,000",
+    "closing_date": "2026-06-30",
+    "status": "open"
+  },
+  {
+    "id": 11,
+    "title": "Provision of Fleet Management and Telematics System for SAPS",
+    "entity": "South African Police Service",
+    "province": "Gauteng",
+    "sector": "ICT",
+    "value": "R 45,000,000",
+    "closing_date": "2026-09-15",
+    "status": "open"
+  },
+  {
+    "id": 12,
+    "title": "Construction of a Multipurpose Agri-Hub in Thohoyandou",
+    "entity": "Limpopo Department of Agriculture and Rural Development",
+    "province": "Limpopo",
+    "sector": "agriculture",
+    "value": "R 21,400,000",
+    "closing_date": "2026-08-19",
+    "status": "open"
+  },
+  {
+    "id": 13,
+    "title": "Upgrade of N2 Intersection near Makhanda",
+    "entity": "South African National Roads Agency (SANRAL)",
+    "province": "Eastern Cape",
+    "sector": "transport",
+    "value": "R 95,000,000",
+    "closing_date": "2026-10-01",
+    "status": "open"
+  },
+  {
+    "id": 14,
+    "title": "Demolition and Asbestos Removal at Decommissioned Mine Hostels",
+    "entity": "Free State Department of Human Settlements",
+    "province": "Free State",
+    "sector": "construction",
+    "value": "R 13,700,000",
+    "closing_date": "2026-07-22",
+    "status": "open"
+  },
+  {
+    "id": 15,
+    "title": "Mobile Clinic Outreach Services for Ugu District",
+    "entity": "KwaZulu-Natal Department of Health",
+    "province": "KwaZulu-Natal",
+    "sector": "health",
+    "value": "R 7,400,000",
+    "closing_date": "2026-06-15",
+    "status": "open"
+  },
+  {
+    "id": 16,
+    "title": "Supply of ICT Devices for Teacher Professional Development",
+    "entity": "Mpumalanga Department of Education",
+    "province": "Mpumalanga",
+    "sector": "ICT",
+    "value": "R 4,800,000",
+    "closing_date": "2026-07-05",
+    "status": "open"
+  },
+  {
+    "id": 17,
+    "title": "Construction of a Smallholder Irrigation Scheme in Vaalharts",
+    "entity": "Northern Cape Department of Agriculture",
+    "province": "Northern Cape",
+    "sector": "agriculture",
+    "value": "R 19,200,000",
+    "closing_date": "2026-09-01",
+    "status": "open"
+  },
+  {
+    "id": 18,
+    "title": "Rehabilitation of Railway Sidings from Klerksdorp to Potchefstroom",
+    "entity": "Transnet Freight Rail",
+    "province": "North West",
+    "sector": "transport",
+    "value": "R 67,500,000",
+    "closing_date": "2026-10-15",
+    "status": "open"
+  },
+  {
+    "id": 19,
+    "title": "Provision of E-Learning Content for Western Cape High Schools",
+    "entity": "Western Cape Education Department",
+    "province": "Western Cape",
+    "sector": "education",
+    "value": "R 10,100,000",
+    "closing_date": "2026-08-26",
+    "status": "open"
+  },
+  {
+    "id": 20,
+    "title": "Design and Build of a New Community Health Centre in Mamelodi",
+    "entity": "City of Tshwane",
+    "province": "Gauteng",
+    "sector": "health",
+    "value": "R 42,300,000",
+    "closing_date": "2026-09-30",
+    "status": "open"
+  }
+]

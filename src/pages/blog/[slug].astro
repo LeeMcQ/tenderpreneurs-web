@@ -1,24 +1,101 @@
 ---
-import { getCollection } from 'astro:content';
-import BlogLayout from '@layouts/BlogLayout.astro';
+import { getCollection, getEntry } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import { format } from 'date-fns';
+import RelatedArticles from '../../components/RelatedArticles.astro';
 
-export async function getStaticPaths() {
-  const entries = await getCollection('blog');
-  return entries.map((entry) => ({
-    params: { slug: entry.slug },
-    props: { entry },
+export const getStaticPaths: GetStaticPaths = async () => {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
   }));
-}
+};
 
-const { entry } = Astro.props;
-const { Content } = await entry.render();
+const slug = Astro.params.slug;
+if (!slug) return Astro.redirect('/blog');
 
-const allPosts = await getCollection('blog');
-const related = allPosts
-  .filter((p) => p.slug !== entry.slug && p.data.category === entry.data.category)
-  .slice(0, 3);
+const post = await getEntry('blog', slug);
+if (!post) return Astro.redirect('/404');
+
+const { Content } = await post.render();
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.date.toISOString(),
+  author: {
+    '@type': 'Organization',
+    name: 'tenderpreneurs Editorial Team',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'tenderpreneurs',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://tenderpreneurs.co.za/logo.png',
+    },
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': Astro.url.href,
+  },
+};
 ---
 
-<BlogLayout entry={entry} related={related}>
-  <Content />
-</BlogLayout>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{post.data.title} – tenderpreneurs Blog</title>
+    <meta name="description" content={post.data.description} />
+    <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  </head>
+  <body>
+    <main class="max-w-3xl mx-auto px-4 py-12">
+      <nav class="text-sm text-gray-500 mb-4">
+        <a href="/blog" class="hover:text-gray-700">Blog</a>
+        <span class="mx-2">/</span>
+        <span>{post.data.title}</span>
+      </nav>
+
+      <article>
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">
+          {post.data.title}
+        </h1>
+        <div class="flex items-center gap-2 text-gray-600 mb-8">
+          <span>tenderpreneurs Editorial Team</span>
+          <span class="text-gray-300">|</span>
+          <time datetime={post.data.date.toISOString()}>
+            {format(post.data.date, 'd MMM yyyy')}
+          </time>
+        </div>
+
+        <div class="prose prose-lg max-w-none text-gray-800">
+          <Content />
+        </div>
+      </article>
+
+      <section class="mt-16 bg-blue-50 rounded-2xl p-8 text-center">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">
+          Get AI‑powered tender alerts — sign up free
+        </h2>
+        <p class="text-gray-600 mb-6">
+          Never miss a government contract again. Our AI scans every
+          official bulletin and sends you matching opportunities instantly.
+        </p>
+        <a
+          href="/signup"
+          class="inline-block bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+        >
+          Start Free
+        </a>
+      </section>
+
+      <RelatedArticles tags={post.data.tags ?? []} />
+    </main>
+  </body>
+</html>

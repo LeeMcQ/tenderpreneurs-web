@@ -1,242 +1,248 @@
 ---
-import BaseLayout from '@layouts/BaseLayout.astro';
-import SEO from '@components/SEO.astro';
-import HeroSection from '@components/HeroSection.astro';
-import FeatureGrid from '@components/FeatureGrid.astro';
-
-const stats = [
-  { value: '7,841+', label: 'Active tenders' },
-  { value: '9', label: 'Provinces covered' },
-  { value: '4hrs', label: 'Update frequency' },
-  { value: 'Free', label: 'PFMA Assistant' },
-];
-
-const testimonials = [
-  {
-    quote: 'We won our first government tender within three months of using Tenderpreneur. The PFMA Assistant saved us hours of research.',
-    author: 'Nomvula D.',
-    company: 'NovaBuild Construction, Gauteng',
-  },
-  {
-    quote: 'The win probability score helped us decide which tenders were worth pursuing. Our success rate doubled.',
-    author: 'Sipho M.',
-    company: 'TechServe Solutions, Western Cape',
-  },
-  {
-    quote: 'Finally a platform built for SMMEs, not just big corporates. The CSD compliance checker alone is worth it.',
-    author: 'Lerato K.',
-    company: 'Kganya Catering, Limpopo',
-  },
-];
-
-const seoData = {
-  title: 'Tenderpreneur — AI-Powered Government Tender Intelligence for South Africa',
-  description:
-    'Win more government tenders. Tenderpreneur uses AI to help South African SMMEs navigate PFMA procurement, track 7,841+ opportunities, and submit winning bids.',
-  canonical: 'https://tenderpreneur.co.za/',
-  ogImage: 'https://tenderpreneur.co.za/og-home.png',
-  schema: {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'Organization',
-        '@id': 'https://tenderpreneur.co.za/#org',
-        name: 'Tenderpreneur',
-        url: 'https://tenderpreneur.co.za',
-        logo: 'https://tenderpreneur.co.za/logo.png',
-        sameAs: [
-          'https://twitter.com/tenderpreneur',
-          'https://linkedin.com/company/tenderpreneur',
-        ],
-        contactPoint: {
-          '@type': 'ContactPoint',
-          email: 'hello@tenderpreneur.co.za',
-          contactType: 'customer support',
-          availableLanguage: ['English', 'Afrikaans', 'Zulu'],
-        },
-      },
-      {
-        '@type': 'LocalBusiness',
-        '@id': 'https://tenderpreneur.co.za/#business',
-        name: 'Tenderpreneur',
-        description:
-          'AI-powered government tender intelligence platform for South African SMMEs.',
-        url: 'https://tenderpreneur.co.za',
-        priceRange: 'R0–R299/mo',
-        areaServed: {
-          '@type': 'Country',
-          name: 'South Africa',
-        },
-      },
-      {
-        '@type': 'WebSite',
-        '@id': 'https://tenderpreneur.co.za/#website',
-        url: 'https://tenderpreneur.co.za',
-        name: 'Tenderpreneur',
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: 'https://tenderpreneur.co.za/tenders?q={search_term_string}',
-          'query-input': 'required name=search_term_string',
-        },
-      },
-    ],
-  },
-};
+// You can optionally define props for dynamic blog posts here,
+// or keep the hardcoded placeholder data shown below.
 ---
 
-<BaseLayout>
-  <SEO slot="head" {...seoData} />
+<!-- ===== SECTION 1: Province Quick Links ===== -->
+<section class="py-16 px-4 max-w-7xl mx-auto">
+  <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+    Browse Tenders by Province
+  </h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <a href="/tenders/eastern-cape" class="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="text-lg font-semibold text-gray-800 group-hover:text-blue-700">Eastern Cape</h3>
+    </a>
+    <a href="/tenders/free-state" class="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="text-lg font-semibold text-gray-800 group-hover:text-blue-700">Free State</h3>
+    </a>
+    <a href="/tenders/gauteng" class="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="text-lg font-semibold text-gray-800 group-hover:text-blue-700">Gauteng</h3>
+    </a>
+    <a href="/tenders/kwazulu-natal" class="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="text-lg font-semibold text-gray-800 group-hover:text-blue-700">KwaZulu-Natal</h3>
+    </a>
+    <a href="/tenders/limpopo" class="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="text-lg font-semibold text-gray-800 group-hover:text-blue-700">Limpopo</h3>
+    </a>
+    <a href="/tenders/mpumalanga" class="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="text-lg font-semibold text-gray-800 group-hover:text-blue-700">Mpumalanga</h3>
+    </a>
+    <a href="/tenders/northern-cape" class="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="text-lg font-semibold text-gray-800 group-hover:text-blue-700">Northern Cape</h3>
+    </a>
+    <a href="/tenders/north-west" class="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="text-lg font-semibold text-gray-800 group-hover:text-blue-700">North West</h3>
+    </a>
+    <a href="/tenders/western-cape" class="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="text-lg font-semibold text-gray-800 group-hover:text-blue-700">Western Cape</h3>
+    </a>
+  </div>
+</section>
 
-  <HeroSection />
-  <FeatureGrid />
+<!-- ===== SECTION 2: Sector Quick Links ===== -->
+<section class="py-16 px-4 max-w-7xl mx-auto bg-gray-50">
+  <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+    Browse Tenders by Sector
+  </h2>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <a href="/tenders/construction" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Construction</h3>
+    </a>
+    <a href="/tenders/ict" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">ICT</h3>
+    </a>
+    <a href="/tenders/health" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Health</h3>
+    </a>
+    <a href="/tenders/education" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Education</h3>
+    </a>
+    <a href="/tenders/transport" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Transport</h3>
+    </a>
+    <a href="/tenders/agriculture" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Agriculture</h3>
+    </a>
+    <a href="/tenders/energy" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Energy</h3>
+    </a>
+    <a href="/tenders/security" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Security</h3>
+    </a>
+    <a href="/tenders/consulting" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Consulting</h3>
+    </a>
+    <a href="/tenders/cleaning" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Cleaning</h3>
+    </a>
+    <a href="/tenders/catering" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Catering</h3>
+    </a>
+    <a href="/tenders/legal" class="group bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+      <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">Legal</h3>
+    </a>
+  </div>
+</section>
 
-  <!-- Stats Section -->
-  <section class="bg-navy-900 py-16 text-white" aria-labelledby="stats-heading">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-      <h2
-        id="stats-heading"
-        class="mb-12 text-center font-display text-3xl font-bold text-white"
-      >
-        Built for South African procurement
-      </h2>
-      <div class="grid grid-cols-2 gap-8 sm:grid-cols-4">
-        {
-          stats.map((stat) => (
-            <div class="text-center">
-              <p class="font-display text-4xl font-bold text-gold-400">{stat.value}</p>
-              <p class="mt-1 text-sm text-sky-200">{stat.label}</p>
-            </div>
-          ))
-        }
-      </div>
-    </div>
-  </section>
-
-  <!-- How It Works -->
-  <section class="bg-white py-20 dark:bg-navy-950" aria-labelledby="how-heading">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-      <div class="mb-14 text-center">
-        <h2
-          id="how-heading"
-          class="font-display text-3xl font-bold text-navy-900 dark:text-white sm:text-4xl"
-        >
-          From registration to winning bid
-        </h2>
-        <p class="mx-auto mt-4 max-w-2xl text-gray-600 dark:text-gray-300">
-          Tenderpreneur walks you through every step of the government procurement journey.
+<!-- ===== SECTION 3: Latest Blog Posts ===== -->
+<section class="py-16 px-4 max-w-7xl mx-auto">
+  <div class="flex items-center justify-between mb-8">
+    <h2 class="text-3xl font-bold text-gray-900">Procurement Guides & Resources</h2>
+    <a href="/blog" class="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200">
+      View all articles →
+    </a>
+  </div>
+  <div class="grid gap-8 md:grid-cols-3">
+    <!-- Hardcoded placeholders – replace with dynamic data if needed -->
+    <article class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <div class="p-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+          <a href="/blog/how-to-win-your-first-government-tender" class="hover:text-blue-700 transition-colors">
+            How to Win Your First Government Tender in South Africa
+          </a>
+        </h3>
+        <p class="text-gray-600 line-clamp-3">
+          A step-by-step guide for newcomers, covering everything from finding the right opportunities to submitting a compliant bid.
         </p>
       </div>
-      <ol class="grid gap-8 sm:grid-cols-3" role="list">
-        {
-          [
-            {
-              step: '01',
-              title: 'Get compliant',
-              body: 'Register on the Central Supplier Database (CSD), get your Tax Clearance Pin, and update your B-BBEE certificate. Our compliance checker tells you exactly what's missing.',
-            },
-            {
-              step: '02',
-              title: 'Find the right tenders',
-              body: 'Filter 7,841+ open tenders by province, sector, rand value, B-BBEE preference level, and closing date. Save searches and get email alerts.',
-            },
-            {
-              step: '03',
-              title: 'Submit a winning bid',
-              body: 'Use our AI win-probability score to prioritise your pipeline. The PFMA Assistant answers your compliance questions. Download the right SBD forms instantly.',
-            },
-          ].map((item) => (
-            <li class="card relative">
-              <span class="font-display text-5xl font-bold text-sky-100 dark:text-navy-800">
-                {item.step}
-              </span>
-              <h3 class="mt-2 font-display text-xl font-semibold text-navy-900 dark:text-white">
-                {item.title}
-              </h3>
-              <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{item.body}</p>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
-  </section>
-
-  <!-- Testimonials -->
-  <section class="bg-sky-50 py-20 dark:bg-navy-900" aria-labelledby="testimonials-heading">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-      <h2
-        id="testimonials-heading"
-        class="mb-12 text-center font-display text-3xl font-bold text-navy-900 dark:text-white"
-      >
-        Trusted by South African SMMEs
-      </h2>
-      <div class="grid gap-8 sm:grid-cols-3">
-        {
-          testimonials.map((t) => (
-            <blockquote class="card">
-              <p class="text-sm italic text-gray-600 dark:text-gray-300">"{t.quote}"</p>
-              <footer class="mt-4">
-                <p class="font-semibold text-navy-900 dark:text-white">{t.author}</p>
-                <p class="text-xs text-gray-500">{t.company}</p>
-              </footer>
-            </blockquote>
-          ))
-        }
+    </article>
+    <article class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <div class="p-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+          <a href="/blog/understanding-bbbee-requirements" class="hover:text-blue-700 transition-colors">
+            Understanding B-BBEE Requirements for Tenders
+          </a>
+        </h3>
+        <p class="text-gray-600 line-clamp-3">
+          Learn how your B-BBEE scorecard affects your tender competitiveness and what documentation you need to submit.
+        </p>
       </div>
-    </div>
-  </section>
-
-  <!-- PFMA Teaser -->
-  <section class="bg-white py-20 dark:bg-navy-950" aria-labelledby="pfma-teaser-heading">
-    <div class="mx-auto max-w-4xl px-4 text-center sm:px-6">
-      <h2
-        id="pfma-teaser-heading"
-        class="font-display text-3xl font-bold text-navy-900 dark:text-white sm:text-4xl"
-      >
-        Confused by PFMA, PPPFA, or B-BBEE?
-      </h2>
-      <p class="mx-auto mt-4 max-w-2xl text-gray-600 dark:text-gray-300">
-        Our free PFMA knowledge base covers every aspect of South African government
-        procurement legislation — with plain-language explanations, real examples, and
-        citations to the actual regulations.
-      </p>
-      <div class="mt-8 flex flex-wrap justify-center gap-4">
-        <a href="/pfma" class="btn-primary">Explore PFMA Guide</a>
-        <a href="/blog" class="btn-secondary">Read our blog</a>
+    </article>
+    <article class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <div class="p-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+          <a href="/blog/central-supplier-database-registration" class="hover:text-blue-700 transition-colors">
+            Central Supplier Database Registration: A Complete Walkthrough
+          </a>
+        </h3>
+        <p class="text-gray-600 line-clamp-3">
+          Everything you need to know to register on the CSD, from required documents to avoiding common mistakes.
+        </p>
       </div>
-    </div>
-  </section>
+    </article>
+  </div>
+</section>
 
-  <!-- Final CTA -->
-  <section
-    class="bg-gradient-to-br from-civic-700 to-navy-900 py-20 text-white"
-    aria-labelledby="cta-heading"
-  >
-    <div class="mx-auto max-w-4xl px-4 text-center sm:px-6">
-      <h2
-        id="cta-heading"
-        class="font-display text-3xl font-bold text-white sm:text-4xl"
-      >
-        Start winning tenders today
-      </h2>
-      <p class="mx-auto mt-4 max-w-xl text-sky-200">
-        Free forever for PFMA research. Upgrade to Professional for live tender tracking and
-        AI win-probability scoring.
-      </p>
-      <div class="mt-8 flex flex-wrap justify-center gap-4">
-        <a
-          href="https://app.tenderpreneur.co.za/register"
-          class="inline-flex items-center gap-2 rounded-lg bg-gold-500 px-8 py-3 font-semibold text-white shadow-lg transition hover:bg-gold-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-400"
-        >
-          Get started free
-        </a>
-        <a
-          href="/pricing"
-          class="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-8 py-3 font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-        >
-          View pricing
-        </a>
+<!-- ===== SECTION 4: FAQ with JSON-LD Schema ===== -->
+<section class="py-16 px-4 max-w-4xl mx-auto">
+  <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+    Frequently Asked Questions
+  </h2>
+  <div class="space-y-4">
+    <details class="group bg-white rounded-xl shadow-sm border border-gray-200">
+      <summary class="flex justify-between items-center font-semibold text-gray-900 p-5 cursor-pointer list-none">
+        How do I find government tenders in South Africa?
+        <span class="ml-2 transition-transform duration-200 group-open:rotate-180">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </span>
+      </summary>
+      <div class="px-5 pb-5 text-gray-700">
+        Government tenders are published on the eTender Publication Portal, departmental websites, and various tender notice boards. You can also use aggregated platforms like tenderpreneurs to monitor opportunities across all provinces and sectors.
       </div>
-      <p class="mt-4 text-xs text-sky-300">No credit card required. Cancel anytime.</p>
-    </div>
-  </section>
-</BaseLayout>
+    </details>
+    <details class="group bg-white rounded-xl shadow-sm border border-gray-200">
+      <summary class="flex justify-between items-center font-semibold text-gray-900 p-5 cursor-pointer list-none">
+        What is eTenders and how does it work?
+        <span class="ml-2 transition-transform duration-200 group-open:rotate-180">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </span>
+      </summary>
+      <div class="px-5 pb-5 text-gray-700">
+        eTenders is the South African government’s official electronic tender portal where public sector contracts are advertised. Suppliers can search for tenders, download bid documents, and sometimes submit bids online.
+      </div>
+    </details>
+    <details class="group bg-white rounded-xl shadow-sm border border-gray-200">
+      <summary class="flex justify-between items-center font-semibold text-gray-900 p-5 cursor-pointer list-none">
+        How do I register on the Central Supplier Database?
+        <span class="ml-2 transition-transform duration-200 group-open:rotate-180">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </span>
+      </summary>
+      <div class="px-5 pb-5 text-gray-700">
+        Visit the CSD website, complete the online registration form, upload the required supporting documents (such as tax clearance certificate, B-BBEE certificate, and bank confirmation letter), and submit for verification.
+      </div>
+    </details>
+    <details class="group bg-white rounded-xl shadow-sm border border-gray-200">
+      <summary class="flex justify-between items-center font-semibold text-gray-900 p-5 cursor-pointer list-none">
+        What is PFMA compliance?
+        <span class="ml-2 transition-transform duration-200 group-open:rotate-180">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </span>
+      </summary>
+      <div class="px-5 pb-5 text-gray-700">
+        PFMA stands for the Public Finance Management Act. It sets out the financial management and procurement rules that government entities must follow to ensure transparency, fairness, and value for money in tender processes.
+      </div>
+    </details>
+    <details class="group bg-white rounded-xl shadow-sm border border-gray-200">
+      <summary class="flex justify-between items-center font-semibold text-gray-900 p-5 cursor-pointer list-none">
+        How are B-BBEE points calculated for tenders?
+        <span class="ml-2 transition-transform duration-200 group-open:rotate-180">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </span>
+      </summary>
+      <div class="px-5 pb-5 text-gray-700">
+        B-BBEE points are awarded based on your verified scorecard. Typically, 10 or 20 points are allocated to B-BBEE status level in the total tender evaluation, with higher levels earning more points. The exact calculation depends on the specific tender’s Preferential Procurement regulations.
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- FAQPage JSON-LD schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I find government tenders in South Africa?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Government tenders are published on the eTender Publication Portal, departmental websites, and various tender notice boards. You can also use aggregated platforms like tenderpreneurs to monitor opportunities across all provinces and sectors."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is eTenders and how does it work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "eTenders is the South African government’s official electronic tender portal where public sector contracts are advertised. Suppliers can search for tenders, download bid documents, and sometimes submit bids online."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I register on the Central Supplier Database?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Visit the CSD website, complete the online registration form, upload the required supporting documents (such as tax clearance certificate, B-BBEE certificate, and bank confirmation letter), and submit for verification."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is PFMA compliance?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PFMA stands for the Public Finance Management Act. It sets out the financial management and procurement rules that government entities must follow to ensure transparency, fairness, and value for money in tender processes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How are B-BBEE points calculated for tenders?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "B-BBEE points are awarded based on your verified scorecard. Typically, 10 or 20 points are allocated to B-BBEE status level in the total tender evaluation, with higher levels earning more points. The exact calculation depends on the specific tender’s Preferential Procurement regulations."
+      }
+    }
+  ]
+}
+</script>

@@ -1,0 +1,224 @@
+[
+  {
+    "url": "/",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 1.0
+  },
+  {
+    "url": "/tenders/eastern-cape",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/free-state",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/gauteng",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/kwazulu-natal",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/limpopo",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/mpumalanga",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/northern-cape",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/north-west",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/western-cape",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/construction",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/ict",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/health",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/education",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/transport",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/agriculture",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/energy",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/water-sanitation",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/manufacturing",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/tourism",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/financial-services",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/tenders/legal-services",
+    "lastmod": "2026-05-12",
+    "changefreq": "daily",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/pfma-compliance",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/csd-registration",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/pppfa-rule",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/bbbee-levels",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/compliant-bid",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/sbd-forms",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/non-responsive-tenders",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/win-probability",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/western-cape-tenders-2026",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/gauteng-tenders",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/kzn-procurement",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/construction-tenders-2026",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/ict-tenders-smmes",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/etenders-guide",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+  {
+    "url": "/blog/bid-disqualification",
+    "lastmod": "2026-05-12",
+    "changefreq": "weekly",
+    "priority": 0.8
+  }
+]
