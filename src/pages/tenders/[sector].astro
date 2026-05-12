@@ -4,12 +4,14 @@ import tenders from '../../data/tenders-seed.json';
 import TenderCard from '../../components/TenderCard.astro';
 
 interface Tender {
+  id: number;
   title: string;
+  entity: string;
   province: string;
   sector: string;
-  closingDate: string;
-  description: string;
-  link?: string;
+  value: string;
+  closing_date: string;
+  status: string;
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
