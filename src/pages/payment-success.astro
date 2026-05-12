@@ -1,0 +1,46 @@
+---
+// src/pages/payment-success.astro
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Successful - Tenderpreneurs</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f7fa;
+    }
+    .message {
+      text-align: center;
+      background: white;
+      padding: 2rem 3rem;
+      border-radius: 1rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    }
+    h1 { color: #166534; margin-bottom: 0.5rem; }
+    p { color: #4b5563; }
+  </style>
+</head>
+<body>
+  <div class="message">
+    <h1>🎉 Payment successful!</h1>
+    <p>Setting up your account…</p>
+    <p style="font-size:0.85rem; color:#9ca3af;">Redirecting to your dashboard in a few seconds.</p>
+    <p><a href="/dashboard">Go to dashboard now</a></p>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 3000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+---
+// src/pages/payment-cancelled.astro
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Cancelled - Tenderpreneurs</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f7fa;
+    }
+    .message {
+      text-align: center;
+      background: white;
+      padding: 2rem 3rem;
+      border-radius: 1rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    }
+    h1 { color: #92400e; margin-bottom: 0.5rem; }
+    p { color: #4b5563; margin-bottom: 2rem; }
+    a {
+      display: inline-block;
+      background: #1d4ed8;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover { background: #1e40af; }
+  </style>
+</head>
+<body>
+  <div class="message">
+    <h1>💳 Payment cancelled</h1>
+    <p>No worries — you can upgrade anytime when you’re ready.</p>
+    <a href="/pricing">← Back to pricing</a>
+  </div>
+</body>
+</html>
