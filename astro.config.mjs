@@ -1,14 +1,16 @@
 import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
 import tailwind from '@astrojs/tailwind';
-import sitemap from '@astrojs/sitemap';
+// import sitemap from '@astrojs/sitemap';   // ← disabled for now
 
 export default defineConfig({
   site: 'https://tenderpreneurs.co.za',
+
   output: 'hybrid',
   adapter: cloudflare(),
+
   integrations: [
     tailwind(),
-    sitemap(),
+    // sitemap(),   // ← commented out
   ],
 });

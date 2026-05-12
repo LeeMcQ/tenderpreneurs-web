@@ -5,8 +5,8 @@ import Footer from '@/components/Footer.astro';
 import '@/styles/globals.css';
 
 export interface Props {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   canonical?: string;
   ogImage?: string;
   ogType?: 'website' | 'article';
@@ -20,12 +20,12 @@ export interface Props {
 }
 
 const {
-  title,
-  description,
-  canonical,
-  ogImage,
-  ogType,
-  noIndex,
+  title = 'Tenderpreneur',
+  description = 'Government tenders, PFMA guides and business opportunities in South Africa',
+  canonical = 'https://tenderpreneur.co.za',
+  ogImage = 'https://tenderpreneur.co.za/og-default.png',
+  ogType = 'website',
+  noIndex = false,
   schema,
   publishedTime,
   modifiedTime,
@@ -76,7 +76,7 @@ const orgSchema = {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- SEO -->
+    <!-- SEO (defaults + org schema) -->
     <SEO
       title={title}
       description={description}
