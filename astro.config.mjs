@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import AstroPWA from '@vite-pwa/astro';
 import cloudflare from '@astrojs/cloudflare';
 import tailwind from '@astrojs/tailwind';
-import sitemap from '@astrojs/sitemap';
+//import sitemap from '@astrojs/sitemap';
 
 // NOTE: previously this file declared `integrations:` TWICE in the same
 // object literal. In JS, the second key silently overwrites the first —
@@ -25,7 +25,7 @@ export default defineConfig({
       // injected base stylesheet to avoid double-loading.
       applyBaseStyles: false,
     }),
-    sitemap(),
+    //sitemap(),
     AstroPWA({
       registerType: 'autoUpdate',
       strategies: 'injectManifest',
