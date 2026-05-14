@@ -37,7 +37,6 @@
   --shadow-card-hover: 0 10px 40px rgba(12, 27, 51, 0.14);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --header-height: 72px;
-  --shadow-card-hover: 0 20px 25px -5px rgb(12 27 51 / 0.15), 0 8px 10px -6px rgb(12 27 51 / 0.15);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -182,32 +181,6 @@
     box-shadow: var(--shadow-card);
     transition: box-shadow var(--transition-base), transform var(--transition-base);
   }
-  /* ====================== TILE CARDS ====================== */
-@layer components {
-  .tile {
-    @apply relative flex items-center justify-between gap-3 p-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 hover:border-[var(--color-gold)];
-    box-shadow: var(--shadow-card);
-  }
-
-  .tile-title {
-    @apply font-semibold text-lg leading-tight text-[var(--color-text)];
-  }
-
-  .tile-arrow {
-    @apply w-6 h-6 text-[var(--color-gold)] transition-transform group-hover:rotate-45;
-  }
-
-  /* Province tiles get a subtle flag-like accent */
-  .tile::before {
-    content: '';
-    @apply absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-[var(--color-civic)] to-[var(--color-gold)] rounded-l-2xl opacity-10;
-  }
-
-  .dark .tile {
-    border-color: #1E3A5F;
-    background: #0C1B33;
-  }
-}
 
   .card:hover {
     box-shadow: var(--shadow-card-hover);
