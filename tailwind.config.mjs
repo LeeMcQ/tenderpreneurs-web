@@ -4,6 +4,9 @@ export default {
   darkMode: 'media',
   theme: {
     extend: {
+		boxShadow: {
+  'card-hover': '0 20px 25px -5px rgb(12 27 51 / 0.15), 0 8px 10px -6px rgb(12 27 51 / 0.15)',
+},
       colors: {
         navy: {
           DEFAULT: '#0C1B33',

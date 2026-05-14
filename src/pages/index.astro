@@ -18,18 +18,18 @@ const provinces = [
 ];
 
 const sectors = [
-  { name: 'Construction',  slug: 'construction',  icon: '🏗️' },
-  { name: 'ICT',           slug: 'ict',           icon: '💻' },
-  { name: 'Health',        slug: 'health',        icon: '🏥' },
-  { name: 'Education',     slug: 'education',     icon: '🎓' },
-  { name: 'Transport',     slug: 'transport',     icon: '🚛' },
-  { name: 'Agriculture',   slug: 'agriculture',   icon: '🌾' },
-  { name: 'Energy',        slug: 'energy',        icon: '⚡' },
-  { name: 'Security',      slug: 'security',      icon: '🛡️' },
-  { name: 'Consulting',    slug: 'consulting',    icon: '💼' },
-  { name: 'Cleaning',      slug: 'cleaning',      icon: '🧹' },
-  { name: 'Catering',      slug: 'catering',      icon: '🍽️' },
-  { name: 'Legal',         slug: 'legal',         icon: '⚖️' },
+  { name: 'Construction', slug: 'construction', icon: '🏗️' },
+  { name: 'ICT',          slug: 'ict',          icon: '💻' },
+  { name: 'Health',       slug: 'health',       icon: '🩺' },
+  { name: 'Education',    slug: 'education',    icon: '🎓' },
+  { name: 'Transport',    slug: 'transport',    icon: '🚚' },
+  { name: 'Agriculture',  slug: 'agriculture',  icon: '🌾' },
+  { name: 'Energy',       slug: 'energy',       icon: '⚡' },
+  { name: 'Security',     slug: 'security',     icon: '🛡️' },
+  { name: 'Consulting',   slug: 'consulting',   icon: '📋' },
+  { name: 'Cleaning',     slug: 'cleaning',     icon: '🧹' },
+  { name: 'Catering',     slug: 'catering',     icon: '🍽️' },
+  { name: 'Legal',        slug: 'legal',        icon: '⚖️' },
 ];
 
 const featuredPosts = [
@@ -114,18 +114,19 @@ const faqSchema = {
         </p>
       </div>
 
-      <ul role="list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 md:gap-4">
-        {provinces.map((p) => (
-          <li>
-            <a href={`/tenders/${p.slug}`} class="tile" aria-label={`Browse ${p.name} tenders`}>
-              <span class="tile-title">{p.name}</span>
-              <svg class="tile-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M5 10h10m-4-4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </a>
-          </li>
-        ))}
-      </ul>
+      <ul role="list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+  {sectors.map((s) => (
+    <li key={s.slug}>
+      <a href={`/tenders/${s.slug}`} class="tile group">
+        <span class="text-4xl">{s.icon}</span>
+        <span class="tile-title">{s.name}</span>
+        <svg class="tile-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M5 10h10m-4-4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </li>
+  ))}
+</ul>
     </div>
   </section>
 
