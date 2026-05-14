@@ -1,0 +1,28 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SEO from '@/components/SEO.astro';
+---
+
+<BaseLayout bodyClass="bg-[var(--color-surface-2)]">
+  <SEO slot="head" title="Payment Successful — Tenderpreneur" description="Your payment was successful." noIndex={true} />
+
+  <section class="section">
+    <div class="container max-w-lg text-center">
+      <div class="card p-10">
+        <div class="text-5xl mb-4" aria-hidden="true">🎉</div>
+        <h1 class="text-2xl font-bold text-green-700 dark:text-green-400 mb-2">
+          Payment successful!
+        </h1>
+        <p class="text-[var(--color-text-muted)] mb-1">Setting up your account…</p>
+        <p class="text-sm text-[var(--color-text-muted)] mb-6">
+          Redirecting to your dashboard in a few seconds.
+        </p>
+        <a href="/dashboard" class="btn-primary">Go to dashboard now</a>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    setTimeout(() => { window.location.href = '/dashboard'; }, 3000);
+  </script>
+</BaseLayout>

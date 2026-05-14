@@ -1,0 +1,83 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SEO from '@/components/SEO.astro';
+import { getCollection } from 'astro:content';
+
+const seoData = {
+  title: 'Blog — Procurement Guides & Insights | Tenderpreneur',
+  description:
+    'Expert advice on winning SA government tenders. Guides on B-BBEE, CSD registration, PFMA compliance, tender pricing, and more.',
+  canonical: 'https://tenderpreneur.co.za/blog',
+};
+
+const posts = await getCollection('blog');
+const sortedPosts = posts
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime());
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+---
+
+<BaseLayout>
+  <SEO slot="head" {...seoData} />
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-navy-900 to-civic-800 py-20 text-white">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6">
+      <nav aria-label="Breadcrumb" class="breadcrumb mb-6">
+        <ol class="flex items-center gap-2 text-sm text-sky-300">
+          <li><a href="/" class="hover:text-white">Home</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page" class="text-white">Blog</li>
+        </ol>
+      </nav>
+      <h1 class="font-display text-4xl font-bold text-white sm:text-5xl">Blog</h1>
+      <p class="mt-4 max-w-2xl text-lg text-sky-200">
+        Expert advice for winning more government contracts.
+      </p>
+    </div>
+  </section>
+
+  <!-- Posts grid -->
+  <section class="section bg-white dark:bg-navy-950">
+    <div class="container">
+      {sortedPosts.length === 0 ? (
+        <div class="text-center py-12">
+          <p class="text-xl text-gray-500">No posts published yet — check back soon.</p>
+        </div>
+      ) : (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {sortedPosts.map((post) => (
+            <a
+              href={`/blog/${post.slug}`}
+              class="card flex flex-col hover:-translate-y-1 hover:shadow-lg transition p-0 overflow-hidden"
+            >
+              <div class="gradient-sky h-28 flex items-end p-4">
+                {post.data.category && (
+                  <span class="badge badge-civic">{post.data.category}</span>
+                )}
+              </div>
+              <div class="p-6 flex flex-col flex-1">
+                <span class="text-xs text-[var(--color-text-muted)] mb-2">
+                  {formatDate(post.data.publishedDate)}
+                  {post.data.readingTime && <span> · {post.data.readingTime} min read</span>}
+                </span>
+                <h2 class="text-lg font-bold text-[var(--color-navy)] dark:text-white mb-2 leading-snug">
+                  {post.data.title}
+                </h2>
+                <p class="text-sm text-[var(--color-text-muted)] line-clamp-3 flex-1">
+                  {post.data.description}
+                </p>
+                <span class="mt-4 text-sm font-semibold text-[var(--color-civic)]">
+                  Read more →
+                </span>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>

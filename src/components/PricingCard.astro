@@ -8,6 +8,7 @@ export interface Props {
   cta: string;
   ctaHref: string;
   highlighted?: boolean;
+  featured?: boolean;
   badge?: string;
   icon?: string;
 }
@@ -21,13 +22,17 @@ const {
   cta,
   ctaHref,
   highlighted = false,
+  featured = false,
   badge,
   icon = '📦',
 } = Astro.props;
+
+// Accept either prop name (pricing.astro passes `featured`, docs say `highlighted`)
+const isHighlighted = highlighted || featured;
 ---
 
 <article
-  class={`pricing-card ${highlighted ? 'pricing-card--featured' : ''}`}
+  class={`pricing-card ${isHighlighted ? 'pricing-card--featured' : ''}`}
   aria-label={`${tier} plan`}
 >
   {badge && (
@@ -69,7 +74,7 @@ const {
 
   <a
     href={ctaHref}
-    class={`pricing-cta ${highlighted ? 'btn btn-primary' : 'btn btn-outline'}`}
+    class={`pricing-cta ${isHighlighted ? 'btn btn-primary' : 'btn btn-outline'}`}
     rel={ctaHref.startsWith('http') ? 'noopener' : undefined}
     aria-label={`${cta} — ${tier} plan`}
   >

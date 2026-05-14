@@ -1,0 +1,130 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SEO from '@/components/SEO.astro';
+import TenderCard from '@/components/TenderCard.astro';
+import tenders from '@/data/tenders-seed.json';
+
+interface Tender {
+  id?: number;
+  title: string;
+  entity?: string;
+  province: string;
+  sector: string;
+  value?: string;
+  closing_date?: string;
+  closingDate?: string;
+  status?: string;
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const sectors = [...new Set((tenders as Tender[]).map((t) => t.sector))];
+  return sectors.map((sector) => ({
+    params: { sector },
+  }));
+};
+
+const { sector } = Astro.params;
+if (!sector) return Astro.redirect('/tenders');
+
+const filtered = (tenders as Tender[]).filter(
+  (t) => t.sector.toLowerCase() === sector.toLowerCase()
+);
+
+const sectorName = sector.charAt(0).toUpperCase() + sector.slice(1);
+
+const seoData = {
+  title: `${sectorName} Government Tenders & Contracts | Tenderpreneur`,
+  description: `Browse the latest ${sectorName} government tenders, RFQs and procurement opportunities across South Africa.`,
+  canonical: `https://tenderpreneur.co.za/tenders/${sector}`,
+};
+
+const faqs = [
+  {
+    q: `What are the most common ${sectorName} tenders?`,
+    a: `${sectorName} tenders typically include supply, installation, and maintenance contracts issued by national and provincial departments.`,
+  },
+  {
+    q: `How often are new ${sectorName} tenders published?`,
+    a: `New ${sectorName} opportunities appear weekly on the eTender portal and in local newspapers. Tenderpreneur checks hourly for updates.`,
+  },
+  {
+    q: `Can I get alerts for only ${sectorName} tenders?`,
+    a: `Yes — Tenderpreneur lets you filter alerts by sector, so you only see ${sectorName} bids that match your business.`,
+  },
+];
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneur.co.za/' },
+    { '@type': 'ListItem', position: 2, name: 'Tenders', item: 'https://tenderpreneur.co.za/tenders' },
+    { '@type': 'ListItem', position: 3, name: `${sectorName} Tenders`, item: `https://tenderpreneur.co.za/tenders/${sector}` },
+  ],
+};
+---
+
+<BaseLayout>
+  <SEO slot="head" {...seoData} schema={breadcrumbSchema} />
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-navy-900 to-civic-800 py-20 text-white">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6">
+      <nav aria-label="Breadcrumb" class="breadcrumb mb-6">
+        <ol class="flex items-center gap-2 text-sm text-sky-300">
+          <li><a href="/" class="hover:text-white">Home</a></li>
+          <li aria-hidden="true">›</li>
+          <li><a href="/tenders" class="hover:text-white">Tenders</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page" class="text-white">{sectorName}</li>
+        </ol>
+      </nav>
+      <h1 class="font-display text-4xl font-bold text-white sm:text-5xl">
+        {sectorName} Tenders
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-sky-200">
+        Browse open {sectorName.toLowerCase()} procurement opportunities across all 9 South African provinces.
+      </p>
+    </div>
+  </section>
+
+  <!-- Tender cards -->
+  <section class="section bg-white dark:bg-navy-950">
+    <div class="container">
+      {filtered.length === 0 ? (
+        <div class="text-center py-16">
+          <div class="text-5xl mb-4" aria-hidden="true">🔍</div>
+          <h2 class="text-2xl font-bold text-[var(--color-navy)] dark:text-white mb-2">
+            No {sectorName.toLowerCase()} tenders listed yet
+          </h2>
+          <p class="text-[var(--color-text-muted)] max-w-md mx-auto mb-6">
+            We're building the live feed. Sign up to get notified the moment {sectorName.toLowerCase()} tenders go live.
+          </p>
+          <a href="/tenders" class="btn-secondary">Browse all tenders</a>
+        </div>
+      ) : (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filtered.map((tender) => (
+            <TenderCard tender={tender} />
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section-sm bg-[var(--color-surface-2)]">
+    <div class="container max-w-3xl">
+      <h2 class="text-2xl font-bold text-[var(--color-navy)] dark:text-white mb-8">FAQ</h2>
+      <dl class="space-y-6">
+        {faqs.map((faq) => (
+          <div>
+            <dt class="font-semibold text-[var(--color-navy)] dark:text-white">{faq.q}</dt>
+            <dd class="mt-2 text-sm text-[var(--color-text-muted)]">{faq.a}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+</BaseLayout>

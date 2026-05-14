@@ -1,43 +1,56 @@
 ---
 import { getCollection } from 'astro:content';
-import { format } from 'date-fns';
 
 export interface Props {
   tags: string[];
+  currentSlug?: string;
 }
 
-const { tags } = Astro.props;
+const { tags, currentSlug } = Astro.props;
 
-// Option 1: fetch all blog posts and filter by common tags
 const allPosts = await getCollection('blog');
 
-const related = allPosts
+// Filter by common tags, excluding the current post
+let related = allPosts
+  .filter((p) => p.slug !== currentSlug && !p.data.draft)
   .filter((p) => p.data.tags && p.data.tags.some((tag: string) => tags.includes(tag)))
-  .slice(0, 3); // take top 3 (most recent first – assuming ordered by date)
+  .slice(0, 3);
 
-// If not enough related posts, fallback to most recent posts
-const fallbackPosts = allPosts.slice(0, 3);
-const postsToShow = related.length >= 1 ? related : fallbackPosts;
+// Fallback to most recent if no tag matches
+if (related.length < 1) {
+  related = allPosts
+    .filter((p) => p.slug !== currentSlug && !p.data.draft)
+    .sort((a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime())
+    .slice(0, 3);
+}
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 ---
 
-<div class="mt-12">
-  <h2 class="text-2xl font-bold text-gray-900 mb-6">Related Articles</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    {postsToShow.map((post) => (
-      <a
-        href={`/blog/${post.slug}`}
-        class="block bg-white rounded-xl shadow hover:shadow-md p-5 border border-gray-100 transition"
-      >
-        <span class="text-xs text-gray-400">
-          {format(post.data.date, 'd MMM yyyy')}
-        </span>
-        <h3 class="font-semibold text-gray-900 mt-1 mb-1">
-          {post.data.title}
-        </h3>
-        <p class="text-sm text-gray-600 line-clamp-2">
-          {post.data.description}
-        </p>
-      </a>
-    ))}
+{related.length > 0 && (
+  <div class="mt-12">
+    <h2 class="text-2xl font-bold text-[var(--color-navy)] dark:text-white mb-6">
+      Related Articles
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {related.map((post) => (
+        <a
+          href={`/blog/${post.slug}`}
+          class="card flex flex-col p-5 hover:-translate-y-1 hover:shadow-lg transition"
+        >
+          <span class="text-xs text-[var(--color-text-muted)]">
+            {formatDate(post.data.publishedDate)}
+          </span>
+          <h3 class="font-semibold text-[var(--color-navy)] dark:text-white mt-1 mb-1 leading-snug">
+            {post.data.title}
+          </h3>
+          <p class="text-sm text-[var(--color-text-muted)] line-clamp-2">
+            {post.data.description}
+          </p>
+        </a>
+      ))}
+    </div>
   </div>
-</div>
+)}
