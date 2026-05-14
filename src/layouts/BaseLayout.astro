@@ -20,9 +20,9 @@ export interface Props {
 }
 
 const {
-  title = 'Tenderpreneur',
-  description = 'Government tenders, PFMA guides and business opportunities in South Africa',
-  canonical = 'https://tenderpreneur.co.za',
+  title = 'Tenderpreneur — South African Government Tender Intelligence',
+  description = 'Browse live SA government tenders, score win-probability with AI, and get instant PFMA, PPPFA and B-BBEE answers. Built for South African SMMEs.',
+  canonical,
   ogImage = 'https://tenderpreneur.co.za/og-default.png',
   ogType = 'website',
   noIndex = false,
@@ -61,11 +61,10 @@ const orgSchema = {
 <html lang="en-ZA" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-	<title>Tenderpreneur - South African Government Tenders</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <!-- Favicon -->
+    <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -73,11 +72,25 @@ const orgSchema = {
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#0C1B33" />
 
-    <!-- Google Fonts preconnect -->
+    <!--
+      Fonts: load via <link> with preconnect + display=swap so the browser
+      can parallelise font discovery with the rest of the HTML. The old
+      approach (CSS @import inside globals.css) was render-blocking and
+      cost ~400ms of LCP on mobile.
+    -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;900&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;900&display=swap"
+    />
 
-    <!-- SEO (defaults + org schema) -->
+    <!-- SEO (title, description, OG, Twitter, schema) -->
     <SEO
       title={title}
       description={description}
@@ -103,7 +116,7 @@ const orgSchema = {
     <slot name="head" />
   </head>
 
-  <body class={`min-h-screen flex flex-col ${bodyClass}`}>
+  <body class={`min-h-screen flex flex-col bg-[var(--color-surface)] text-[var(--color-text)] ${bodyClass}`}>
     <!-- Skip to content (a11y) -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
