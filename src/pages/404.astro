@@ -4,60 +4,65 @@ import SEO from '@components/SEO.astro';
 
 const seoData = {
   title: '404 — Page Not Found | Tenderpreneur',
-  description: 'The page you were looking for doesn\'t exist. Return to Tenderpreneur to browse government tenders and PFMA guides.',
+  description: "The page you were looking for doesn't exist. Return to Tenderpreneur to browse government tenders and PFMA guides.",
   canonical: 'https://tenderpreneur.co.za/404',
   ogImage: 'https://tenderpreneur.co.za/og-default.png',
+  noIndex: true,
 };
 
 const quickLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/pfma', label: 'PFMA Knowledge Base' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/tenders', label: 'Browse Tenders' },
-  { href: '/pricing', label: 'Pricing' },
+  { href: '/', label: 'Home', icon: '🏠' },
+  { href: '/tenders', label: 'Browse Tenders', icon: '📋' },
+  { href: '/pfma', label: 'PFMA Knowledge Base', icon: '📚' },
+  { href: '/blog', label: 'Blog', icon: '📰' },
+  { href: '/pricing', label: 'Pricing', icon: '💰' },
 ];
 ---
 
 <BaseLayout>
   <SEO slot="head" {...seoData} />
 
-  <section class="flex min-h-[70vh] items-center bg-white py-20 dark:bg-navy-950">
-    <div class="mx-auto max-w-2xl px-4 text-center sm:px-6">
-      <!-- Illustrated number -->
-      <p class="font-display text-[8rem] font-bold leading-none text-sky-100 dark:text-navy-800" aria-hidden="true">
+  <section class="flex min-h-[80vh] items-center bg-[var(--color-surface-2)] py-20">
+    <div class="container max-w-2xl text-center">
+      <!-- Giant 404 — gold gradient, properly visible -->
+      <p
+        class="font-display font-extrabold leading-none text-gradient-gold select-none"
+        style="font-size: clamp(7rem, 18vw, 12rem);"
+        aria-hidden="true"
+      >
         404
       </p>
-      <div class="-mt-8">
-        <h1 class="font-display text-3xl font-bold text-navy-900 dark:text-white sm:text-4xl">
-          Page not found
+
+      <div class="-mt-4 sm:-mt-8">
+        <h1 class="font-display text-3xl sm:text-4xl font-bold text-[var(--color-navy)] dark:text-white">
+          That page took an early closing date.
         </h1>
-        <p class="mx-auto mt-4 max-w-md text-gray-600 dark:text-gray-300">
-          Sorry, we couldn't find that page. It may have moved, been removed, or the URL
-          might have a typo.
+        <p class="mx-auto mt-4 max-w-md text-[var(--color-text-muted)] dark:text-gray-300">
+          We couldn't find what you were looking for. The URL may have moved,
+          been removed, or contain a typo.
         </p>
 
         <!-- Quick links -->
-        <nav aria-label="Helpful links" class="mt-8">
-          <p class="mb-3 text-sm font-medium text-gray-500 dark:text-gray-400">
-            Try one of these instead:
+        <nav aria-label="Helpful links" class="mt-10">
+          <p class="mb-4 text-xs font-bold tracking-[0.18em] uppercase text-[var(--color-text-muted)]">
+            Try one of these instead
           </p>
-          <ul class="flex flex-wrap justify-center gap-2">
-            {
-              quickLinks.map((link) => (
-                <li>
-                  <a
-                    href={link.href}
-                    class="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-navy-900 transition hover:border-civic-400 hover:bg-sky-50 hover:text-civic-700 dark:border-navy-700 dark:bg-navy-800 dark:text-white dark:hover:bg-navy-700"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))
-            }
+          <ul class="flex flex-wrap justify-center gap-2.5">
+            {quickLinks.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  class="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-navy)] transition hover:border-civic-300 hover:bg-civic-50 hover:text-civic-700 hover:shadow-sm dark:bg-navy-700 dark:text-white dark:hover:bg-navy-600"
+                >
+                  <span aria-hidden="true">{link.icon}</span>
+                  {link.label}
+                </a>
+              </li>
+            ))}
           </ul>
         </nav>
 
-        <div class="mt-10">
+        <div class="mt-12">
           <a href="/" class="btn-primary">
             ← Back to Tenderpreneur
           </a>
