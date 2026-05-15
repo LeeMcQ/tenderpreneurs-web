@@ -1,235 +1,74 @@
 ---
+/**
+ * Footer.astro
+ *
+ * Site footer. Houses:
+ *   - The three required legal links (/privacy, /terms, /cookies).
+ *   - The "Cookie settings" button that re-opens the consent banner.
+ *     This is the POPIA "withdrawal of consent" entry point — it must
+ *     remain visible on every page so consent stays as easy to withdraw
+ *     as it was to give (POPIA s.11(2)(b)).
+ */
 const year = new Date().getFullYear();
-
-const footerLinks = {
-  platform: {
-    heading: 'Platform',
-    links: [
-      { label: 'Browse Tenders', href: '/tenders' },
-      { label: 'Win Probability AI', href: '/#features' },
-      { label: 'PFMA Assistant', href: '/pfma' },
-      { label: 'Pricing', href: '/pricing' },
-    ],
-  },
-  learn: {
-    heading: 'Learn',
-    links: [
-      { label: 'PFMA Guide', href: '/pfma' },
-      { label: 'Blog', href: '/blog' },
-      { label: 'CSD Registration', href: '/blog/how-to-register-on-csd-2026-guide' },
-      { label: 'B-BBEE Explained', href: '/pfma/b-bbee' },
-    ],
-  },
-  company: {
-    heading: 'Company',
-    links: [
-      { label: 'About', href: '/about' },
-      { label: 'Privacy Policy', href: '/privacy' },
-      { label: 'Terms of Service', href: '/terms' },
-      { label: 'Contact', href: 'mailto:hello@tenderpreneur.co.za' },
-    ],
-  },
-};
 ---
 
-<footer class="footer" role="contentinfo">
-  <div class="container">
-    <div class="footer-grid">
-      <!-- Brand column -->
-      <div class="footer-brand">
-        <a href="/" class="footer-logo" aria-label="Tenderpreneur home">
-          <span class="footer-logo-mark" aria-hidden="true">TP</span>
-          <span class="footer-logo-text">Tenderpreneur</span>
+<footer class="border-t border-slate-200 bg-slate-50 text-slate-700">
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 gap-8 sm:grid-cols-4">
+      <div class="col-span-2">
+        <a href="/" class="inline-flex items-center gap-2">
+          <span class="text-base font-semibold text-slate-900">Tenderpreneur</span>
         </a>
-        <p class="footer-tagline">
-          AI-powered government tender intelligence for South African SMMEs. Navigate procurement. Win more bids.
+        <p class="mt-3 max-w-sm text-sm text-slate-600">
+          AI-powered government tender intelligence for South African SMMEs.
         </p>
-        <div class="footer-badges">
-          <span class="badge badge-civic">🇿🇦 South Africa</span>
-          <span class="badge badge-gold">POPIA Compliant</span>
-        </div>
       </div>
 
-      <!-- Nav columns -->
-      {Object.entries(footerLinks).map(([key, section]) => (
-        <div class="footer-col">
-          <h3 class="footer-heading">{section.heading}</h3>
-          <ul class="footer-list" role="list">
-            {section.links.map((link) => (
-              <li>
-                <a href={link.href} class="footer-link">
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      <div>
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Product</h3>
+        <ul class="mt-3 space-y-2 text-sm">
+          <li><a class="hover:text-slate-900" href="/">Home</a></li>
+          <li><a class="hover:text-slate-900" href="/pricing">Pricing</a></li>
+          <li><a class="hover:text-slate-900" href="/about">About</a></li>
+          <li><a class="hover:text-slate-900" href="/blog">Blog</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Legal</h3>
+        <ul class="mt-3 space-y-2 text-sm">
+          <li>
+            <a class="hover:text-slate-900" href="/privacy" data-testid="footer-privacy-link">
+              Privacy Policy
+            </a>
+          </li>
+          <li>
+            <a class="hover:text-slate-900" href="/terms" data-testid="footer-terms-link">
+              Terms of Service
+            </a>
+          </li>
+          <li>
+            <a class="hover:text-slate-900" href="/cookies" data-testid="footer-cookies-link">
+              Cookies Policy
+            </a>
+          </li>
+          <li>
+            <button
+              type="button"
+              data-testid="footer-cookie-settings"
+              class="text-left underline decoration-slate-400 underline-offset-2 hover:text-slate-900"
+              onclick="if (window.tpConsent) { window.tpConsent.open(); }"
+            >
+              Cookie settings
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
 
-    <!-- Bottom bar -->
-    <div class="footer-bottom">
-      <p class="footer-copy">
-        &copy; {year} Tenderpreneur (Pty) Ltd. All rights reserved.
-        Built for SA SMMEs. Not affiliated with National Treasury.
-      </p>
-      <div class="footer-legal">
-        <a href="/privacy" class="footer-legal-link">Privacy</a>
-        <span aria-hidden="true">·</span>
-        <a href="/terms" class="footer-legal-link">Terms</a>
-        <span aria-hidden="true">·</span>
-        <a href="/blog/rss.xml" class="footer-legal-link" aria-label="RSS Feed">RSS</a>
-      </div>
+    <div class="mt-10 flex flex-col gap-2 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+      <p>© {year} Tenderpreneur (Pty) Ltd. All rights reserved.</p>
+      <p>Registered in South Africa. POPIA Information Officer: <a class="underline" href="mailto:privacy@tenderpreneur.co.za">privacy@tenderpreneur.co.za</a></p>
     </div>
   </div>
 </footer>
-
-<style>
-  .footer {
-    background: #0C1B33;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 4rem 0 2rem;
-    color: rgba(219, 234, 254, 0.7);
-  }
-
-  .footer-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-    margin-bottom: 3rem;
-  }
-
-  @media (min-width: 640px) {
-    .footer-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .footer-grid {
-      grid-template-columns: 2fr 1fr 1fr 1fr;
-    }
-  }
-
-  .footer-brand {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .footer-logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-  }
-
-  .footer-logo-mark {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #D97706, #F59E0B);
-    border-radius: 7px;
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    font-size: 12px;
-    color: #fff;
-  }
-
-  .footer-logo-text {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: #fff;
-  }
-
-  .footer-tagline {
-    font-size: 0.875rem;
-    line-height: 1.6;
-    max-width: 28ch;
-  }
-
-  .footer-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .footer-col {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .footer-heading {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: rgba(219, 234, 254, 0.4);
-  }
-
-  .footer-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
-  }
-
-  .footer-link {
-    font-size: 0.875rem;
-    color: rgba(219, 234, 254, 0.65);
-    text-decoration: none;
-    transition: color 0.15s;
-  }
-
-  .footer-link:hover {
-    color: #fff;
-  }
-
-  .footer-bottom {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  @media (min-width: 640px) {
-    .footer-bottom {
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-    }
-  }
-
-  .footer-copy {
-    font-size: 0.75rem;
-    color: rgba(219, 234, 254, 0.4);
-    line-height: 1.5;
-  }
-
-  .footer-legal {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.75rem;
-    color: rgba(219, 234, 254, 0.4);
-    flex-shrink: 0;
-  }
-
-  .footer-legal-link {
-    color: rgba(219, 234, 254, 0.4);
-    text-decoration: none;
-    transition: color 0.15s;
-  }
-
-  .footer-legal-link:hover {
-    color: #fff;
-  }
-</style>

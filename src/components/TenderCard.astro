@@ -1,33 +1,77 @@
 ---
-interface Tender {
+export interface Props {
+  id: string;
+  source_ref: string;
   title: string;
-  entity: string;
-  province: string;
-  sector: string;
-  value: string;
-  closing_date: string;
-  status: string;
+  procuring_entity: string | null;
+  province: string | null;
+  sector: string | null;
+  closing_date: string | null;
+  closing_time: string | null;
+  briefing_compulsory: number | null;
+  cidb_grade: string | null;
 }
 
-interface Props {
-  tender: Tender;
+const {
+  id, source_ref, title, procuring_entity, province, sector,
+  closing_date, closing_time, briefing_compulsory, cidb_grade,
+} = Astro.props;
+
+function fmtClosing(d: string | null, t: string | null): string {
+  if (!d) return "Date TBC";
+  const date = new Date(d + "T00:00:00Z");
+  const dayMs = 86_400_000;
+  const days = Math.ceil((date.getTime() - Date.now()) / dayMs);
+  const dStr = date.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
+  let suffix = "";
+  if (days < 0) suffix = " · closed";
+  else if (days === 0) suffix = " · today";
+  else if (days === 1) suffix = " · tomorrow";
+  else if (days <= 7) suffix = ` · in ${days} days`;
+  return `${dStr}${t ? ` ${t}` : ""}${suffix}`;
 }
 
-const { tender } = Astro.props;
+const closingText = fmtClosing(closing_date, closing_time);
+const isUrgent = closing_date && (new Date(closing_date).getTime() - Date.now()) < 7 * 86_400_000;
+const provinceLabel = province ? province.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : null;
+const sectorLabel = sector ? sector.charAt(0).toUpperCase() + sector.slice(1) : null;
 ---
 
-<div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-  <div class="flex items-start justify-between gap-2">
-    <h3 class="font-semibold text-navy-900 text-sm leading-snug">{tender.title}</h3>
-    <span class="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-      {tender.status}
+<article class="tender-card group block rounded-lg border border-slate-200 bg-white p-5 transition hover:border-amber-400 hover:shadow-md focus-within:border-amber-500">
+  <div class="flex items-start justify-between gap-4 mb-2">
+    <span class="text-xs font-mono text-slate-500 truncate">{source_ref}</span>
+    <span class={`text-xs font-medium ${isUrgent ? "text-amber-700" : "text-slate-600"}`}>
+      {closingText}
     </span>
   </div>
-  <p class="mt-1 text-xs text-gray-500">{tender.entity}</p>
-  <div class="mt-3 flex flex-wrap gap-2 text-xs text-gray-600">
-    <span>📍 {tender.province}</span>
-    <span>🏷️ {tender.sector}</span>
-    <span>💰 {tender.value}</span>
-    <span>⏰ Closes: {tender.closing_date}</span>
+
+  <h3 class="text-base font-semibold text-slate-900 leading-snug mb-2 line-clamp-2">
+    <a href={`/tenders/t/${id}`} class="hover:underline focus:outline-none focus-visible:underline">
+      {title}
+    </a>
+  </h3>
+
+  {procuring_entity && (
+    <p class="text-sm text-slate-600 mb-3 line-clamp-1">{procuring_entity}</p>
+  )}
+
+  <div class="flex flex-wrap items-center gap-2 text-xs">
+    {provinceLabel && (
+      <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">{provinceLabel}</span>
+    )}
+    {sectorLabel && (
+      <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-amber-800">{sectorLabel}</span>
+    )}
+    {cidb_grade && (
+      <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-slate-700 font-mono">CIDB {cidb_grade}</span>
+    )}
+    {briefing_compulsory ? (
+      <span class="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-rose-700">Compulsory briefing</span>
+    ) : null}
   </div>
-</div>
+</article>
+
+<style>
+  .line-clamp-1 { display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+  .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+</style>

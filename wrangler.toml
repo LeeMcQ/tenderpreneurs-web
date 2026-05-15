@@ -1,0 +1,55 @@
+name = "tenderpreneurs"
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "dist"
+
+# ---------------------------------------------------------------
+# D1 — primary database
+# Create with:  wrangler d1 create tenderpreneurs
+# Then paste the database_id below.
+# ---------------------------------------------------------------
+[[d1_databases]]
+binding = "DB"
+database_name = "tenderpreneurs"
+database_id = "PASTE_AFTER_wrangler_d1_create"
+migrations_dir = "migrations"
+
+# ---------------------------------------------------------------
+# R2 — archive of original tender PDFs
+# Create with:  wrangler r2 bucket create tenderpreneurs-tenders
+# ---------------------------------------------------------------
+[[r2_buckets]]
+binding = "R2_TENDERS"
+bucket_name = "tenderpreneurs-tenders"
+
+# ---------------------------------------------------------------
+# Cron triggers — the ingestion and audit schedules.
+# Cloudflare cron syntax = standard 5-field cron.
+# ---------------------------------------------------------------
+[triggers]
+crons = [
+  "0 */6 * * *",   # ingest: every 6 hours
+  "30 7 * * *"     # audit: every day at 07:30 UTC (09:30 SAST)
+]
+
+# ---------------------------------------------------------------
+# Environment variables (non-secret).
+# Real secrets go via `wrangler secret put NAME` — see OPERATIONS.md.
+# ---------------------------------------------------------------
+[vars]
+PUBLIC_SITE_URL    = "https://tenderpreneurs.co.za"
+SESSION_TTL_DAYS   = "30"
+MAGIC_LINK_TTL_MIN = "15"
+AUDIT_EMAIL_TO     = "mogulbyte1@gmail.com"
+AUDIT_EMAIL_FROM   = "audit@tenderpreneurs.co.za"
+AUTH_EMAIL_FROM    = "no-reply@tenderpreneurs.co.za"
+
+# ---------------------------------------------------------------
+# Required secrets (set via `wrangler secret put`):
+#   OPENROUTER_API_KEY     — for DeepSeek V3 extraction
+#   GEMINI_API_KEY         — for Gemini Flash classification
+#   GROQ_API_KEY           — Groq Llama as classification fallback
+#   RESEND_API_KEY         — magic-link + audit emails
+#   MAGIC_LINK_SECRET      — sign magic-link tokens (openssl rand -hex 32)
+#   SESSION_SECRET         — sign session cookies (openssl rand -hex 32)
+# ---------------------------------------------------------------

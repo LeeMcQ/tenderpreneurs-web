@@ -1,47 +1,68 @@
 ---
+import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { format } from 'date-fns';
 
-const posts = await getCollection('blog');
+const posts = await getCollection('blog', ({ data }) => !data.draft);
 const sortedPosts = posts.sort(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+  (a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime()
 );
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Blog – tenderpreneurs</title>
-    <meta
-      name="description"
-      content="Insights, guides, and news on South African government tenders and procurement."
-    />
-  </head>
-  <body>
-    <main class="max-w-7xl mx-auto px-4 py-12">
-      <h1 class="text-4xl font-bold text-gray-900 mb-2">Blog</h1>
-      <p class="text-lg text-gray-600 mb-12">
+<BaseLayout
+  title="Blog — Tenderpreneurs"
+  description="Insights, guides, and news on South African government tenders and procurement."
+>
+  <section class="container mx-auto px-4 py-12 max-w-7xl">
+    <header class="mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-white mb-3">Blog</h1>
+      <p class="text-lg text-slate-300">
         Expert advice for winning more government contracts.
       </p>
+    </header>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {sortedPosts.length === 0 ? (
+      <div class="rounded-lg border border-slate-700 bg-slate-800/50 p-6 text-slate-300">
+        <p class="font-medium">No articles published yet.</p>
+        <p class="text-sm mt-1">Check back shortly — we're adding new guides every week.</p>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedPosts.map((post) => (
           <a
             href={`/blog/${post.slug}`}
-            class="block bg-white rounded-2xl shadow hover:shadow-lg transition p-6 border border-gray-100"
+            class="group block rounded-xl bg-slate-800/50 border border-slate-700 p-6 transition hover:border-amber-500 hover:bg-slate-800"
           >
-            <span class="text-sm text-gray-500">
-              {format(post.data.date, 'd MMM yyyy')}
-            </span>
-            <h2 class="text-xl font-semibold text-gray-900 mt-1 mb-2">
+            <div class="flex items-center gap-2 text-xs text-slate-400 mb-3">
+              <span class="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-400 font-medium">
+                {post.data.category}
+              </span>
+              <span>·</span>
+              <time datetime={post.data.publishedDate.toISOString()}>
+                {format(post.data.publishedDate, 'd MMM yyyy')}
+              </time>
+            </div>
+            <h2 class="text-lg font-semibold text-white mb-2 leading-snug group-hover:text-amber-400 transition">
               {post.data.title}
             </h2>
-            <p class="text-gray-600 line-clamp-3">{post.data.description}</p>
+            <p class="text-sm text-slate-300 line-clamp-3">
+              {post.data.description}
+            </p>
+            <p class="mt-4 text-sm font-medium text-amber-400 group-hover:underline">
+              Read article →
+            </p>
           </a>
         ))}
       </div>
-    </main>
-  </body>
-</html>
+    )}
+  </section>
+</BaseLayout>
+
+<style>
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

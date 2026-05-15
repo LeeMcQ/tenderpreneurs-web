@@ -1,0 +1,116 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const lastUpdated = '14 May 2026';
+const effectiveDate = '14 May 2026';
+---
+
+<BaseLayout
+  title="Cookies Policy | Tenderpreneur"
+  description="Which cookies and similar technologies Tenderpreneur uses, what they do, and how you can control them under POPIA."
+>
+  <main class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+    <header class="mb-12 border-b border-slate-200 pb-8">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Legal</p>
+      <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Cookies Policy</h1>
+      <dl class="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-600">
+        <div><dt class="inline font-medium text-slate-900">Effective:</dt> <dd class="inline">{effectiveDate}</dd></div>
+        <div><dt class="inline font-medium text-slate-900">Last updated:</dt> <dd class="inline">{lastUpdated}</dd></div>
+      </dl>
+    </header>
+
+    <article class="prose prose-slate max-w-none prose-h2:mt-12 prose-h2:text-2xl prose-h2:font-semibold prose-a:text-slate-900 prose-a:underline prose-a:decoration-slate-400 prose-a:underline-offset-2">
+      <p class="lead">
+        This policy explains what cookies and similar technologies we use, why
+        we use them, and how you can control them. It supplements our
+        <a href="/privacy">Privacy Policy</a> and forms part of it.
+      </p>
+
+      <h2 id="what-cookies-are">1. What cookies are</h2>
+      <p>
+        Cookies are small text files placed on your device by websites you
+        visit. They allow the site to remember things like your login state or
+        your cookie preferences. We also use similar technologies such as
+        localStorage entries — wherever this policy says "cookie", treat it as
+        including these.
+      </p>
+
+      <h2 id="lawful-basis">2. Lawful basis</h2>
+      <p>
+        Strictly necessary cookies are placed on the basis of our legitimate
+        interest in providing a working service (POPIA s.11(1)(f)). All other
+        cookies — analytics and marketing — are placed only with your prior
+        consent (POPIA s.11(1)(a)). Non-essential cookies are off by default,
+        and you can change your choice at any time.
+      </p>
+
+      <h2 id="control">3. How to control cookies</h2>
+      <p>You have three independent controls:</p>
+      <ul>
+        <li>
+          <strong>Our consent banner.</strong> Click the button below to reopen it:
+          <br>
+          <button
+            type="button"
+            data-testid="open-cookie-settings"
+            class="not-prose mt-3 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm no-underline hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+            onclick="if (window.tpConsent) { window.tpConsent.open(); }"
+          >
+            Open cookie settings
+          </button>
+        </li>
+        <li><strong>Your browser settings.</strong> Most browsers let you block or delete cookies. Blocking strictly necessary cookies will break the site.</li>
+        <li><strong>Do Not Track / Global Privacy Control.</strong> If your browser sends a GPC signal we treat it as a withdrawal of consent for analytics and marketing.</li>
+      </ul>
+
+      <h2 id="categories">4. Cookies we use</h2>
+
+      <h3 id="necessary">4.1 Strictly necessary (always on)</h3>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Purpose</th><th>Duration</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>tp.consent.v1</code></td><td>Stores your cookie preferences so we don't keep asking.</td><td>12 months</td></tr>
+          <tr><td><code>tp.session</code></td><td>Keeps you logged in during a browsing session.</td><td>Session</td></tr>
+          <tr><td><code>tp.csrf</code></td><td>Anti-CSRF token, protects form submissions.</td><td>Session</td></tr>
+          <tr><td><code>__cf_bm</code></td><td>Cloudflare bot management — distinguishes humans from automated traffic.</td><td>30 minutes</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="analytics">4.2 Analytics (consent required)</h3>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Purpose</th><th>Duration</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>plausible_*</code></td><td>Aggregate page-view counts. No cross-site tracking, no personal identifiers.</td><td>24 hours</td></tr>
+        </tbody>
+      </table>
+      <p>
+        If we add a different analytics provider in future we will update this
+        table and ask for fresh consent where the new processing is not
+        equivalent.
+      </p>
+
+      <h3 id="marketing">4.3 Marketing (consent required)</h3>
+      <p>
+        We do not currently use marketing cookies. If we add any, they will be
+        listed here and only set after you have given consent through the
+        banner.
+      </p>
+
+      <h2 id="changes">5. Changes to this policy</h2>
+      <p>
+        We may update this policy when we add or remove cookies. The "Last
+        updated" date at the top reflects the latest revision.
+      </p>
+
+      <h2 id="contact">6. Contact</h2>
+      <p>
+        Questions about cookies should go to
+        <a href="mailto:privacy@tenderpreneur.co.za">privacy@tenderpreneur.co.za</a>.
+      </p>
+    </article>
+  </main>
+</BaseLayout>
