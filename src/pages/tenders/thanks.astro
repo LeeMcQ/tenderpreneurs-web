@@ -1,0 +1,33 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const hub = Astro.url.searchParams.get("hub") || "";
+const [hubType = "", hubName = ""] = hub.split(":");
+const niceName = hubName || "the next tender feed";
+---
+
+<BaseLayout
+  title="You're on the waitlist — Tenderpreneurs"
+  description="Thanks for joining the Tenderpreneurs waitlist."
+>
+  <article class="container mx-auto px-4 py-16 max-w-2xl text-center">
+    <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">You're in.</h1>
+    <p class="text-lg text-slate-700 mb-6">
+      We'll email you the moment the {niceName} feed goes live. No spam, ever — just the launch notice
+      and the first batch of opportunities.
+    </p>
+
+    <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="/tenders" class="rounded-md bg-amber-700 px-5 py-2 font-semibold text-white hover:bg-amber-800">
+        Back to Tenders
+      </a>
+      <a href="/blog" class="rounded-md border border-slate-300 px-5 py-2 font-semibold text-slate-700 hover:bg-slate-50">
+        Read the procurement guides
+      </a>
+    </div>
+
+    {hubType && hubName && (
+      <p class="text-xs text-slate-500 mt-10">Signed up for: {hubType} — {hubName}</p>
+    )}
+  </article>
+</BaseLayout>

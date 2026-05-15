@@ -1,0 +1,124 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+
+export interface Props {
+  title: string;
+  description: string;
+  hubType: "Province" | "Sector";
+  hubName: string;
+  /** Display name with article, e.g. "the Eastern Cape" or "Construction" */
+  contextLabel: string;
+  /** ISO date for schema.org */
+  lastUpdated?: string;
+}
+
+const { title, description, hubType, hubName, contextLabel, lastUpdated = new Date().toISOString().slice(0, 10) } = Astro.props;
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://tenderpreneurs.co.za/" },
+    { "@type": "ListItem", position: 2, name: "Tenders", item: "https://tenderpreneurs.co.za/tenders" },
+    { "@type": "ListItem", position: 3, name: hubName, item: Astro.url.href },
+  ],
+};
+
+const collectionJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: title,
+  description,
+  url: Astro.url.href,
+  dateModified: lastUpdated,
+  isPartOf: {
+    "@type": "WebSite",
+    name: "Tenderpreneurs",
+    url: "https://tenderpreneurs.co.za/",
+  },
+};
+---
+
+<BaseLayout title={title} description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(collectionJsonLd)} slot="head" />
+
+  <nav aria-label="Breadcrumb" class="container mx-auto px-4 pt-6 text-sm text-slate-600">
+    <ol class="flex flex-wrap items-center gap-2">
+      <li><a href="/" class="hover:underline">Home</a></li>
+      <li aria-hidden="true">/</li>
+      <li><a href="/tenders" class="hover:underline">Tenders</a></li>
+      <li aria-hidden="true">/</li>
+      <li><span class="text-slate-900 font-medium">{hubName}</span></li>
+    </ol>
+  </nav>
+
+  <article class="container mx-auto px-4 py-8 max-w-4xl">
+    <header class="mb-8">
+      <p class="text-sm uppercase tracking-wide text-amber-700 font-semibold mb-2">{hubType} hub</p>
+      <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3">{title}</h1>
+      <p class="text-lg text-slate-700">{description}</p>
+    </header>
+
+    <div class="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-a:text-amber-700 hover:prose-a:underline">
+      <slot />
+    </div>
+
+    <section class="mt-12 rounded-lg border border-amber-200 bg-amber-50 p-6">
+      <h2 class="text-xl font-semibold text-slate-900 mb-2">Get tender alerts for {contextLabel}</h2>
+      <p class="text-slate-700 mb-4">
+        We're building a live feed of {hubType.toLowerCase()} tenders aggregated from eTenders, departmental sites, and municipal portals.
+        Join the waitlist to be notified the moment it launches.
+      </p>
+      <form
+        action="/api/waitlist"
+        method="POST"
+        class="flex flex-col sm:flex-row gap-3"
+        aria-label={`Tender alerts waitlist for ${hubName}`}
+      >
+        <input type="hidden" name="hub" value={`${hubType}:${hubName}`} />
+        <label class="sr-only" for={`email-${hubName}`}>Email address</label>
+        <input
+          type="email"
+          name="email"
+          id={`email-${hubName}`}
+          required
+          placeholder="you@yourcompany.co.za"
+          class="flex-1 rounded-md border border-slate-300 px-4 py-2 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-300"
+        />
+        <button
+          type="submit"
+          class="rounded-md bg-amber-700 px-5 py-2 font-semibold text-white hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+        >
+          Join waitlist
+        </button>
+      </form>
+      <p class="text-xs text-slate-600 mt-3">
+        We'll only email you about {hubName} tender alerts. Unsubscribe anytime. POPIA-compliant.
+      </p>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-2xl font-bold text-slate-900 mb-4">Useful links right now</h2>
+      <ul class="space-y-2 text-slate-700">
+        <li>
+          <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer" class="text-amber-700 hover:underline">
+            eTenders Publication Portal →
+          </a>
+          <span class="text-slate-600"> the official national tender notice board</span>
+        </li>
+        <li>
+          <a href="https://secure.csd.gov.za" target="_blank" rel="noopener noreferrer" class="text-amber-700 hover:underline">
+            Central Supplier Database (CSD) →
+          </a>
+          <span class="text-slate-600"> register before you bid</span>
+        </li>
+        <li>
+          <a href="/blog" class="text-amber-700 hover:underline">Procurement guides on Tenderpreneurs →</a>
+        </li>
+      </ul>
+    </section>
+
+    <p class="mt-10 text-xs text-slate-500">Last reviewed: {lastUpdated}.</p>
+  </article>
+</BaseLayout>
