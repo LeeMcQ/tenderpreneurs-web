@@ -11,7 +11,7 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "tenderpreneurs"
-database_id = "PASTE_AFTER_wrangler_d1_create"
+database_id = "ec19d49a-aac9-4519-b4bf-1af9449c88a0"
 migrations_dir = "migrations"
 
 # ---------------------------------------------------------------
@@ -26,11 +26,7 @@ bucket_name = "tenderpreneurs-tenders"
 # Cron triggers — the ingestion and audit schedules.
 # Cloudflare cron syntax = standard 5-field cron.
 # ---------------------------------------------------------------
-[triggers]
-crons = [
-  "0 */6 * * *",   # ingest: every 6 hours
-  "30 7 * * *"     # audit: every day at 07:30 UTC (09:30 SAST)
-]
+
 
 # ---------------------------------------------------------------
 # Environment variables (non-secret).
