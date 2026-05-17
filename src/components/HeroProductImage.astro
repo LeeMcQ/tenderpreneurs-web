@@ -1,0 +1,117 @@
+---
+// src/components/HeroProductImage.astro
+// Reserves the correct space in the homepage hero for the product screenshot.
+// In dev / when no image is set, shows a placeholder. In production with no
+// image set, renders an empty aspect-ratio box (no layout shift, no broken-image icon).
+//
+// ─── HOW TO SWAP FOR REAL ────────────────────────────────────
+// 1. Capture a screenshot of the actual app at 1280×800 (or any 16:10 ratio).
+// 2. Save as /public/screenshots/app-hero.webp (preferred) or .png.
+// 3. Optionally provide a 2x version at app-hero@2x.webp for retina.
+// 4. Replace the src below.
+// 5. Update the alt text to describe what's actually shown.
+// ─────────────────────────────────────────────────────────────
+
+interface Props {
+  src?: string;
+  src2x?: string;
+  alt?: string;
+  caption?: string;
+}
+
+const {
+  src,         // e.g. "/screenshots/app-hero.webp"
+  src2x,       // e.g. "/screenshots/app-hero@2x.webp"
+  alt = "Tenderpreneur dashboard showing a list of open South African government tenders, filtered by province with B-BBEE preference scores",
+  caption,
+} = Astro.props;
+
+const hasImage = Boolean(src);
+const isDev = !import.meta.env.PROD;
+---
+
+<figure class="hero-product">
+  {hasImage ? (
+    <img
+      src={src}
+      srcset={src2x ? `${src} 1x, ${src2x} 2x` : undefined}
+      alt={alt}
+      loading="eager"
+      decoding="async"
+      width="1280"
+      height="800"
+      class="hero-product-img"
+    />
+  ) : (
+    <div
+      class="hero-product-placeholder"
+      role="img"
+      aria-label="Product screenshot — coming soon"
+      data-todo="Add real app screenshot at /public/screenshots/app-hero.webp"
+    >
+      {isDev && (
+        <div class="dev-marker">
+          <strong>TODO:</strong> Add product screenshot
+          <small>
+            1280×800 (16:10) · /public/screenshots/app-hero.webp · Visible in dev only
+          </small>
+        </div>
+      )}
+    </div>
+  )}
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .hero-product {
+    margin: 0;
+    width: 100%;
+    max-width: 1100px;
+    margin-inline: auto;
+  }
+  .hero-product-img,
+  .hero-product-placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0C1B33 0%, #1e3a5f 100%);
+    box-shadow: 0 20px 60px rgba(12, 27, 51, 0.15);
+    display: block;
+  }
+  .hero-product-img {
+    object-fit: cover;
+  }
+  .hero-product-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 14px;
+    text-align: center;
+    padding: 24px;
+    /* Subtle dashed border in production helps you spot when you've forgotten */
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+  }
+  .dev-marker {
+    background: rgba(255, 255, 255, 0.95);
+    color: #0C1B33;
+    padding: 16px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  .dev-marker small {
+    display: block;
+    margin-top: 6px;
+    font-weight: 400;
+    color: #6b7280;
+    font-size: 12px;
+  }
+  figcaption {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 13px;
+    color: #6b7280;
+    font-style: italic;
+  }
+</style>

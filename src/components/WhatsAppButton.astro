@@ -1,0 +1,113 @@
+---
+// src/components/WhatsAppButton.astro
+// Floating WhatsApp CTA — primary support channel for SA SMMEs.
+//
+// ─── HOW TO SET YOUR REAL NUMBER ─────────────────────────────
+// 1. Get a WhatsApp Business number (https://business.whatsapp.com).
+// 2. Replace the placeholder below with your number in international format,
+//    digits only, no + or spaces. South African examples:
+//      021 555 1234   →  27215551234
+//      082 555 1234   →  27825551234
+// 3. Optionally set a prefilled message in PREFILLED_MESSAGE.
+// ─────────────────────────────────────────────────────────────
+
+const WHATSAPP_NUMBER = "27000000000"; // TODO: swap for your real WhatsApp Business number
+const PREFILLED_MESSAGE = "Hi Tenderpreneur, I have a question about ";
+
+// If the placeholder is still in place, render the button in "preview" mode
+// so it shows on dev but doesn't accidentally go live with a fake number.
+// Flip SHOW_IN_PRODUCTION to true once you've set a real number.
+const SHOW_IN_PRODUCTION = false;
+
+const isPlaceholder = WHATSAPP_NUMBER === "27000000000";
+const shouldRender = !isPlaceholder || !import.meta.env.PROD || SHOW_IN_PRODUCTION;
+
+const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(PREFILLED_MESSAGE)}`;
+---
+
+{shouldRender && (
+  <a
+    href={href}
+    class="wa-btn"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Chat with us on WhatsApp"
+    data-placeholder={isPlaceholder ? "true" : undefined}
+  >
+    <svg
+      class="wa-icon"
+      viewBox="0 0 32 32"
+      width="28"
+      height="28"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        fill="currentColor"
+        d="M16.003 3C9.374 3 4 8.374 4 15.003c0 2.296.66 4.44 1.804 6.262L4 28l6.94-1.78A11.97 11.97 0 0 0 16 27c6.628 0 12-5.372 12-12S22.628 3 16.003 3zm0 21.7a9.65 9.65 0 0 1-4.916-1.343l-.353-.21-4.118 1.056 1.1-4.013-.23-.37a9.6 9.6 0 0 1-1.481-5.117c0-5.343 4.357-9.7 9.7-9.7 5.343 0 9.697 4.357 9.697 9.7 0 5.343-4.354 9.7-9.7 9.7zm5.31-7.26c-.29-.146-1.722-.85-1.989-.947-.267-.097-.46-.146-.654.146-.193.292-.747.946-.916 1.14-.169.193-.339.218-.629.073-.29-.146-1.226-.452-2.336-1.443-.864-.77-1.448-1.722-1.617-2.014-.169-.291-.018-.448.128-.593.132-.131.29-.34.435-.51.146-.169.193-.291.29-.485.097-.193.048-.364-.024-.51-.073-.146-.654-1.575-.895-2.158-.236-.566-.476-.49-.654-.5l-.557-.01a1.07 1.07 0 0 0-.776.364c-.267.292-1.018.995-1.018 2.425 0 1.43 1.042 2.813 1.187 3.007.146.193 2.05 3.13 4.965 4.387.694.3 1.235.479 1.657.613.696.221 1.33.19 1.83.115.558-.083 1.722-.704 1.965-1.382.243-.679.243-1.261.17-1.382-.072-.121-.266-.193-.557-.34z"
+      />
+    </svg>
+    <span class="wa-text">Chat on WhatsApp</span>
+    {isPlaceholder && <span class="wa-warning">⚠ Placeholder</span>}
+  </a>
+)}
+
+<style>
+  .wa-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9000; /* below cookie banner (9999) so banner sits above */
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px 12px 14px;
+    background: #25D366;
+    color: #fff;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .wa-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(37, 211, 102, 0.45);
+  }
+  .wa-btn:focus-visible {
+    outline: 2px solid #0C1B33;
+    outline-offset: 3px;
+  }
+  .wa-btn[data-placeholder="true"] {
+    background: #9ca3af;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  }
+  .wa-icon {
+    flex-shrink: 0;
+    display: block;
+  }
+  .wa-text {
+    white-space: nowrap;
+  }
+  .wa-warning {
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.18);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  @media (max-width: 480px) {
+    .wa-btn {
+      bottom: 14px;
+      right: 14px;
+      padding: 12px;
+    }
+    .wa-text {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wa-btn { transition: none; }
+    .wa-btn:hover { transform: none; }
+  }
+</style>

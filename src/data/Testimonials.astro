@@ -1,0 +1,163 @@
+---
+// src/components/Testimonials.astro
+// Renders a testimonials section ONLY if real quotes exist in
+// src/data/testimonials.ts. Empty array = nothing renders. No placeholders
+// reach the live site.
+//
+// Usage:
+//   <Testimonials />                             — full section, default heading
+//   <Testimonials heading="What SMMEs say" />    — custom heading
+//   <Testimonials variant="compact" />           — single horizontal row
+//   <Testimonials limit={3} />                   — cap the number shown
+
+import { TESTIMONIALS, HAS_TESTIMONIALS } from "../data/testimonials";
+
+interface Props {
+  heading?: string;
+  eyebrow?: string;
+  variant?: "grid" | "compact";
+  limit?: number;
+}
+
+const {
+  heading = "Real SMMEs, real wins",
+  eyebrow = "Customer stories",
+  variant = "grid",
+  limit,
+} = Astro.props;
+
+const items = typeof limit === "number" ? TESTIMONIALS.slice(0, limit) : TESTIMONIALS;
+---
+
+{HAS_TESTIMONIALS && (
+  <section class:list={["testimonials", `variant-${variant}`]} aria-labelledby="testimonials-h">
+    <header class="testimonials-header">
+      <p class="eyebrow">{eyebrow}</p>
+      <h2 id="testimonials-h">{heading}</h2>
+    </header>
+    <ul class="testimonials-list">
+      {items.map((t) => (
+        <li class="testimonial-card">
+          <blockquote>
+            <p>"{t.quote}"</p>
+          </blockquote>
+          <footer>
+            <div class="t-author">
+              {t.avatarUrl && (
+                <img src={t.avatarUrl} alt="" class="t-avatar" width="44" height="44" loading="lazy" />
+              )}
+              <div class="t-meta">
+                <span class="t-name">{t.name}</span>
+                <span class="t-role">
+                  {t.role}, {t.company}
+                  {t.location ? ` · ${t.location}` : ""}
+                </span>
+              </div>
+            </div>
+            {t.outcome && <span class="t-outcome">{t.outcome}</span>}
+          </footer>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .testimonials {
+    max-width: 1100px;
+    margin: 64px auto;
+    padding: 0 20px;
+  }
+  .testimonials-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .eyebrow {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+    margin: 0 0 8px;
+  }
+  .testimonials h2 {
+    font-size: clamp(24px, 4vw, 32px);
+    color: #0C1B33;
+    margin: 0;
+  }
+  .testimonials-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .variant-compact .testimonials-list {
+    grid-template-columns: 1fr;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .testimonial-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .testimonial-card blockquote {
+    margin: 0;
+    flex: 1;
+  }
+  .testimonial-card blockquote p {
+    margin: 0;
+    color: #1f2937;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .testimonial-card footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .t-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .t-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f3f4f6;
+  }
+  .t-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+  .t-name {
+    font-weight: 600;
+    color: #0C1B33;
+    font-size: 14px;
+  }
+  .t-role {
+    color: #6b7280;
+    font-size: 12px;
+  }
+  .t-outcome {
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+</style>
