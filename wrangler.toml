@@ -19,7 +19,7 @@ migrations_dir = "migrations"
 # Create with:  wrangler r2 bucket create tenderpreneurs-tenders
 # ---------------------------------------------------------------
 [[r2_buckets]]
-binding = "R2_TENDERS"
+binding = "TENDERPRENEURS_TENDERS"   # (or whatever name your code uses)
 bucket_name = "tenderpreneurs-tenders"
 
 # ---------------------------------------------------------------
