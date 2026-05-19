@@ -1,169 +1,182 @@
 ---
-import BaseLayout from '@layouts/BaseLayout.astro';
-import SEO from '@components/SEO.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
-const lastUpdated = '15 January 2025';
-
-const seoData = {
-  title: 'Terms of Service — Tenderpreneur',
-  description:
-    'Tenderpreneur terms of service. Read our terms for using the platform, subscription and payment terms, and acceptable use policy.',
-  canonical: 'https://tenderpreneur.co.za/terms',
-  ogImage: 'https://tenderpreneur.co.za/og-default.png',
-};
+const lastUpdated = '14 May 2026';
+const effectiveDate = '14 May 2026';
 ---
 
-<BaseLayout>
-  <SEO slot="head" {...seoData} />
+<BaseLayout
+  title="Terms of Service | Tenderpreneur"
+  description="The terms that govern your use of the Tenderpreneur service, including subscriptions, acceptable use, intellectual property, liability, and South African governing law."
+>
+  <main class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+    <header class="mb-12 border-b border-slate-200 pb-8">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Legal</p>
+      <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Terms of Service</h1>
+      <dl class="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-600">
+        <div><dt class="inline font-medium text-slate-900">Effective:</dt> <dd class="inline">{effectiveDate}</dd></div>
+        <div><dt class="inline font-medium text-slate-900">Last updated:</dt> <dd class="inline">{lastUpdated}</dd></div>
+      </dl>
+    </header>
 
-  <!-- Page Hero -->
-  <section class="bg-gradient-to-br from-navy-900 to-civic-800 py-16 text-white">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6">
-      <nav aria-label="Breadcrumb" class="breadcrumb mb-6">
-        <ol class="flex items-center gap-2 text-sm text-sky-300">
-          <li><a href="/" class="hover:text-white">Home</a></li>
-          <li aria-hidden="true">›</li>
-          <li aria-current="page" class="text-white">Terms of Service</li>
-        </ol>
-      </nav>
-      <h1 class="font-display text-4xl font-bold text-white">Terms of Service</h1>
-      <p class="mt-2 text-sky-300">Last updated: {lastUpdated}</p>
-    </div>
-  </section>
+    <article class="prose prose-slate max-w-none prose-h2:mt-12 prose-h2:text-2xl prose-h2:font-semibold prose-a:text-slate-900 prose-a:underline prose-a:decoration-slate-400 prose-a:underline-offset-2">
+      <p class="lead">
+        These Terms of Service ("<strong>Terms</strong>") form a binding
+        agreement between you and Tenderpreneur (Pty) Ltd
+        ("<strong>Tenderpreneur</strong>", "we", "us") and govern your access
+        to and use of the Tenderpreneur website, mobile application, and
+        related services (the "<strong>Service</strong>"). By creating an
+        account or using the Service you agree to these Terms.
+      </p>
 
-  <!-- Content -->
-  <section class="bg-white py-16 dark:bg-navy-950">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6">
-      <div class="prose prose-tp mx-auto">
+      <h2 id="ect-notice">1. Information required by section 43 of the ECT Act</h2>
+      <ul>
+        <li><strong>Full name:</strong> Tenderpreneur (Pty) Ltd</li>
+        <li><strong>Place of registration:</strong> Republic of South Africa</li>
+        <li><strong>Physical address:</strong> Western Cape, South Africa (available on written request)</li>
+        <li><strong>Email:</strong> <a href="mailto:hello@tenderpreneur.co.za">hello@tenderpreneur.co.za</a></li>
+        <li><strong>Website:</strong> <a href="https://tenderpreneur.co.za">https://tenderpreneur.co.za</a></li>
+      </ul>
 
-        <p class="lead">
-          By accessing or using Tenderpreneur (tenderpreneur.co.za and app.tenderpreneur.co.za),
-          you agree to these Terms of Service. Please read them carefully. If you do not agree,
-          do not use the platform.
-        </p>
+      <h2 id="eligibility">2. Eligibility</h2>
+      <p>
+        You must be at least 18 years old and able to enter into a binding
+        contract. If you accept on behalf of a juristic person (company, close
+        corporation, trust, NPC) you warrant that you are authorised to bind
+        that entity.
+      </p>
 
-        <h2>1. Who these terms apply to</h2>
-        <p>
-          These terms apply to all users of Tenderpreneur, including visitors, free-tier users,
-          Professional subscribers, and Enterprise clients. "Tenderpreneur" means Tenderpreneur
-          (Pty) Ltd, a company registered in South Africa.
-        </p>
+      <h2 id="account">3. Your account</h2>
+      <p>
+        You are responsible for keeping your login credentials confidential and
+        for all activity under your account. Notify us immediately at
+        <a href="mailto:security@tenderpreneur.co.za">security@tenderpreneur.co.za</a>
+        if you suspect unauthorised use.
+      </p>
 
-        <h2>2. What Tenderpreneur provides</h2>
-        <p>
-          Tenderpreneur provides a government tender intelligence platform that aggregates publicly
-          available tender information, publishes procurement guidance, and offers AI-assisted
-          tools to help South African businesses navigate government procurement. Tenderpreneur
-          is an information service, not a procurement agent. We do not submit tenders on your
-          behalf, provide legal advice, or guarantee procurement outcomes.
-        </p>
+      <h2 id="subscription">4. Subscriptions, fees, and cancellation</h2>
+      <ul>
+        <li>Subscription fees and billing cycles are shown on the <a href="/pricing">pricing page</a>. Fees are inclusive of VAT where applicable.</li>
+        <li>Subscriptions renew automatically until cancelled. You can cancel at any time from your account; cancellation takes effect at the end of the current billing cycle.</li>
+        <li>Except where required by the Consumer Protection Act, 2008 ("CPA") or the ECT Act, fees are non-refundable for partial periods.</li>
+        <li>We may change pricing on 30 days' written notice. Continued use after the change takes effect constitutes acceptance of the new pricing.</li>
+      </ul>
 
-        <h2>3. Account registration</h2>
-        <p>
-          To access most features you must create an account. You agree to provide accurate
-          information, keep your login credentials secure, and notify us immediately if you
-          suspect unauthorised access. You are responsible for all activity under your account.
-          You must be 18 or older to register.
-        </p>
+      <h2 id="cooling-off">5. Cooling-off (where applicable)</h2>
+      <p>
+        If you are a natural person and you purchased a subscription as an
+        electronic transaction within the meaning of the ECT Act, you may
+        cancel within <strong>7 days</strong> after the date you first received
+        access to the Service, in which case we will refund the fees paid
+        within 30 days, less any direct costs of supplying the Service that you
+        used during the cooling-off period.
+      </p>
 
-        <h2>4. Subscription plans and payment</h2>
+      <h2 id="acceptable-use">6. Acceptable use</h2>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Scrape, mirror, resell, or redistribute Service content except as permitted by your subscription tier;</li>
+        <li>Reverse-engineer or attempt to derive source code from the Service;</li>
+        <li>Use the Service to send unsolicited commercial communications in breach of POPIA or the CPA;</li>
+        <li>Upload malicious code, attempt to gain unauthorised access, or interfere with the Service or its users;</li>
+        <li>Use the Service for any unlawful purpose.</li>
+      </ul>
+      <p>
+        We may suspend or terminate accounts that breach this clause without
+        refund.
+      </p>
 
-        <h3>Free plan</h3>
-        <p>
-          The Free plan provides access to the PFMA knowledge base, SBD form library, and
-          compliance checklist at no cost. We may modify Free plan features at any time with
-          30 days' notice.
-        </p>
+      <h2 id="ip">7. Intellectual property</h2>
+      <p>
+        The Service, including all software, content, design, trade marks,
+        and aggregated datasets, is owned by Tenderpreneur or its licensors and
+        is protected by South African and international intellectual property
+        law. We grant you a non-exclusive, non-transferable, revocable licence
+        to use the Service for its intended purpose during your subscription.
+      </p>
+      <p>
+        Tender notice text published by South African organs of state is
+        government information and we do not claim ownership of it. Our
+        aggregation, classification, summaries, and analyses are our own
+        intellectual property.
+      </p>
 
-        <h3>Professional plan</h3>
-        <p>
-          The Professional plan is billed monthly at R299 (inclusive of VAT) via PayFast.
-          Your subscription renews automatically each month. You authorise Tenderpreneur to
-          charge your nominated payment method on the same day each month.
-        </p>
+      <h2 id="disclaimer">8. No warranty of outcomes</h2>
+      <p>
+        <strong>Important:</strong> Tenderpreneur is an information and
+        analytics service. We do not guarantee that you will be awarded any
+        tender, that any tender we list will remain open or correctly
+        described, or that any information sourced from third parties (such as
+        the eTender Publication Portal or departmental websites) is complete or
+        error-free. You must verify any tender directly with the issuing organ
+        of state before bidding.
+      </p>
+      <p>
+        The Service is provided "as is" and "as available". To the maximum
+        extent permitted by law we exclude all implied warranties, save for the
+        implied warranties of quality and fitness for purpose in section 55 of
+        the CPA where the CPA applies.
+      </p>
 
-        <h3>Enterprise plan</h3>
-        <p>
-          Enterprise pricing is agreed by contract. Payment terms are set out in the individual
-          enterprise agreement.
-        </p>
+      <h2 id="liability">9. Limitation of liability</h2>
+      <p>
+        Nothing in these Terms excludes or limits liability that cannot be
+        excluded or limited by law (such as liability for fraud or for damage
+        caused by gross negligence under section 51 of the CPA). Subject to
+        that, our total aggregate liability arising out of or in connection
+        with these Terms is limited to the fees you paid in the 12 months
+        preceding the event giving rise to the claim. We are not liable for
+        indirect, incidental, or consequential loss, including loss of profit,
+        loss of business, or loss of data.
+      </p>
 
-        <h3>Cancellation</h3>
-        <p>
-          You may cancel your Professional subscription at any time from your account settings.
-          Cancellation takes effect at the end of the current billing period. We do not issue
-          pro-rata refunds for unused days unless required by the Consumer Protection Act 68 of
-          2008 or another applicable South African law.
-        </p>
+      <h2 id="indemnity">10. Indemnity</h2>
+      <p>
+        You indemnify Tenderpreneur against any third-party claim arising from
+        your breach of these Terms or your use of the Service in violation of
+        the law.
+      </p>
 
-        <h3>Price changes</h3>
-        <p>
-          We may change subscription pricing with 30 days' written notice. If you do not accept
-          the new price, you may cancel before the change takes effect.
-        </p>
+      <h2 id="termination">11. Suspension and termination</h2>
+      <p>
+        We may suspend or terminate your access on reasonable notice for
+        material breach, non-payment, or if required by law. On termination
+        your right to use the Service ends; clauses that by their nature should
+        survive (IP, liability, dispute resolution) survive termination.
+      </p>
 
-        <h2>5. Acceptable use</h2>
-        <p>You agree not to:</p>
-        <ul>
-          <li>Scrape, crawl, or systematically download Tenderpreneur content without written permission</li>
-          <li>Resell, sublicense, or redistribute Tenderpreneur data to third parties</li>
-          <li>Use the platform to submit fraudulent tenders or engage in fronting under the B-BBEE Act</li>
-          <li>Attempt to circumvent security controls or access other users' data</li>
-          <li>Use the AI assistant to generate false compliance documents</li>
-          <li>Violate any South African law including the PFMA, B-BBEE Act, or POPIA</li>
-        </ul>
+      <h2 id="changes">12. Changes to the Service or these Terms</h2>
+      <p>
+        We may change the Service or these Terms. Material changes will be
+        communicated by email or an in-product notice at least 14 days before
+        they take effect. Continued use after that date constitutes acceptance.
+      </p>
 
-        <h2>6. Intellectual property</h2>
-        <p>
-          Tenderpreneur content — including PFMA guides, blog posts, AI assistant responses, and
-          platform design — is protected by copyright. You may use it for your own procurement
-          purposes but may not reproduce or republish it without permission.
-        </p>
-        <p>
-          Tender notices displayed on Tenderpreneur originate from public procurement portals
-          operated by the South African government. They remain in the public domain.
-        </p>
+      <h2 id="privacy">13. Privacy</h2>
+      <p>
+        Our processing of your personal information is described in the
+        <a href="/privacy">Privacy Policy</a>, which forms part of these Terms.
+      </p>
 
-        <h2>7. Disclaimers</h2>
-        <p>
-          Tenderpreneur provides information for general guidance only. Our PFMA content, AI
-          assistant responses, and compliance tools do not constitute legal advice. Procurement
-          regulations change frequently. Always verify critical compliance requirements against
-          the current legislation and consult a qualified procurement professional for complex
-          matters.
-        </p>
-        <p>
-          Tenderpreneur aggregates tender data from third-party government portals. We strive
-          for accuracy but cannot guarantee that all tenders are complete, current, or error-free.
-          Always verify tender details on the originating portal before bidding.
-        </p>
+      <h2 id="disputes">14. Disputes, governing law, and jurisdiction</h2>
+      <p>
+        These Terms are governed by the law of the Republic of South Africa.
+        Before formal proceedings, the parties will attempt to resolve any
+        dispute by good-faith negotiation. Where the CPA applies and a dispute
+        is not resolved, you may approach an accredited consumer ombud, the
+        National Consumer Commission, or a consumer court. Otherwise, the
+        parties consent to the non-exclusive jurisdiction of the Magistrates'
+        Court having jurisdiction over Tenderpreneur, even if the claim would
+        ordinarily exceed that court's jurisdiction.
+      </p>
 
-        <h2>8. Limitation of liability</h2>
-        <p>
-          To the maximum extent permitted by South African law, Tenderpreneur's liability for
-          any claim arising from your use of the platform is limited to the total subscription
-          fees you paid in the 12 months preceding the claim. We are not liable for lost business,
-          tender disqualifications, or procurement decisions made in reliance on our platform.
-        </p>
-
-        <h2>9. Governing law</h2>
-        <p>
-          These terms are governed by the laws of the Republic of South Africa. Disputes will
-          be resolved in the courts of South Africa, with Cape Town as the agreed jurisdiction.
-        </p>
-
-        <h2>10. Changes to these terms</h2>
-        <p>
-          We may update these terms from time to time. We will notify users by email at least
-          14 days before material changes take effect. Continued use of Tenderpreneur after the
-          effective date constitutes acceptance of the updated terms.
-        </p>
-
-        <h2>11. Contact</h2>
-        <p>
-          Questions about these terms: <a href="mailto:legal@tenderpreneur.co.za">legal@tenderpreneur.co.za</a>
-        </p>
-      </div>
-    </div>
-  </section>
+      <h2 id="general">15. General</h2>
+      <ul>
+        <li><strong>Entire agreement:</strong> these Terms, the Privacy Policy, and the Cookies Policy form the entire agreement between us.</li>
+        <li><strong>Severability:</strong> if any clause is found unenforceable, the rest remain in force.</li>
+        <li><strong>Assignment:</strong> you may not assign these Terms without our written consent; we may assign on notice to you.</li>
+        <li><strong>Notices:</strong> we may send notices to your account email; you may reach us at <a href="mailto:hello@tenderpreneur.co.za">hello@tenderpreneur.co.za</a>.</li>
+      </ul>
+    </article>
+  </main>
 </BaseLayout>

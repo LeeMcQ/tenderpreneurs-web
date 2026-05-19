@@ -16,7 +16,14 @@
  * The brand color is kept at the 500 step where templates expect it,
  * but the 600/700/800/900 steps now actually darken (not collapse to black),
  * and 50/100/200 actually lighten.
+
  */
+ import typography from '@tailwindcss/typography';
+
+export default {
+  // ...
+  plugins: [typography],
+};
 export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
   darkMode: 'media',

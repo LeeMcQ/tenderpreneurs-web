@@ -1,0 +1,204 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import TenderCard from "../components/TenderCard.astro";
+import SignupGate from "../components/SignupGate.astro";
+import LockedTenderCard from "../components/LockedTenderCard.astro";
+import { getEnv } from "../lib/db";
+import { getSessionUser } from "../lib/auth/magic-link";
+
+export interface Props {
+  title: string;
+  description: string;
+  hubType: "Province" | "Sector";
+  hubName: string;
+  contextLabel: string;
+  filterSlug?: string;
+  lastUpdated?: string;
+}
+
+const {
+  title, description, hubType, hubName, contextLabel,
+  filterSlug: rawFilterSlug,
+  lastUpdated = new Date().toISOString().slice(0, 10),
+} = Astro.props;
+
+const filterSlug =
+  rawFilterSlug ||
+  hubName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+let tenders: any[] = [];
+let totalOpen = 0;
+let authed = false;
+let dbReady = true;
+
+try {
+  const env = getEnv(Astro);
+  const user = await getSessionUser(env.DB, Astro.request.headers.get("cookie"));
+  authed = !!user;
+
+  const limit = authed ? 50 : 5;
+  const filterCol = hubType === "Province" ? "province" : "sector";
+
+  const result = await env.DB.prepare(
+    `SELECT id, source_ref, title, procuring_entity, province, sector,
+            closing_date, closing_time, briefing_compulsory, cidb_grade
+     FROM tenders
+     WHERE status = 'open' AND canonical_ref IS NULL AND ${filterCol} = ?
+       AND (closing_date IS NULL OR closing_date >= date('now', '-1 day'))
+     ORDER BY COALESCE(closing_date, '9999-12-31') ASC, first_seen_at DESC
+     LIMIT ?`
+  ).bind(filterSlug, limit).all();
+
+  tenders = result.results || [];
+
+  const total = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM tenders
+     WHERE status = 'open' AND canonical_ref IS NULL AND ${filterCol} = ?
+       AND (closing_date IS NULL OR closing_date >= date('now', '-1 day'))`
+  ).bind(filterSlug).first<{ n: number }>();
+  totalOpen = total?.n || 0;
+} catch (err) {
+  dbReady = false;
+}
+
+const hiddenCount = Math.max(0, totalOpen - tenders.length);
+const showGate = !authed && hiddenCount > 0;
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org", "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://tenderpreneurs.co.za/" },
+    { "@type": "ListItem", position: 2, name: "Tenders", item: "https://tenderpreneurs.co.za/tenders" },
+    { "@type": "ListItem", position: 3, name: hubName, item: Astro.url.href },
+  ],
+};
+---
+
+<BaseLayout title={title} description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} slot="head" />
+
+  <nav aria-label="Breadcrumb" class="container mx-auto px-4 pt-6 text-sm text-slate-400">
+    <ol class="flex flex-wrap items-center gap-2">
+      <li><a href="/" class="hover:text-amber-400 hover:underline">Home</a></li>
+      <li aria-hidden="true">/</li>
+      <li><a href="/tenders" class="hover:text-amber-400 hover:underline">Tenders</a></li>
+      <li aria-hidden="true">/</li>
+      <li><span class="text-white font-medium">{hubName}</span></li>
+    </ol>
+  </nav>
+
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <header class="mb-8">
+      <p class="text-sm uppercase tracking-wide text-amber-400 font-semibold mb-2">{hubType} hub</p>
+      <h1 class="text-3xl md:text-4xl font-bold text-white mb-3">{title}</h1>
+      <p class="text-lg text-slate-300 max-w-prose">{description}</p>
+      {totalOpen > 0 && (
+        <p class="mt-3 text-sm text-slate-400">
+          <strong class="text-white">{totalOpen.toLocaleString()}</strong> open tenders right now
+          {!authed && totalOpen > 5 && <> · showing the latest 5</>}
+        </p>
+      )}
+    </header>
+
+    <!-- Live feed -->
+    <section aria-label={`Latest open tenders in ${hubName}`} class="mb-10">
+      {tenders.length > 0 ? (
+        <div class="grid gap-3">
+          {tenders.map((t) => (
+            <TenderCard
+              id={t.id}
+              source_ref={t.source_ref}
+              title={t.title}
+              procuring_entity={t.procuring_entity}
+              province={t.province}
+              sector={t.sector}
+              closing_date={t.closing_date}
+              closing_time={t.closing_time}
+              briefing_compulsory={t.briefing_compulsory}
+              cidb_grade={t.cidb_grade}
+            />
+          ))}
+        </div>
+      ) : dbReady ? (
+        <div class="rounded-lg border border-slate-700 bg-slate-800/50 p-6 text-slate-300">
+          <p class="font-medium text-white">No open tenders matched yet.</p>
+          <p class="text-sm mt-1">The feed updates every 6 hours. Join the waitlist below — we'll email you the moment {contextLabel} tenders are picked up.</p>
+        </div>
+      ) : (
+        <div class="rounded-lg border border-slate-700 bg-slate-800/50 p-6 text-slate-300">
+          <p class="font-medium text-white">Tender feed coming online.</p>
+          <p class="text-sm mt-1">We're in final ingestion testing. Sign up to be notified when the live feed switches on.</p>
+        </div>
+      )}
+
+      {showGate && (
+        <>
+          <LockedTenderCard count={3} />
+          <SignupGate
+            hiddenCount={hiddenCount}
+            contextName={hubName}
+            redirectTo={Astro.url.pathname}
+          />
+        </>
+      )}
+    </section>
+
+    <!-- Editorial intro -->
+    <article class="hub-prose prose prose-invert max-w-none
+                    prose-headings:font-bold prose-headings:text-white
+                    prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
+                    prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
+                    prose-p:text-slate-300
+                    prose-strong:text-white
+                    prose-li:text-slate-300
+                    prose-a:text-amber-400 hover:prose-a:text-amber-300 hover:prose-a:underline">
+      <slot />
+    </article>
+
+    <p class="mt-10 text-xs text-slate-500">Last reviewed: {lastUpdated}.</p>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Fallback styles in case @tailwindcss/typography isn't installed.
+     These ensure readable text even without the prose plugin. */
+  .hub-prose :global(h2) {
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  .hub-prose :global(h3) {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .hub-prose :global(p), .hub-prose :global(li) {
+    color: #cbd5e1; /* slate-300 */
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
+  }
+  .hub-prose :global(strong) { color: #ffffff; }
+  .hub-prose :global(em) { color: #e2e8f0; }
+  .hub-prose :global(a) {
+    color: #fbbf24; /* amber-400 */
+    text-decoration: none;
+  }
+  .hub-prose :global(a:hover) {
+    color: #fcd34d; /* amber-300 */
+    text-decoration: underline;
+  }
+  .hub-prose :global(ul) {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .hub-prose :global(ol) {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+</style>

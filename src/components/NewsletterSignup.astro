@@ -1,0 +1,280 @@
+---
+// src/components/NewsletterSignup.astro
+// Top-of-funnel newsletter — PFMA tips, B-BBEE updates, bid-writing
+// guides. Wider audience than the /tenders waitlist.
+//
+// Reuses the /api/waitlist endpoint with source="newsletter" so all
+// signups land in the same Cloudflare KV namespace but you can filter
+// by source when exporting.
+//
+// Drop into homepage, blog index, /about, end of blog posts, etc.
+
+interface Props {
+  heading?: string;
+  pitch?: string;
+  variant?: "card" | "inline" | "banner";
+}
+
+const {
+  heading = "PFMA tips, B-BBEE updates, and bid-writing guides",
+  pitch = "One short email per fortnight. No spam, no sales pitches — just the stuff that helps SMMEs win tenders.",
+  variant = "card",
+} = Astro.props;
+
+// Reuse the same form contract as WaitlistForm but with a different source tag
+// so you can segment the list later in Cloudflare KV.
+---
+
+<section class:list={["newsletter", `variant-${variant}`]} aria-labelledby="newsletter-h">
+  <div class="newsletter-inner">
+    <div class="newsletter-text">
+      <h2 id="newsletter-h">{heading}</h2>
+      <p>{pitch}</p>
+    </div>
+    <form
+      class="newsletter-form waitlist-form"
+      data-source="newsletter"
+      aria-label="Newsletter signup"
+    >
+      <div class="newsletter-row">
+        <label class="sr-only" for="newsletter-email">Email address</label>
+        <input
+          id="newsletter-email"
+          class="newsletter-input"
+          type="email"
+          name="email"
+          required
+          autocomplete="email"
+          inputmode="email"
+          placeholder="your.name@company.co.za"
+        />
+        <input
+          type="text"
+          name="company_url"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+          class="newsletter-honeypot"
+        />
+        <button class="newsletter-btn" type="submit">
+          <span class="btn-label">Subscribe</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+      <p class="newsletter-meta">
+        POPIA compliant. One-click unsubscribe in every email.
+      </p>
+      <p class="newsletter-msg" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+<style>
+  .newsletter {
+    margin: 56px auto;
+    max-width: 1000px;
+    padding: 0 20px;
+  }
+  .newsletter-inner {
+    background: linear-gradient(135deg, #0C1B33 0%, #1e3a5f 100%);
+    color: #fff;
+    padding: 32px;
+    border-radius: 16px;
+    display: grid;
+    gap: 24px;
+  }
+  .variant-card .newsletter-inner {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .variant-inline .newsletter-inner {
+    grid-template-columns: 1fr;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    color: #0C1B33;
+  }
+  .variant-banner .newsletter-inner {
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr);
+    align-items: center;
+    text-align: left;
+  }
+  @media (max-width: 720px) {
+    .variant-banner .newsletter-inner {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+  }
+  .newsletter h2 {
+    margin: 0 0 8px;
+    color: inherit;
+    font-size: clamp(20px, 3vw, 26px);
+    line-height: 1.25;
+  }
+  .newsletter-text p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .variant-inline .newsletter-text p {
+    color: #4b5563;
+  }
+  .newsletter-form {
+    width: 100%;
+  }
+  .variant-card .newsletter-form {
+    margin: 0 auto;
+    max-width: 420px;
+  }
+  .newsletter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .newsletter-input {
+    flex: 1 1 220px;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #0C1B33;
+    font-size: 15px;
+  }
+  .variant-inline .newsletter-input {
+    border-color: #d1d5db;
+    background: #fff;
+  }
+  .newsletter-input:focus {
+    outline: 2px solid #fff;
+    outline-offset: 1px;
+  }
+  .variant-inline .newsletter-input:focus {
+    outline-color: #0C1B33;
+  }
+  .newsletter-honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  .newsletter-btn {
+    padding: 12px 20px;
+    background: #fff;
+    color: #0C1B33;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+  }
+  .variant-inline .newsletter-btn {
+    background: #0C1B33;
+    color: #fff;
+  }
+  .newsletter-btn:hover:not(:disabled) { opacity: 0.92; }
+  .newsletter-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .btn-spinner {
+    display: none;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(12, 27, 51, 0.3);
+    border-top-color: #0C1B33;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  .variant-card .btn-spinner,
+  .variant-banner .btn-spinner {
+    border-color: rgba(12, 27, 51, 0.3);
+    border-top-color: #0C1B33;
+  }
+  .newsletter-form[data-state="submitting"] .btn-spinner {
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .newsletter-meta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .variant-inline .newsletter-meta { color: #6b7280; }
+  .newsletter-msg {
+    margin-top: 8px;
+    font-size: 14px;
+    min-height: 1.2em;
+  }
+  .newsletter-msg[data-tone="ok"] { color: #6ee7b7; }
+  .newsletter-msg[data-tone="err"] { color: #fca5a5; }
+  .variant-inline .newsletter-msg[data-tone="ok"] { color: #065f46; }
+  .variant-inline .newsletter-msg[data-tone="err"] { color: #b91c1c; }
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
+
+<script>
+  // Reuses /api/waitlist with source="newsletter".
+  // If WaitlistForm.astro's script is already on the page (homepage etc.),
+  // its querySelector(".waitlist-form") catches this one too — that's fine,
+  // both work identically.
+  document.querySelectorAll<HTMLFormElement>(".newsletter-form").forEach((form) => {
+    if (form.dataset.bound === "true") return; // already wired by WaitlistForm script
+    form.dataset.bound = "true";
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector<HTMLParagraphElement>(".newsletter-msg")!;
+      const btn = form.querySelector<HTMLButtonElement>(".newsletter-btn")!;
+      const input = form.querySelector<HTMLInputElement>('input[name="email"]')!;
+      const honeypot = form.querySelector<HTMLInputElement>('input[name="company_url"]')!;
+
+      msg.textContent = "";
+      msg.removeAttribute("data-tone");
+      form.setAttribute("data-state", "submitting");
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/waitlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: input.value,
+            source: form.dataset.source ?? "newsletter",
+            honeypot: honeypot.value,
+          }),
+        });
+        const data = (await res.json()) as { ok: boolean; message?: string; error?: string };
+        if (res.ok && data.ok) {
+          msg.textContent = data.message ?? "Subscribed. Check your inbox.";
+          msg.setAttribute("data-tone", "ok");
+          input.value = "";
+        } else {
+          msg.textContent = data.error ?? "Something went wrong. Please try again.";
+          msg.setAttribute("data-tone", "err");
+        }
+      } catch {
+        msg.textContent = "Network error. Please try again.";
+        msg.setAttribute("data-tone", "err");
+      } finally {
+        form.removeAttribute("data-state");
+        btn.disabled = false;
+      }
+    });
+  });
+</script>

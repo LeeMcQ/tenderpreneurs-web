@@ -1,0 +1,2299 @@
+diff --git a/src/content/blog/central-supplier-database-registration.mdx a/src/content/blog/central-supplier-database-registration.mdx
+new file mode 100644
+index 0000000..c64fef4
+--- /dev/null
++++ a/src/content/blog/central-supplier-database-registration.mdx
+@@ -0,0 +1,35 @@
++---
++title: "Central Supplier Database Registration: A Complete Walkthrough"
++description: "Everything you need to know to register on the CSD, from required documents to bank account verification and avoiding common mistakes that cause delays."
++pubDate: 2026-03-10
++author: "Tenderpreneurs Team"
++category: "Compliance"
++---
++
++The Central Supplier Database (CSD) is the single source of supplier information for all spheres of government in South Africa. Established by the National Treasury, it eliminates the need for businesses to submit the same compliance documents to every organ of state. For any company seeking to do business with the public sector, a complete and validated CSD registration is non-negotiable.
++
++## Starting your registration
++
++The process begins online at [www.csd.gov.za](https://secure.csd.gov.za). You need a device with internet access and an active email address. Start by clicking **Supplier Registration** and completing the self-registration form. The system requires basic details: company name, trading name (if different), type of supplier (individual, sole proprietor, partnership, or company), and the enterprise's legal registration number. For companies and close corporations, this means the CK or enterprise number from the Companies and Intellectual Property Commission (CIPC). All information must match the CIPC register exactly; discrepancies will cause validation failures.
++
++## Tax compliance data
++
++Next, you will enter tax compliance data. The CSD interfaces directly with the South African Revenue Service (SARS). You must provide your income tax reference number and ensure the tax type and number align with SARS records. If the business holds a valid Tax Compliance Status PIN, the system will pull the status automatically. Note that the CSD does not replace the need for a tax clearance certificate during tender submission — it merely verifies that the tax number exists and the entity's status is visible to government.
++
++## B-BBEE documentation
++
++The third critical step is uploading the company's B-BBEE certificate or sworn affidavit. The database accepts a verified B-BBEE certificate issued by a SANAS-accredited verification agency, or an affidavit for exempted micro enterprises (EMEs) and qualifying small enterprises (QSEs). The system reads the certificate number and expiry date. If your B-BBEE certificate is older than 12 months, or if you upload a handwritten affidavit that is not commissioned properly, the validation will stall. Always scan clear, colour images of the original documents.
++
++## Banking details and verification
++
++Banking details form another pillar of the registration. You must provide the bank name, account number, branch code, and account type. Importantly, the CSD now requires that the bank account be verified via the Bank Account Verification (BAV) service embedded in the system. This step confirms that the account belongs to the supplier and prevents fraud. If the bank verification fails, the CSD record will remain incomplete. It is essential to ensure the account is in the name of the registered supplier and is active.
++
++## Submission and validation
++
++After all sections are filled, submit the registration. The CSD issues a unique supplier number and a summary report immediately. However, **"registered" status does not mean "compliance checked."** The National Treasury validation team reviews the data against CIPC, SARS, and bank records. A status will show as "Compliant," "Not Compliant," or "Verification Pending." Suppliers should not bid with a non-compliant status — organs of state cannot award contracts to an invalid CSD record.
++
++## Common mistakes
++
++Common mistakes include outdated CIPC annual returns, dormant SARS profiles, and mismatched physical addresses. Keep your CSD profile updated. Any change to company details, B-BBEE level, or banking information must be amended promptly. Invalid data can trigger rejection during tender evaluations.
++
++By treating the CSD as a living profile and not a once-off task, businesses position themselves to participate in public sector opportunities seamlessly and remain compliant throughout the contract lifecycle.
+diff --git a/src/content/blog/common-reasons-bids-disqualified.mdx a/src/content/blog/common-reasons-bids-disqualified.mdx
+new file mode 100644
+index 0000000..35a01fa
+--- /dev/null
++++ a/src/content/blog/common-reasons-bids-disqualified.mdx
+@@ -0,0 +1,55 @@
++---
++title: "Common Reasons Bids Are Disqualified: Bidders' Top Mistakes and How to Fix Them"
++description: "A concise summary of the most frequent disqualification triggers in South African government tenders, helping bidders avoid preventable errors."
++pubDate: 2026-02-08
++author: "Tenderpreneurs Team"
++category: "Bidding"
++---
++
++Every year, hundreds of millions of rands in government contracts are awarded — or not — based on compliance. Disqualification is the fastest way to waste the investment of preparing a bid. The National Treasury and provincial audit outcomes consistently highlight the same cluster of fatal mistakes. If you can eliminate these, you dramatically increase your success rate.
++
++## 1. Late submission
++
++This tops the list. A bid delivered after the specified closing time must be returned unopened. Logistics failures — traffic, courier delays, or misreading the deadline — carry zero weight. Always aim to submit the day before, and if possible, have a backup person ready to hand-deliver.
++
++## 2. Non-attendance of compulsory briefings
++
++If the tender advert says "compulsory," it is not negotiable. Bidders who fail to sign the attendance register at the exact time and venue are disqualified. Sometimes briefings are held at remote project sites; plan travel with a large buffer.
++
++## 3. Missing or invalid tax compliance verification
++
++A bidder must produce a SARS Tax Compliance Status PIN and reflect a "Compliant" status on the CSD. If the PIN is invalid, expired, or the tax matters are not in order at the time of evaluation, the bid is out.
++
++## 4. Expired or improperly substantiated B-BBEE certificates
++
++Bidders claiming preference points for B-BBEE must attach a valid (less than 12 months old) certificate or sworn affidavit. A certificate that does not match the CSD record, or an uncertified copy, will lead to the points being zeroed, and if points were essential, the bid may be declared non-responsive.
++
++## 5. Incomplete SBD forms
++
++SBD 4 (declaration of interest), SBD 8 (past SCM practices), and SBD 9 (independent bid determination) are often overlooked. Blank spaces or "N/A" where disclosure is required can be interpreted as non-disclosure. Fill every field honestly, and sign every required signature.
++
++## 6. Omitted or incorrect pricing schedules
++
++Any alteration to the bill of quantities, omission of a line item, or a conditional offer (such as "price valid for 10 days instead of the required 90 days") disqualifies the bid. Use the exact spreadsheet provided; do not hide formulas.
++
++## 7. Failure to meet minimum functionality
++
++If the tender requires three years of experience and the bidder demonstrates only two, the evaluators have a duty to disqualify. No amount of explanation post-submission can remedy it.
++
++## 8. CSD non-compliance
++
++A supplier number that is not validated by the National Treasury or has discrepancies with the bidding entity's details causes instant disqualification. Keep your CSD profile updated and compliant.
++
++## 9. Lack of required samples or demonstrations
++
++Some tenders for goods require samples to be submitted by a certain date. Missing the drop-off deadline sinks the bid.
++
++## 10. Misrepresentation and fraud
++
++Any material misrepresentation, whether about B-BBEE, past performance, or qualifications, leads to disqualification and referral to the authorities for prosecution. Transparency is the only safe path.
++
++## The fix
++
++A disciplined internal review using a compliance checklist, based on the tender's returnable schedule, catches most of these errors. Procure a second, independent reviewer — fresh eyes see what stressed bid teams miss.
++
++In a space where margins are tight, simply not being disqualified is a competitive advantage.
+diff --git a/src/content/blog/construction-tenders-sa-2026.mdx a/src/content/blog/construction-tenders-sa-2026.mdx
+new file mode 100644
+index 0000000..2754836
+--- /dev/null
++++ a/src/content/blog/construction-tenders-sa-2026.mdx
+@@ -0,0 +1,53 @@
++---
++title: "Construction Tenders SA 2026: A Comprehensive Sector Outlook"
++description: "Outlook for South African construction tender opportunities in 2026, covering national, provincial, and municipal infrastructure projects."
++pubDate: 2026-02-14
++author: "Tenderpreneurs Team"
++category: "Sector Outlook"
++---
++
++South Africa's construction sector is poised for a measured upswing in 2026, driven by renewed government focus on infrastructure as an economic catalyst. From national mega-projects to municipal service delivery upgrades, construction tenders will span roads, water, energy, and building works. For contractors, subcontractors, and material suppliers, understanding the pipeline is key to resource planning.
++
++## SANRAL leads the national pipeline
++
++At the national level, the South African National Roads Agency (SANRAL) continues to lead with multi-billion rand tenders. The 2026 book will include significant packages on:
++
++- The N2 Wild Coast Toll Road
++- The N3 upgrade corridor between Durban and Gauteng
++- Routine maintenance across all nine provinces
++
++SANRAL's procurement is heavily weighted toward CIDB grading; tenderers must hold the appropriate Construction Industry Development Board grade. The agency also implements an active transformation programme, setting aside certain tenders for black-owned and emerging contractors. Monitoring the SANRAL website and eTender portal for the 2026 procurement plan is essential.
++
++## Provincial public works
++
++Provincial public works departments are another robust source. The Eastern Cape and Limpopo, with large rural road networks and school infrastructure backlogs, will issue hundreds of tenders for maintenance and new builds.
++
++KwaZulu-Natal's flood rehabilitation programmes continue into 2026, sustaining demand for civil engineering services. The Gauteng Department of Roads and Transport plans to upgrade interchanges and rehabilitate key arterial routes. In the Western Cape, the provincial health infrastructure budget will unlock tenders for clinic constructions and hospital upgrades.
++
++## Water infrastructure
++
++Water infrastructure represents a high-growth segment. The National Department of Water and Sanitation, through its water boards and the Regional Bulk Infrastructure Grant, will release tenders for:
++
++- Dam rehabilitation
++- Bulk water pipelines
++- Wastewater treatment works
++
++The Lesotho Highlands Water Project Phase II construction activities also generate ancillary service tenders on the South African side. Municipalities are scrambling to repair aging water networks; tenders for leak detection, pipe replacement, and reservoir construction are frequent.
++
++## Energy and industrial construction
++
++Energy and industrial construction tenders are on the rise. Eskom's transmission development plan will necessitate tenders for substation construction and power line installation. Private sector renewable energy projects that reach financial close in 2025 will frequently involve government-linked offtake and require local infrastructure upgrades, translating into tender opportunities for balance-of-plant contractors.
++
++## Bid readiness checklist
++
++Bid preparation for construction tenders in 2026 must emphasise:
++
++- Health and safety compliance
++- CIDB registration (verify your grading and upgrade if necessary)
++- A visible project track record
++- Joint venture agreements in place well ahead of tender adverts
++- A valid B-BBEE certificate
++
++The Construction Sector B-BBEE Charter applies, and tenders will demand a valid B-BBEE certificate. Contractors who invest in document readiness, financial capacity proof, and a well-drafted methodology will stand out.
++
++The 2026 wave of construction tenders can be transformative for businesses that approach it with diligence, local partnerships, and a clear grip on compliance.
+diff --git a/src/content/blog/gauteng-government-tenders-guide.mdx a/src/content/blog/gauteng-government-tenders-guide.mdx
+new file mode 100644
+index 0000000..37e08db
+--- /dev/null
++++ a/src/content/blog/gauteng-government-tenders-guide.mdx
+@@ -0,0 +1,44 @@
++---
++title: "Gauteng Government Tenders Guide: Navigating the Economic Hub"
++description: "A comprehensive guide to finding and winning Gauteng provincial and municipal government tenders, including key departments and bidding tips."
++pubDate: 2026-02-18
++author: "Tenderpreneurs Team"
++category: "Province Outlook"
++---
++
++Gauteng is South Africa's economic powerhouse, and government procurement in the province moves billions of rands annually. For suppliers, the Gauteng tender environment is dynamic, highly competitive, and tightly regulated. Whether you target provincial departments, city municipalities, or Gauteng-based entities like the Gautrain Management Agency, a clear strategy is essential.
++
++## The major provincial departments
++
++The primary departments issuing tenders include:
++
++- **Gauteng Health** — medical equipment, pharmaceuticals, linen, catering, and facility maintenance on a massive scale
++- **Gauteng Education** — stationery, furniture, scholar transport, and school construction
++- **Roads and Transport** — provincial road network, stormwater upgrades, ongoing rehabilitation of bridges
++- **Human Settlements** — RDP houses and mixed-use developments, often with compulsory subcontracting goals
++
++Health alone procures on a scale that supports an entire ecosystem of specialist suppliers. Infrastructure projects under Roads and Transport cover the provincial road network and the rehabilitation of bridges.
++
++## The metro municipalities
++
++Municipal tenders add another layer. The City of Johannesburg, City of Tshwane, and Ekurhuleni Metropolitan Municipality each have independent supply chain management units. These metros issue tenders for waste management, water reticulation, electricity maintenance, ICT systems, and professional services.
++
++The City of Johannesburg's Group Supply Chain Management department uses an online portal for bid advertisements. Registering on these municipal databases is often a prerequisite to receiving notifications.
++
++## Reading the procurement plans
++
++The Gauteng Provincial Treasury's Supplier Database is integrated with the CSD, but some departments still require suppliers to complete supplementary registration forms. Always check each tender's specific data requirements.
++
++Procurement plans for the 2026 financial year will be published on the eTender portal and departmental websites. These plans are goldmines — they list forecasted tenders, estimated values, and the quarters in which they will be advertised. Aligning your business development calendar with these plans gives a competitive edge.
++
++## Township economy preference
++
++Preferential procurement in Gauteng follows the PPPFA regulations closely, with a strong emphasis on township economy revitalisation. The Gauteng Township Economic Development Act encourages organs of state to procure from township-based enterprises. Bidders with bricks-and-mortar operations in Soweto, Tembisa, and other townships may earn locality-specific preference points if the tender targets that goal.
++
++## Bidding discipline
++
++Bid management discipline is crucial in Gauteng's fast-paced environment. The sheer volume of tenders means evaluators have low tolerance for incomplete SBD forms or missing compliance documents. Prices must be sharp; the competitor density is high.
++
++Consider partnering with larger, established companies as a subcontractor to build a track record. Attend the Gauteng Provincial Treasury's free supplier development workshops, where officials explain upcoming projects and common compliance errors.
++
++The Gauteng tender space rewards those who are visible, compliant, and persistent.
+diff --git a/src/content/blog/how-to-find-tenders-on-etenders.mdx a/src/content/blog/how-to-find-tenders-on-etenders.mdx
+new file mode 100644
+index 0000000..51fcbd8
+--- /dev/null
++++ a/src/content/blog/how-to-find-tenders-on-etenders.mdx
+@@ -0,0 +1,43 @@
++---
++title: "How to Find Tenders on eTenders: Mastering South Africa's National Portal"
++description: "A step-by-step guide to searching, filtering, and downloading tender opportunities on the government's eTender publication portal."
++pubDate: 2026-02-10
++author: "Tenderpreneurs Team"
++category: "How-To"
++---
++
++The eTender Publication Portal ([www.etenders.gov.za](https://www.etenders.gov.za)) is the official platform where all national, provincial, and municipal organs of state must advertise their bids. For any business serious about public sector work, proficiency in using this portal is not optional — it is the primary gateway to opportunities. Here is how to navigate it efficiently.
++
++## Getting started
++
++Start by accessing the site and selecting **Tender Opportunities** on the home page. This opens a search interface with several filters. You do not need to log in or register to view and download tenders; the portal is entirely open to the public.
++
++## Filtering effectively
++
++The most efficient search method is to use the **Organ of State** filter. Here you can select specific departments — such as "Gauteng: Department of Health" or "City of Cape Town" — and view all their active and archived notices.
++
++If you serve a particular sector, use the **Category** filter, which divides procurement into goods, services, construction, and others. Unfortunately, subcategory filters are limited, so you often need to scan the short descriptions.
++
++For more targeted monitoring, use the **Closing Date** filter. Set a date range from today to two weeks ahead to see urgent, closing-soon tenders, or widen the range to get a longer view.
++
++The **Place where goods, works or services are required** filter allows you to narrow by province or municipality — very useful for SMMEs focusing locally.
++
++## Reading the results
++
++Once you hit search, the results display key details: tender number, description, closing date, and the name of the organ of state. Click on the tender number to open the full advert page. This page contains the tender's summary, contact persons, compulsory briefing information, and most importantly, the **Documents** section at the bottom.
++
++Here you will find the complete bid pack in PDF or ZIP format. Download and save all files immediately. Some tender documents are large and may contain dozens of drawings or annexures. Use a high-speed connection and name the folders systematically on your computer, e.g., `GautengHealth-123-2026-{date}`.
++
++## A hidden feature: email alerts
++
++Many miss this one: you can set up automatic email alerts. Register a free account on the portal using an email address and password. After logging in, navigate to **My eTenders** and configure your alert preferences by category, province, and keywords. The system will send you a daily or weekly email whenever a matching tender is published. This is invaluable for not missing brief-window opportunities.
++
++## Submission is separate
++
++Remember that eTenders does not process submissions; it only advertises. Each tender document will state whether bids must be delivered physically, dropped into a tender box, or submitted through an online procurement system like the municipal e-procurement platform. Always verify the submission method and location from the official bid document, not just the advertisement.
++
++## Use the Awards section for intelligence
++
++Check the **Awards** section of the portal. Studying who won previous similar tenders and at what price gives you market intelligence.
++
++The eTender portal, used systematically, stops being a confusing maze and becomes a powerful radar, scrolling hundreds of potential contracts across your screen every morning.
+diff --git a/src/content/blog/how-to-win-your-first-government-tender.mdx a/src/content/blog/how-to-win-your-first-government-tender.mdx
+new file mode 100644
+index 0000000..ebaf626
+--- /dev/null
++++ a/src/content/blog/how-to-win-your-first-government-tender.mdx
+@@ -0,0 +1,58 @@
++---
++title: "How to Win Your First Government Tender in South Africa"
++description: "A step-by-step guide for newcomers, covering everything from finding the right opportunities to submitting a compliant bid that survives evaluation."
++pubDate: 2026-03-12
++author: "Tenderpreneurs Team"
++category: "Bidding"
++---
++
++Winning your first government tender is mostly an exercise in writing a compliant bid — and that is the single most important skill for any company chasing public sector contracts. A non-responsive bid hits the rejection pile before the evaluators even read your value proposition. Compliance means meeting every administrative, technical, and returnable requirement exactly as stated in the tender document. There is no room for interpretation or assumption.
++
++## Get the full bid pack
++
++Start by obtaining the full bid pack from the eTender portal or the department's website. Read the invitation letter and the conditions of tender first. These spell out the closing date, time, submission location, and mandatory briefings. Missing a compulsory briefing session alone will render your bid non-responsive.
++
++Make a checklist of every document requested:
++
++- SBD forms
++- Tax clearance pin
++- CSD summary report
++- B-BBEE certificate
++- Price schedule
++- Any technical returns
++
++Place the checklist prominently and tick off each item as you prepare it.
++
++## Mirror the tender structure
++
++Structure your bid exactly according to the tender's index. If the document asks for "Section A: Company Profile," "Section B: Methodology," "Section C: Price," then mirror that arrangement. Evaluators with hundreds of bids to score will not hunt for scattered information. Use tabs and clear headings. Each page should be numbered and signed where indicated.
++
++The General Conditions of Contract often demand that every page of the price schedule and the declarations be initialled. A missing initial on a key page can be exploited to disqualify you.
++
++## Administrative compliance
++
++Pay careful attention to the administrative compliance items:
++
++- The **CSD supplier number** must be valid
++- The **tax compliance status** must be "Compliant"
++- The **B-BBEE affidavit or certificate** must be current
++- The **SBD 1** (invitation to bid) must be filled in without any corrections that are not countersigned
++- The **SBD 4** (declaration of interest) requires full disclosure of any relationship with employees of the organ of state
++
++Even an innocent omission can be seen as misrepresentation.
++
++## The technical proposal
++
++The technical proposal must respond precisely to the evaluation criteria. If the tender calls for three contactable references of similar projects completed in the last five years, provide exactly three, with full contact details and contract values. If the methodology requires a risk management plan, include one even if it seems incidental.
++
++Functional criteria are often minimum hurdles. Failing to score the minimum points for methodology, experience, or qualifications means your price will not be considered.
++
++## Pricing
++
++On pricing, complete the bill of quantities or pricing schedule without altering the format. All calculations must be accurate. If provisional sums or contingencies are included, treat them according to the instructions. For tenders with 80/20 preference points, your price determines up to 80 points, so ensure your offer is competitive but sustainable. An abnormally low bid can be investigated and rejected if you cannot justify it.
++
++## The final check
++
++Before sealing the envelope or uploading digitally, get a second pair of eyes to check the compliance checklist. It is easy to miss a signature or a certified copy. Deliver the bid on time — late bids are returned unopened. Then, preserve a complete copy of your submission for your records.
++
++A compliant bid is a mirror image of the tender's requirements, nothing more, nothing less. By making compliance your first and last check, you ensure your company's ideas and expertise are actually evaluated.
+diff --git a/src/content/blog/how-win-probability-is-calculated.mdx a/src/content/blog/how-win-probability-is-calculated.mdx
+new file mode 100644
+index 0000000..69f15ab
+--- /dev/null
++++ a/src/content/blog/how-win-probability-is-calculated.mdx
+@@ -0,0 +1,49 @@
++---
++title: "How Win Probability Is Calculated: A Tenderer's Guide to Scoring"
++description: "Methodology for estimating win probability in government tenders, including price scoring, functionality, and preference point calculations."
++pubDate: 2026-02-24
++author: "Tenderpreneurs Team"
++category: "Strategy"
++---
++
++Winning a government tender is often seen as a lottery, but smart bidders calculate their win probability before committing resources. Win probability estimation combines a realistic assessment of the competition, analysis of the evaluation criteria, and honest introspection about the company's strengths and gaps. It is both an art and a science, and it is critical for go/no-go decisions.
++
++## Step 1: Dissect the criteria
++
++The first step is to dissect the evaluation criteria and their weightings. In a typical 80/20 tender with functionality, the total points are split: a minimum functionality threshold must be passed, then 80 points for price and 20 for specific goals.
++
++Functionality is often scored out of 100, with a threshold of, say, 70 points. If your own honest self-assessment against the published scoring matrix gives you only 65 points, your win probability is zero, irrespective of price. That saves you the cost of preparing a full bid.
++
++## Step 2: Estimate your price score
++
++If you clear functionality, estimate your likely price score. Gather intelligence on your competitors' likely pricing. If you have bid against the same firms before, their historical margins and price models are a reference point.
++
++Assume the lowest bidder will set the benchmark and earn 80 points. If your estimate is 15% higher than that forecast lowest price, your price score will be roughly (Lowest / Yours) × 80. For instance, if the expected lowest bid is R2 million and your price is R2.5 million, your price score is (2/2.5) × 80 = **64 points**.
++
++## Step 3: Calculate your specific goal points
++
++Examine the matrix closely. If the tender allocates:
++
++- 10 points to B-BBEE Level 1, and you hold Level 2 → 9 points
++- 5 points to locality, and you are within the municipal area → 5 points
++- 5 points to women ownership, and you qualify → 5 points
++
++Total: **19 out of 20**. A competitor with a Level 1 and similar locality might get the full 20.
++
++## Step 4: Combine and contextualise
++
++Combine the numbers: functionality (pass), price score (64), specific goals (19) gives a total of 83 points out of 100. Now you must place this in a competitive field.
++
++You do not know the exact number of bidders, but you can estimate how many capable firms will respond. If you think there are three competitors who can beat your price and match your specific goals, your win probability would be lower than 25%. But if only one competitor has a clear price advantage, you might still win if your specific goals edge them out.
++
++## The compliance attrition factor
++
++Sophisticated bidders use weighted decision matrices and even Monte Carlo simulation where the spread of possible lowest prices is modelled. However, at a practical level, the biggest factor is often disqualification.
++
++If your bid is fully compliant and others commonly make errors, your actual win probability rises. Research shows that in many government tenders, 20–30% of bids are non-responsive. Factoring in this "compliance attrition" can boost your calculated odds.
++
++## Use it for discipline
++
++Win probability is not a guarantee, but it drives discipline. If the figure is below 15%, consider whether the tender is a strategic reference or a profit-making opportunity. Use it to focus on tenders where your company's profile aligns tightly with the evaluation criteria, and where the price gap is bridgeable.
++
++Calculated bidding turns procurement from a gamble into a portfolio of measured risks.
+diff --git a/src/content/blog/ict-tenders-for-smmes.mdx a/src/content/blog/ict-tenders-for-smmes.mdx
+new file mode 100644
+index 0000000..de7038c
+--- /dev/null
++++ a/src/content/blog/ict-tenders-for-smmes.mdx
+@@ -0,0 +1,59 @@
++---
++title: "ICT Tenders for SMMEs: Unlocking Opportunities in Government Tech Spend"
++description: "How small businesses can identify and win ICT tenders in South Africa, including tips on sub-contracting, consortiums, and set-aside opportunities."
++pubDate: 2026-02-12
++author: "Tenderpreneurs Team"
++category: "Sector Outlook"
++---
++
++The South African government spends billions annually on information and communication technology. While big systems integrators often grab the headlines, a growing share of ICT tenders is ring-fenced for small, medium, and micro enterprises through set-asides, subcontracting, and targeted preference goals. For an SMME, cracking the government ICT market requires a sharp strategy that combines technical skill with procurement savvy.
++
++## Identify the right opportunities
++
++The State Information Technology Agency (SITA) is the central procurement agency for most national and provincial government IT needs. SITA issues tenders for:
++
++- Hardware
++- Software licensing
++- Networking
++- Cloud services
++- Application development
++
++SITA's own supplier development programme often breaks large contracts into manageable lots that SMMEs can bid for. Monitor SITA's procurement portal, but also check the eTender portal for ICT tenders issued directly by municipalities — such as Wi-Fi hotspot deployments, LED notification systems, or records management software.
++
++## Use SMME-friendly procurement mechanisms
++
++Many departments now apply the PPPFA specific goal of "contracting with SMMEs" by allocating up to 5 or 10 of the 20 preference points to bidders who are small enterprises. To claim these points, you must attach:
++
++- A valid sworn affidavit confirming your turnover falls under the R10 million (EME) or R50 million (QSE) threshold
++- Your B-BBEE status
++
++In addition, certain ICT tenders are designated for exclusive bidding by SMMEs if the value falls below R2 million, or if the department has applied to the Treasury for a set-aside.
++
++## Subcontracting is the entry point
++
++Subcontracting is often the most accessible entry point. Large IT firms that win government tenders are required by the tender conditions or the B-BBEE scorecard to subcontract a percentage of the work to smaller enterprises, particularly black-owned SMMEs.
++
++Proactively approach these prime contractors with a capability statement. Offer niche services like:
++
++- In-field support
++- Cabling
++- Training
++- Helpdesk support
++
++Having your own CSD registration, tax compliance, and ICT-specific certifications (like Cisco, Microsoft, or CompTIA) makes you attractive as a subcontractor.
++
++## Craft a winning ICT bid
++
++Even as an SMME, your technical proposal must demonstrate methodology, skill, and an ability to deliver warranty and support. Include:
++
++- Certifications of your technical staff
++- Case studies of past projects (even small ones)
++- An implementation plan
++
++Price competitively but not destructively; government evaluators are wary of abnormally low ICT bids that compromise quality.
++
++## Training opportunities
++
++Finally, attend free training sessions offered by SITA and the Department of Communications and Digital Technologies. These sessions explain upcoming ICT procurement plans and help SMMEs navigate the compliance maze.
++
++With a mix of direct bidding, subcontracting, and persistence, ICT tenders can become a sustainable revenue stream for agile small firms willing to play by the procurement rules.
+diff --git a/src/content/blog/kzn-procurement-deadlines.mdx a/src/content/blog/kzn-procurement-deadlines.mdx
+new file mode 100644
+index 0000000..02a768e
+--- /dev/null
++++ a/src/content/blog/kzn-procurement-deadlines.mdx
+@@ -0,0 +1,46 @@
++---
++title: "KZN Procurement Deadlines: Planning Your Bid Calendar Around Provincial Cycles"
++description: "Key procurement deadlines and planning cycles for KwaZulu-Natal government departments and municipalities, helping bidders prepare in advance."
++pubDate: 2026-02-16
++author: "Tenderpreneurs Team"
++category: "Province Outlook"
++---
++
++KwaZulu-Natal's procurement landscape is shaped by its unique geography, large population, and ambitious infrastructure programme. For businesses wanting to tap into the province's spending, understanding the procurement calendar and key deadline windows is just as important as a competitive price. Many opportunities are lost not because a bid was weak, but because the company missed the cycle.
++
++## The provincial financial year anchor
++
++Provincial government procurement planning is anchored in the financial year, **1 April to 31 March**. Departments table their annual procurement plans by end-March on the KZN Provincial Treasury website and on the eTender portal.
++
++These plans list the categories of goods, services, and works expected to go out on tender, along with the anticipated quarter of advertisement. If you are targeting infrastructure, transport, or health, download the KZN Department of Public Works' procurement plan early. It typically features a heavy construction pipeline of schools, clinics, and community halls, particularly in rural districts.
++
++The Department of Transport's plan reveals major road maintenance and bridge construction tenders, with deadlines often clustered in the second and third quarters (July to November).
++
++## Municipal cycles
++
++Municipalities in KZN — including eThekwini Metro, Msunduzi, and the various district councils — follow their own supply chain calendars. eThekwini often advertises multi-year water and sanitation tenders in the first half of the year, while smaller district municipalities might only release tenders after their budget approval in May.
++
++It is wise to monitor the municipal websites and the eTender portal weekly. Set up email alerts using the commodity codes that match your business; the system can push notifications when matching tenders are posted.
++
++## The deadline clock
++
++The deadline clock starts the moment an advert appears. Typical tender response periods in KZN range from 21 to 45 days. Infrastructure tenders with compulsory briefing sessions will have the briefing date listed; missing the briefing effectively kills the bid.
++
++KZN departments frequently hold compulsory briefings at the project site, which could be in distant rural locations like uMkhanyakude or Zululand. Logistical planning is required.
++
++## Flood-recovery and climate-resilience tenders
++
++Another significant deadline cluster relates to the province's flood recovery and climate resilience programmes. Following severe floods in recent years, there is a sustained pipeline of reconstruction tenders funded by national grants. These are often fast-tracked with shorter response times, so quick mobilisation and a ready set of compliance documents become critical.
++
++## Build a rolling calendar
++
++To stay on top of deadlines, create a twelve-month rolling calendar. Populate it with the planned tenders from the procurement plans, add columns for the expected advertisement date and submission deadline, and match it with your company's capacity.
++
++Build in time for:
++
++- Site visits
++- Document collection
++- Internal reviews
++- Travel to rural briefings
++
++Remember, late bids are not accepted in KZN — procurement units strictly enforce the cut-off time. A proactive deadline awareness system ensures that you are not perpetually rushing, but steadily building a pipeline of well-prepared bids that get through the door.
+diff --git a/src/content/blog/sbd-forms-checklist.mdx a/src/content/blog/sbd-forms-checklist.mdx
+new file mode 100644
+index 0000000..ff2c031
+--- /dev/null
++++ a/src/content/blog/sbd-forms-checklist.mdx
+@@ -0,0 +1,59 @@
++---
++title: "SBD Forms Checklist: Your Go-To Guide for Bid Documentation"
++description: "A complete checklist of standard bidding documents (SBD forms) required in South African government tenders, explaining each form's purpose."
++pubDate: 2026-02-28
++author: "Tenderpreneurs Team"
++category: "Bidding"
++---
++
++Standard Bidding Documents (SBD) are the administrative glue of public procurement in South Africa. They are prescribed by the National Treasury to standardise the declarations, commitments, and certifications that bidders must submit. A single missing or incorrectly completed SBD form can invalidate an otherwise excellent bid. Here is a practical checklist of the core SBD forms.
++
++## SBD 1: Invitation to Bid
++
++This is the cover page. It captures the bid number, description, closing date and time, and bidder's details. Check that the address, contact information, and CSD supplier number are correctly filled in. The bidder must sign the declaration that all information is true and that they accept the conditions of tender.
++
++## SBD 2: Tax Matters
++
++Requires the bidder to declare their tax compliance status. Attach the SARS-issued Tax Compliance Status PIN or the TCS certificate. The CSD report must mirror this status. Ensure the tax reference number matches SARS records exactly.
++
++## SBD 3.1: Pricing Schedule – Firm Prices
++
++For goods or services delivered within a short period. This schedule captures the prices that will remain firm for the contract duration. Any deviation from the format, such as adding rows or omitting unit prices, can be grounds for non-responsiveness.
++
++## SBD 3.2: Pricing Schedule – Price Adjustments
++
++Used for longer-term contracts where CPI or other index-based adjustments are allowed. Bidders must specify the basis of the escalation formula. If the tender does not permit escalation, submitting this form instead of SBD 3.1 invalidates the bid.
++
++## SBD 4: Declaration of Interest
++
++Critical for transparency. Bidders must disclose whether any director, member, or employee is connected to a person employed by the state, including public service employees, members of parliament, or municipal councillors. Non-disclosure of a family relationship can lead to disqualification and possible criminal referral.
++
++## SBD 5: National Education, Training and Development Policy
++
++Requires a declaration that the bidder is not listed on the National Treasury's register of tender defaulters or restricted suppliers. It also asks questions about the bidder's involvement in any collusive tendering practices.
++
++## SBD 6.1: Preference Points Claim Form – 80/20
++
++Must be completed for tenders below R50 million. Bidders indicate their B-BBEE level and attach supporting proof. The form calculates the points claimed. The evaluators will verify the claim against the attached certificate or affidavit.
++
++## SBD 6.2: Preference Points Claim Form – 90/10
++
++Equivalent for tenders of R50 million and above. The same verification rules apply.
++
++## SBD 7.2: Contract Form – Rendering of Services
++
++Once a bid is accepted, this becomes the binding contract. At bid stage, it must be signed as an acceptance of the proposed terms.
++
++## SBD 8: Declaration of Past SCM Practices
++
++Requires disclosure of any prior contract cancellations, liquidated damages imposed, or litigation with organs of state. This is not to penalise but to assess risk.
++
++## SBD 9: Certificate of Independent Bid Determination
++
++Bidders certify they arrived at the bid independently, without collusion. False certification can result in criminal prosecution.
++
++## Beyond the core forms
++
++Additional SBDs like SBD 6.3 (for functionality) and schedules for local content may appear. Always check the bid's returnable schedule; if an SBD is listed, it is mandatory. Use the latest versions from the eTender portal or the departmental website.
++
++Bidders should store blank, up-to-date SBD sets and ensure every field is completed. A well-maintained SBD checklist transforms panic at the deadline into quiet confidence.
+diff --git a/src/content/blog/understanding-bbbee-requirements.mdx a/src/content/blog/understanding-bbbee-requirements.mdx
+new file mode 100644
+index 0000000..6420cff
+--- /dev/null
++++ a/src/content/blog/understanding-bbbee-requirements.mdx
+@@ -0,0 +1,43 @@
++---
++title: "Understanding B-BBEE Requirements for Tenders"
++description: "Learn how your B-BBEE scorecard affects your tender competitiveness, what documentation you need, and how the recognition levels translate into preference points."
++pubDate: 2026-03-08
++author: "Tenderpreneurs Team"
++category: "B-BBEE"
++---
++
++Broad-Based Black Economic Empowerment (B-BBEE) is a central pillar of South Africa's public procurement system. The B-BBEE Act and the Amended Codes of Good Practice define how entities are measured on ownership, management control, skills development, enterprise and supplier development, and socio-economic development. The result is a B-BBEE recognition level, which directly influences a company's competitiveness in government tenders.
++
++## The eight recognition levels
++
++Currently, the generic scorecard produces eight recognition levels, with Level 1 being the highest. A Level 1 contributor scores 100 points or more on the scorecard and is recognised as a 135% B-BBEE procurement contributor. A Level 8 contributor scores between 40 and 55 points and receives a 10% recognition.
++
++**Exempted Micro Enterprises (EMEs)** with annual turnover under R10 million automatically qualify as Level 1 if they are 51% or more black-owned, or Level 4 if less than 51% black-owned. **Qualifying Small Enterprises (QSEs)** with turnover between R10 million and R50 million must undergo a verification or may rely on an affidavit for certain elements if they are 51% black-owned.
++
++## How levels translate into preference points
++
++For tenders, these levels translate into preference points only when the specific goals of the tender include B-BBEE as a measurable criterion. Under the 80/20 system, a tender may allocate a portion of the 20 points to B-BBEE level. Typically, a Level 1 might earn the full sub-allocation, Level 2 slightly less, scaling down to Level 8 or non-compliant status scoring zero. In construction tenders, the Construction Sector Code applies, which modifies the elements and thresholds slightly, but the recognition level framework remains consistent.
++
++## Proof of status
++
++Proof of B-BBEE status is required at bid submission. For EMEs and QSEs relying on the automatic level, a sworn affidavit or a certificate issued by the Companies and Intellectual Property Commission (CIPC) via the B-BBEE portal is acceptable. Larger entities must supply a verified B-BBEE certificate issued by a SANAS-accredited verification agency.
++
++The certificate or affidavit must be:
++
++- Signed by an authorised representative
++- Less than 12 months old
++- Clearly stating the recognition level
++
++An expired certificate, or one that does not state the recognition level clearly, renders the bid non-responsive if B-BBEE points were claimed.
++
++## Verification against the CSD
++
++Bid committees must verify the submitted B-BBEE information against the CSD, where the supplier's certificate is stored. Discrepancies between the physical certificate and the CSD record can delay an award or lead to disqualification. It is therefore vital for bidders to upload the identical, valid certificate to their CSD profile.
++
++Misrepresenting B-BBEE status is a criminal offence under the B-BBEE Act, punishable by fines, imprisonment, and exclusion from doing business with the state for up to 10 years.
++
++## Strategic structuring
++
++Strategic bidders often structure joint ventures or sub-contracting arrangements to improve the overall B-BBEE contribution of a proposal. The amended regulations allow measured entities to claim enhanced recognition if they contract with exempted micro enterprises or black-owned QSEs in the supply chain.
++
++For procurement professionals, understanding the interplay between B-BBEE levels and the PPPFA specific goals matrix is essential; the line between drafting a compliant evaluation schedule and one that inadvertently limits competition can be thin. Transparency, consistency, and a rigorous verification protocol protect both the organ of state and genuine bidders in a procurement landscape where empowerment remains a constitutional imperative.
+diff --git a/src/content/blog/understanding-the-80-20-pppfa-rule.mdx a/src/content/blog/understanding-the-80-20-pppfa-rule.mdx
+new file mode 100644
+index 0000000..6de6074
+--- /dev/null
++++ a/src/content/blog/understanding-the-80-20-pppfa-rule.mdx
+@@ -0,0 +1,49 @@
++---
++title: "Understanding the 80/20 PPPFA Rule in Government Tenders"
++description: "Explanation of the 80/20 preference point system under the PPPFA 2022 regulations, with calculation examples and the link to specific goals."
++pubDate: 2026-03-03
++author: "Tenderpreneurs Team"
++category: "Preference Points"
++---
++
++The Preferential Procurement Policy Framework Act (PPPFA) and its 2022 regulations govern how organs of state evaluate tenders using a points system that balances price and socio-economic objectives. The most widely applied formula is the 80/20 preference point system, used for tenders with a value below R50 million (including VAT).
++
++## How the 100 points break down
++
++Under the 80/20 system, a total of 100 points is allocated. Up to **80 points are reserved for price**, and a maximum of **20 points may be awarded for specific goals** linked to the tender.
++
++Price points are calculated using a relative scoring formula: the lowest acceptable bid gets the full 80 points, while other bids receive points proportionally. For example, if Bid A quotes R1 million and Bid B quotes R1.2 million:
++
++- Bid A scores 80
++- Bid B scores (1 000 000 / 1 200 000) × 80 = 66.67 points
++
++Accuracy in pricing and completeness of the financial offer is therefore paramount.
++
++## The 20 points are not automatic
++
++The remaining 20 points are not automatic. They are allocated only if the bidder attains stated specific goals, which the organ of state must clearly articulate in the tender documents. The 2022 regulations include mandatory goals: contracting with companies that are at least:
++
++- 51% black-owned
++- 30% black-woman-owned
++- 30% black-youth-owned
++- 7% black-people-with-disabilities-owned
++
++Organs of state may subdivide the 20 points among these categories and, where justifiable, add local content or other socio-economic objectives. If a bidder does not meet any goal, they score zero out of 20, regardless of price.
++
++## When the 80/20 rule applies
++
++A critical nuance is that the 80/20 rule applies only to tenders above R2 000 and below R50 million. For contracts of R50 million or above, the 90/10 system kicks in.
++
++The 2022 regulations also tighten the link between B-BBEE and preference points. An organ of state may not award preference points solely on the basis of a B-BBEE level certificate unless the tender specifically applies the B-BBEE dimension as one of the measurable specific goals. The contract must stipulate how B-BBEE status contributes to the 20 points, and the bidder must submit a valid certificate or sworn affidavit to claim those points.
++
++## The functionality threshold
++
++Calculating the final score is straightforward: price points out of 80 plus specific goal points out of 20. The tender must be awarded to the bidder with the highest total points, unless objective criteria justify otherwise.
++
++However, the regulations also demand that the winning bid passes the functionality threshold. If a tender includes functionality criteria, only bids scoring above a minimum quality hurdle proceed to the preference point stage. This prevents a pure race to the bottom on price.
++
++## Practical advice
++
++Procurement practitioners must document the evaluation of specific goals meticulously. The score sheet must reflect how each bidder's claimed goals were verified, whether through the CSD B-BBEE indicator, affidavits, or other evidence. Any mathematical error in price scoring can be a source of dispute, so independent checking is advisable.
++
++For bidders, the lesson is to study the tender's specific goal matrix and assemble all supporting proofs before submission. A missing signed affidavit could mean forfeiting up to 20 points — the difference between winning and losing.
+diff --git a/src/content/blog/western-cape-tender-opportunities-2026.mdx a/src/content/blog/western-cape-tender-opportunities-2026.mdx
+new file mode 100644
+index 0000000..b589889
+--- /dev/null
++++ a/src/content/blog/western-cape-tender-opportunities-2026.mdx
+@@ -0,0 +1,40 @@
++---
++title: "Western Cape Tender Opportunities 2026: Sectors to Watch and How to Prepare"
++description: "Overview of forecasted Western Cape government tender opportunities for 2026, focusing on infrastructure, health, education, and ICT sectors."
++pubDate: 2026-02-20
++author: "Tenderpreneurs Team"
++category: "Province Outlook"
++---
++
++The Western Cape province consistently ranks among the highest spenders on infrastructure and service delivery. For 2026, the medium-term expenditure framework and departmental procurement plans point to substantial tender opportunities across multiple sectors. Procurement professionals and local suppliers should start preparing now to position themselves for what is expected to be a competitive but rewarding year.
++
++## Infrastructure and built environment
++
++Infrastructure and built environment lead the pipeline. The Department of Transport and Public Works has signalled major road construction and maintenance projects along the N1, N2, and rural corridors. Affordable housing developments under the Human Settlements Department are projected to increase, with several large contractors likely seeking SMME subcontractors for plumbing, electrical work, and roofing.
++
++The province's commitment to well-located, mixed-income housing estates means tender notices for construction, project management, and civil engineering services will be frequent. Keep an eye on the City of Cape Town's municipal tenders as well; the city's budget for water and sanitation infrastructure upgrades, driven by resilience planning, is substantial.
++
++## Health and education
++
++Health and education facilities represent another major segment. The Department of Health's capital programme includes upgrades to Tygerberg Hospital, new day clinics in Khayelitsha and Mitchells Plain, and the continued rollout of the electronic health record system. ICT tenders linked to this digital transformation will call for hardware, software, and support services.
++
++Education tenders in 2026 will focus on school building replacements, sanitation infrastructure, and e-learning devices. The Western Cape Education Department often uses a transversal term contract approach; getting onto the panel contracts early is strategic.
++
++## Green economy and energy
++
++The green economy and energy sector are emerging strongly. The province's Energy Resilience Programme, targeting load-shedding mitigation, will release tenders for solar PV installations at government buildings, battery storage, and energy management systems. Municipalities like Stellenbosch, Drakenstein, and Mossel Bay are also building their own embedded generation capacity. Small and medium enterprises with renewable energy installation expertise should ensure their CSD profiles list relevant commodity codes.
++
++## Agriculture and agri-processing
++
++Agriculture and agri-processing tender opportunities in 2026 will be buoyed by the Western Cape's export focus. The Department of Agriculture plans to expand the provincial fresh produce market facilities and cold chain infrastructure. Opportunities for fencing, irrigation, and veterinary services are also in the pipeline.
++
++## How to capitalise
++
++To capitalise, businesses must:
++
++- Register on the eTender portal and monitor the provincial treasury's tender bulletin
++- Attend pre-tender information sessions hosted by the Provincial Treasury's Supplier Development Unit
++- Keep B-BBEE documentation current
++- Explore consortium and joint-venture arrangements
++
++The Western Cape government places a strong emphasis on local content and B-BBEE, so ensure your company's documentation is current and your consortium arrangements are explored. With proactive planning, the 2026 tender crop can be a significant growth engine for your enterprise.
+diff --git a/src/content/blog/what-is-pfma-compliance.mdx a/src/content/blog/what-is-pfma-compliance.mdx
+new file mode 100644
+index 0000000..bc46a8e
+--- /dev/null
++++ a/src/content/blog/what-is-pfma-compliance.mdx
+@@ -0,0 +1,43 @@
++---
++title: "What Is PFMA Compliance and Why It Matters in Public Procurement"
++description: "A clear explanation of PFMA compliance for South African procurement professionals, covering key sections, reporting duties, and consequences of non-compliance."
++pubDate: 2026-03-05
++author: "Tenderpreneurs Team"
++category: "Compliance"
++---
++
++The Public Finance Management Act (PFMA), Act 1 of 1999, is the cornerstone of financial governance in South Africa's national and provincial government spheres. For procurement professionals, PFMA compliance is not a box-ticking exercise — it is a legal obligation that shapes every stage of the supply chain. The Act regulates how public funds are spent, ensuring transparency, accountability, and value for money.
++
++## The core sections
++
++At its core, PFMA compliance means following the prescripts of sections 38, 51, and 76.
++
++**Section 38** places general financial management responsibilities on accounting officers, requiring them to maintain effective procurement and provisioning systems that are fair, equitable, transparent, competitive, and cost-effective.
++
++**Section 51** extends similar duties to the boards of public entities.
++
++**Section 76** outlines the framework for the National Treasury's regulations, including the detailed supply chain management rules found in the Treasury Regulations.
++
++## What it means in daily operations
++
++For a procurement officer, compliance touches daily operations. Every request for quotation or tender above R30 000 (including VAT) must be underpinned by proper demand planning, documented cost estimates, and an evaluation process that withstands audit scrutiny. The PFMA mandates that goods and services are procured only through authorised supply chain management policies, backed by valid budget allocations.
++
++A procurement decision that ignores these steps exposes the institution to irregular expenditure — a finding that must be reported to the Auditor-General and can lead to disciplinary action against the responsible official.
++
++## Treasury Instruction Notes
++
++One of the most misunderstood aspects is the link between the PFMA and National Treasury Instruction Notes. These notes update thresholds and procedures, such as the mandatory use of the Central Supplier Database (CSD) and eTender portal. Failing to comply with an instruction note carries the same weight as breaching a regulation.
++
++In recent years, Treasury has tightened the rules on deviations, expansions of scope, and contracts that bypass competitive processes. Procurement professionals must document the justification for any deviation and obtain the correct authority before proceeding.
++
++## Compliance after the award
++
++Post-award, PFMA compliance does not end. Contract management, performance monitoring, and timely payments are all part of the compliance chain. The Act requires that accounting officers report quarterly on all tenders awarded, including the names of successful bidders, amounts, and B-BBEE levels.
++
++In addition, the PFMA's materiality and loss control framework means any suspected fraud, theft, or gross negligence in procurement must be reported immediately to the National Treasury and the South African Police Service.
++
++## Consequences of non-compliance
++
++Non-compliance carries severe consequences. An accounting officer who wilfully or negligently makes an unauthorised expenditure may be charged financially. The institution may incur an audit qualification, damaging its reputation and blocking future funding. For bidders, doing business with a non-compliant department is risky; contracts can be set aside, and payment runs delayed indefinitely.
++
++Ultimately, PFMA compliance builds a procurement ecosystem where public money is protected. It is the lens through which every specification, evaluation score, and contract variation must be viewed. When procurement professionals internalise its principles, they not only safeguard their institutions but also contribute to a clean administration that serves South African citizens with integrity.
+diff --git a/src/content/blog/what-makes-a-tender-non-responsive.mdx a/src/content/blog/what-makes-a-tender-non-responsive.mdx
+new file mode 100644
+index 0000000..0b8809d
+--- /dev/null
++++ a/src/content/blog/what-makes-a-tender-non-responsive.mdx
+@@ -0,0 +1,41 @@
++---
++title: "What Makes a Tender Non-Responsive: The Pitfalls to Avoid"
++description: "Explains the key administrative, technical, and compliance failings that render a bid non-responsive under South African procurement law."
++pubDate: 2026-02-26
++author: "Tenderpreneurs Team"
++category: "Bidding"
++---
++
++In South African public procurement, a non-responsive tender is one that fails to meet the mandatory requirements set out in the tender documents. It is excluded from further evaluation, regardless of how innovative or cheap it might be. Understanding what triggers non-responsiveness saves bidders money and protects procurement officials from costly review challenges.
++
++## Late submission
++
++The most common cause is late submission. The closing date and time are absolute. A bid that arrives one minute after the deadline is non-responsive and must be returned unopened. This rule is strict; even traffic delays or courier errors do not excuse lateness.
++
++## Non-attendance of compulsory briefings
++
++If the tender documents state that attendance is mandatory and the bidder's representative did not sign the attendance register at the specified venue and time, the bid falls away.
++
++## Administrative non-responsiveness
++
++This stems from missing or incorrectly completed returnable documents. If the SBD 1 is unsigned, or the CSD summary report is not attached and the supplier number is not reflected, evaluators cannot verify the bidder's registration. A missing tax compliance pin or an expired B-BBEE certificate linked to claimed preference points will also render the bid non-responsive. These are objective failures, not matters of discretion.
++
++## Technical non-responsiveness
++
++This occurs when the bidder fails to meet the stated minimum functionality threshold. Suppose a tender requires five years' experience in civil works and the bidder submits proof of only three years. If the cut-off is absolute, the bid is rejected. Similarly, if a tender mandates that key personnel hold specific professional registrations (e.g., PrEng for an engineer) and the bidder's candidate is not registered, the bid fails. The evaluation committee has no mandate to condone a deviation.
++
++## Pricing-related issues
++
++Pricing-related non-responsiveness often relates to incomplete or altered price schedules. If the bidder adjusts the quantities in the bill of quantities, or omits a line item entirely, the whole tender may be rejected. An ambiguous price, such as writing "to be negotiated," is fatal.
++
++Bids that exceed the approved budget, if a budget cap is disclosed, are also non-responsive. Recently, Treasury has clarified that an abnormally low bid can be declared non-responsive if the bidder cannot provide a satisfactory written explanation of its cost structure.
++
++## Local content non-compliance
++
++Non-compliance with local content and designation regulations is a growing reason for non-responsiveness. For sectors like steel, furniture, or electrical equipment, bidders must use SBD 6.2 and detailed local content schedules to demonstrate that the goods exceed the minimum local content threshold. An incorrectly completed certificate, or a simple omission of the supporting spreadsheet, leads to disqualification.
++
++## The unfair-procurement cuts both ways
++
++Evaluators who wrongly declare a responsive bid non-responsive can face a tender review application. Conversely, accepting a non-responsive bid constitutes an irregular expenditure. Therefore, bid specifications must clearly differentiate between mandatory (non-waivable) requirements and desirable criteria.
++
++Words like **must** and **shall** signal mandatory conditions; **may** or **should** indicate desirable ones. For bidders, the rule is simple: treat every "must" in the document as an absolute instruction. A systematic compliance matrix prepared before submission can be the difference between a winning bid and the frustration of a non-responsive letter.
+diff --git a/src/layouts/TenderHubLayout.astro a/src/layouts/TenderHubLayout.astro
+new file mode 100644
+index 0000000..c552916
+--- /dev/null
++++ a/src/layouts/TenderHubLayout.astro
+@@ -0,0 +1,124 @@
++---
++import BaseLayout from "./BaseLayout.astro";
++
++export interface Props {
++  title: string;
++  description: string;
++  hubType: "Province" | "Sector";
++  hubName: string;
++  /** Display name with article, e.g. "the Eastern Cape" or "Construction" */
++  contextLabel: string;
++  /** ISO date for schema.org */
++  lastUpdated?: string;
++}
++
++const { title, description, hubType, hubName, contextLabel, lastUpdated = new Date().toISOString().slice(0, 10) } = Astro.props;
++
++const breadcrumbJsonLd = {
++  "@context": "https://schema.org",
++  "@type": "BreadcrumbList",
++  itemListElement: [
++    { "@type": "ListItem", position: 1, name: "Home", item: "https://tenderpreneurs.co.za/" },
++    { "@type": "ListItem", position: 2, name: "Tenders", item: "https://tenderpreneurs.co.za/tenders" },
++    { "@type": "ListItem", position: 3, name: hubName, item: Astro.url.href },
++  ],
++};
++
++const collectionJsonLd = {
++  "@context": "https://schema.org",
++  "@type": "CollectionPage",
++  name: title,
++  description,
++  url: Astro.url.href,
++  dateModified: lastUpdated,
++  isPartOf: {
++    "@type": "WebSite",
++    name: "Tenderpreneurs",
++    url: "https://tenderpreneurs.co.za/",
++  },
++};
++---
++
++<BaseLayout title={title} description={description}>
++  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} slot="head" />
++  <script type="application/ld+json" set:html={JSON.stringify(collectionJsonLd)} slot="head" />
++
++  <nav aria-label="Breadcrumb" class="container mx-auto px-4 pt-6 text-sm text-slate-600">
++    <ol class="flex flex-wrap items-center gap-2">
++      <li><a href="/" class="hover:underline">Home</a></li>
++      <li aria-hidden="true">/</li>
++      <li><a href="/tenders" class="hover:underline">Tenders</a></li>
++      <li aria-hidden="true">/</li>
++      <li><span class="text-slate-900 font-medium">{hubName}</span></li>
++    </ol>
++  </nav>
++
++  <article class="container mx-auto px-4 py-8 max-w-4xl">
++    <header class="mb-8">
++      <p class="text-sm uppercase tracking-wide text-amber-700 font-semibold mb-2">{hubType} hub</p>
++      <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3">{title}</h1>
++      <p class="text-lg text-slate-700">{description}</p>
++    </header>
++
++    <div class="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-a:text-amber-700 hover:prose-a:underline">
++      <slot />
++    </div>
++
++    <section class="mt-12 rounded-lg border border-amber-200 bg-amber-50 p-6">
++      <h2 class="text-xl font-semibold text-slate-900 mb-2">Get tender alerts for {contextLabel}</h2>
++      <p class="text-slate-700 mb-4">
++        We're building a live feed of {hubType.toLowerCase()} tenders aggregated from eTenders, departmental sites, and municipal portals.
++        Join the waitlist to be notified the moment it launches.
++      </p>
++      <form
++        action="/api/waitlist"
++        method="POST"
++        class="flex flex-col sm:flex-row gap-3"
++        aria-label={`Tender alerts waitlist for ${hubName}`}
++      >
++        <input type="hidden" name="hub" value={`${hubType}:${hubName}`} />
++        <label class="sr-only" for={`email-${hubName}`}>Email address</label>
++        <input
++          type="email"
++          name="email"
++          id={`email-${hubName}`}
++          required
++          placeholder="you@yourcompany.co.za"
++          class="flex-1 rounded-md border border-slate-300 px-4 py-2 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-300"
++        />
++        <button
++          type="submit"
++          class="rounded-md bg-amber-700 px-5 py-2 font-semibold text-white hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
++        >
++          Join waitlist
++        </button>
++      </form>
++      <p class="text-xs text-slate-600 mt-3">
++        We'll only email you about {hubName} tender alerts. Unsubscribe anytime. POPIA-compliant.
++      </p>
++    </section>
++
++    <section class="mt-10">
++      <h2 class="text-2xl font-bold text-slate-900 mb-4">Useful links right now</h2>
++      <ul class="space-y-2 text-slate-700">
++        <li>
++          <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer" class="text-amber-700 hover:underline">
++            eTenders Publication Portal →
++          </a>
++          <span class="text-slate-600"> the official national tender notice board</span>
++        </li>
++        <li>
++          <a href="https://secure.csd.gov.za" target="_blank" rel="noopener noreferrer" class="text-amber-700 hover:underline">
++            Central Supplier Database (CSD) →
++          </a>
++          <span class="text-slate-600"> register before you bid</span>
++        </li>
++        <li>
++          <a href="/blog" class="text-amber-700 hover:underline">Procurement guides on Tenderpreneurs →</a>
++        </li>
++      </ul>
++    </section>
++
++    <p class="mt-10 text-xs text-slate-500">Last reviewed: {lastUpdated}.</p>
++  </article>
++</BaseLayout>
+diff --git a/src/pages/api/waitlist.ts a/src/pages/api/waitlist.ts
+new file mode 100644
+index 0000000..a086d0d
+--- /dev/null
++++ a/src/pages/api/waitlist.ts
+@@ -0,0 +1,66 @@
++import type { APIRoute } from "astro";
++
++export const prerender = false;
++
++// Minimal waitlist endpoint: validates input, logs to console (Cloudflare tail captures it).
++// Replace the persistence block with Resend / D1 / KV / Mailchimp once you've picked a provider.
++// Do NOT swallow errors silently in production — wire up Sentry or Cloudflare logs.
++
++const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
++
++export const POST: APIRoute = async ({ request, redirect }) => {
++  let email = "";
++  let hub = "";
++
++  const contentType = request.headers.get("content-type") || "";
++
++  try {
++    if (contentType.includes("application/json")) {
++      const body = await request.json();
++      email = String(body.email || "").trim().toLowerCase();
++      hub = String(body.hub || "unknown").trim();
++    } else {
++      const form = await request.formData();
++      email = String(form.get("email") || "").trim().toLowerCase();
++      hub = String(form.get("hub") || "unknown").trim();
++    }
++  } catch {
++    return new Response(JSON.stringify({ ok: false, error: "invalid_body" }), {
++      status: 400,
++      headers: { "content-type": "application/json" },
++    });
++  }
++
++  if (!EMAIL_RE.test(email) || email.length > 254) {
++    return new Response(JSON.stringify({ ok: false, error: "invalid_email" }), {
++      status: 400,
++      headers: { "content-type": "application/json" },
++    });
++  }
++
++  if (hub.length > 100) {
++    return new Response(JSON.stringify({ ok: false, error: "invalid_hub" }), {
++      status: 400,
++      headers: { "content-type": "application/json" },
++    });
++  }
++
++  // TODO: persist (D1 / KV / Resend / Mailchimp). For now, log so it shows in `wrangler tail`.
++  console.log(JSON.stringify({ event: "waitlist_signup", email, hub, at: new Date().toISOString() }));
++
++  // Browser POSTs from the inline form should redirect to a thanks page.
++  if (!contentType.includes("application/json")) {
++    return redirect(`/tenders/thanks?hub=${encodeURIComponent(hub)}`, 303);
++  }
++
++  return new Response(JSON.stringify({ ok: true }), {
++    status: 200,
++    headers: { "content-type": "application/json" },
++  });
++};
++
++export const GET: APIRoute = () =>
++  new Response(JSON.stringify({ ok: false, error: "method_not_allowed" }), {
++    status: 405,
++    headers: { "content-type": "application/json", allow: "POST" },
++  });
+diff --git a/src/pages/tenders/agriculture.astro a/src/pages/tenders/agriculture.astro
+new file mode 100644
+index 0000000..ca4d2dd
+--- /dev/null
++++ a/src/pages/tenders/agriculture.astro
+@@ -0,0 +1,35 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Agriculture Sector Tenders in South Africa"
++  description="Government agriculture tender opportunities — agri-infrastructure, fencing and irrigation, veterinary services, land care and food security programmes."
++  hubType="Sector"
++  hubName="Agriculture"
++  contextLabel="agriculture"
++  lastUpdated="2026-05-14"
++>
++  <h2>About agriculture procurement</h2>
++  <p>
++    Agriculture-sector tenders are issued by the national Department of Agriculture, Land Reform and Rural
++    Development, provincial agriculture departments, the Agricultural Research Council, and the Land Bank,
++    alongside agri-related procurement from district and local municipalities. Recurring categories include
++    fencing, boreholes and irrigation, veterinary services, extension services, fresh produce market
++    infrastructure, and post-harvest cold-chain facilities.
++  </p>
++
++  <h2>Detailed sector hub — coming soon</h2>
++  <p>
++    We're building a detailed agriculture-sector hub covering the major procuring entities, the recurring
++    tender categories, the compliance requirements (SAVC registration for veterinary services, environmental
++    authorisations, water-use licences), and the link between sector codes (AgriBEE) and PPPFA specific goals.
++    Join the waitlist below to be notified when it publishes.
++  </p>
++
++  <p>
++    In the meantime, the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>
++    carries all current agriculture-sector tenders.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/catering.astro a/src/pages/tenders/catering.astro
+new file mode 100644
+index 0000000..e751f02
+--- /dev/null
++++ a/src/pages/tenders/catering.astro
+@@ -0,0 +1,33 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Catering Services Tenders in South Africa"
++  description="Government catering tender opportunities — hospital and patient catering, school nutrition, conference and event catering, and prison and institutional food services."
++  hubType="Sector"
++  hubName="Catering"
++  contextLabel="catering services"
++  lastUpdated="2026-05-14"
++>
++  <h2>About catering procurement</h2>
++  <p>
++    Catering tenders cover hospital and patient meals, the National School Nutrition Programme,
++    conference and event catering for departmental functions, and large-scale institutional catering for
++    prisons, training colleges, and SAPS / SANDF bases. Hospital and school nutrition tenders dwarf the
++    others in volume; both are governed by sector-specific food safety regulations.
++  </p>
++
++  <h2>Detailed sector hub — coming soon</h2>
++  <p>
++    We're building a detailed catering-services hub covering the National School Nutrition Programme by
++    province, hospital patient catering tenders, the food safety compliance framework (R638, COA, hygiene
++    certificates), HACCP requirements, and the costing realities of high-volume institutional catering.
++    Join the waitlist below.
++  </p>
++
++  <p>
++    Current catering-services tenders are advertised on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/cleaning.astro a/src/pages/tenders/cleaning.astro
+new file mode 100644
+index 0000000..90469a8
+--- /dev/null
++++ a/src/pages/tenders/cleaning.astro
+@@ -0,0 +1,34 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Cleaning Services Tenders in South Africa"
++  description="Government cleaning services tender opportunities — facility cleaning, hospital and specialised hygiene, hygiene consumables, and waste management."
++  hubType="Sector"
++  hubName="Cleaning"
++  contextLabel="cleaning services"
++  lastUpdated="2026-05-14"
++>
++  <h2>About cleaning-services procurement</h2>
++  <p>
++    Cleaning services are one of the largest steady-state SMME procurement categories in government. Every
++    department, hospital, school complex, court, police station, and SOE facility runs cleaning contracts,
++    typically on multi-year terms. The sector includes general facility cleaning, specialised hospital and
++    laboratory hygiene, hygiene consumables supply (paper, soap, dispensers), and integrated facility
++    management contracts that bundle cleaning with related services.
++  </p>
++
++  <h2>Detailed sector hub — coming soon</h2>
++  <p>
++    We're building a detailed cleaning-services hub covering the major procuring entities by province,
++    typical contract structures, the sectoral determination wage compliance regime, the compliance and
++    insurance requirements for hospital and specialised work, and the bidding strategy that wins multi-year
++    panel contracts. Join the waitlist below.
++  </p>
++
++  <p>
++    Current cleaning-services tenders are advertised on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/construction.astro a/src/pages/tenders/construction.astro
+new file mode 100644
+index 0000000..51c791f
+--- /dev/null
++++ a/src/pages/tenders/construction.astro
+@@ -0,0 +1,66 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Construction Tenders in South Africa"
++  description="Government construction tender opportunities — from SANRAL national road packages to provincial school builds, water infrastructure, and municipal works."
++  hubType="Sector"
++  hubName="Construction"
++  contextLabel="construction"
++  lastUpdated="2026-05-14"
++>
++  <h2>About construction procurement</h2>
++  <p>
++    Construction is the largest single category of public-sector procurement in South Africa by value. It
++    spans roads and bridges (SANRAL and provincial transport departments), water and sanitation
++    (Department of Water and Sanitation, water boards, municipalities), buildings (provincial public works,
++    education, health), and energy infrastructure (Eskom transmission, municipal embedded generation).
++  </p>
++
++  <h2>Key procuring entities</h2>
++  <ul>
++    <li><strong>South African National Roads Agency (SANRAL)</strong> — N1/N2/N3 corridors, routine national-route maintenance, the N2 Wild Coast programme.</li>
++    <li><strong>Provincial Departments of Public Works / Infrastructure</strong> — each of the 9 provinces runs a continuous building programme (schools, clinics, government offices).</li>
++    <li><strong>Provincial Departments of Transport</strong> — provincial road networks, bridge rehabilitation.</li>
++    <li><strong>Department of Water and Sanitation</strong> and the water boards (Rand Water, Umgeni Water, Magalies Water, etc.) — bulk water, treatment works.</li>
++    <li><strong>Metropolitan municipalities</strong> — water reticulation, stormwater, electricity infrastructure, social facilities.</li>
++    <li><strong>Eskom</strong> — transmission lines, substations, generation refurbishment.</li>
++  </ul>
++
++  <h2>CIDB grading is the gatekeeper</h2>
++  <p>
++    Construction tenders are gated by Construction Industry Development Board grading. Your CIDB Grade
++    determines the contract value range you may bid for, and the class of works
++    (e.g. <em>2GB</em> = General Building Grade 2, <em>5CE</em> = Civil Engineering Grade 5). Most tenders
++    state the minimum CIDB Grade required; bidding below grade is non-responsive. Plan grading upgrades
++    well in advance — the process takes weeks and requires audited financials, completed contract references,
++    and proof of capacity.
++  </p>
++
++  <h2>The 2026 pipeline</h2>
++  <p>
++    The strongest segments to watch through 2026 are KZN flood reconstruction (continuing), water
++    infrastructure (national catch-up programme), school infrastructure (continuing rollouts in EC,
++    Limpopo, and KZN), and Eskom transmission build-out tied to renewable energy grid connection.
++    See our <a href="/blog/construction-tenders-sa-2026">2026 construction outlook</a> for the detailed
++    sector forecast.
++  </p>
++
++  <h2>Bid readiness checklist</h2>
++  <ul>
++    <li>Valid CIDB grading at the required level and class of works</li>
++    <li>Current B-BBEE certificate (Construction Sector Code applies)</li>
++    <li>Health and safety file ready (Occupational Health and Safety Act, Construction Regulations)</li>
++    <li>Letters of intent or signed joint venture agreements where needed</li>
++    <li>Proof of plant and equipment availability</li>
++    <li>Three to five completed contract references in the relevant class of works</li>
++  </ul>
++
++  <h2>Compliance reading</h2>
++  <ul>
++    <li><a href="/blog/how-to-win-your-first-government-tender">How to win your first government tender</a></li>
++    <li><a href="/blog/sbd-forms-checklist">SBD forms checklist</a></li>
++    <li><a href="/blog/what-makes-a-tender-non-responsive">What makes a tender non-responsive</a></li>
++  </ul>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/consulting.astro a/src/pages/tenders/consulting.astro
+new file mode 100644
+index 0000000..a7ae25f
+--- /dev/null
++++ a/src/pages/tenders/consulting.astro
+@@ -0,0 +1,34 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Consulting Services Tenders in South Africa"
++  description="Government consulting tender opportunities — built-environment professional services, management consulting, engineering, IT advisory, and audit and assurance."
++  hubType="Sector"
++  hubName="Consulting"
++  contextLabel="consulting services"
++  lastUpdated="2026-05-14"
++>
++  <h2>About consulting procurement</h2>
++  <p>
++    Consulting tenders span built-environment professional services (architects, engineers, quantity
++    surveyors, project managers, town planners), management and strategy consulting, IT advisory,
++    organisational development, and internal audit and assurance. Built-environment work is typically
++    procured under the CIDB Standard for the Appointment of Professional Service Providers and remunerated
++    against tariffs guided by the relevant statutory council (SACAP, ECSA, SACPCMP, SACQSP, SACPVP).
++  </p>
++
++  <h2>Detailed sector hub — coming soon</h2>
++  <p>
++    We're building a detailed consulting-services hub covering the procurement frameworks used for
++    professional services, the council registration requirements per discipline, the typical evaluation
++    criteria (the CIDB methodology, NEC4 PSC, FIDIC White Book), and the link between consulting team
++    composition and B-BBEE / specific goal scoring. Join the waitlist below.
++  </p>
++
++  <p>
++    Current consulting tenders are advertised on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/eastern-cape.astro a/src/pages/tenders/eastern-cape.astro
+new file mode 100644
+index 0000000..575be5d
+--- /dev/null
++++ a/src/pages/tenders/eastern-cape.astro
+@@ -0,0 +1,63 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Eastern Cape Government Tenders"
++  description="Tender opportunities across Eastern Cape provincial departments, Nelson Mandela Bay and Buffalo City metros, and rural district municipalities."
++  hubType="Province"
++  hubName="Eastern Cape"
++  contextLabel="the Eastern Cape"
++  lastUpdated="2026-05-14"
++>
++  <h2>About procurement in the Eastern Cape</h2>
++  <p>
++    The Eastern Cape combines two metropolitan economies — Nelson Mandela Bay (Gqeberha) and Buffalo City
++    (East London) — with one of the largest rural service-delivery footprints in the country. Provincial
++    procurement runs through departments coordinated by the Eastern Cape Provincial Treasury, with significant
++    public-works tenders tied to rural school infrastructure backlogs and the provincial road network.
++  </p>
++
++  <h2>Key procuring entities</h2>
++
++  <h3>Provincial departments</h3>
++  <ul>
++    <li><strong>Eastern Cape Department of Public Works and Infrastructure</strong> — schools, clinics, government buildings, especially in rural districts.</li>
++    <li><strong>Eastern Cape Department of Transport</strong> — provincial road maintenance, fleet services, scholar transport.</li>
++    <li><strong>Eastern Cape Department of Health</strong> — district hospitals, equipment, security and catering services.</li>
++    <li><strong>Eastern Cape Department of Education</strong> — large school infrastructure pipeline, sanitation, furniture.</li>
++    <li><strong>Eastern Cape Department of Rural Development and Agrarian Reform</strong> — agri-infrastructure, fencing, irrigation.</li>
++  </ul>
++
++  <h3>Municipalities</h3>
++  <ul>
++    <li><strong>Nelson Mandela Bay Metropolitan Municipality</strong> — water and sanitation upgrades (Nooitgedacht scheme), port-adjacent industrial infrastructure.</li>
++    <li><strong>Buffalo City Metropolitan Municipality</strong> — coastal infrastructure, refuse, electricity.</li>
++    <li>District municipalities such as <strong>OR Tambo, Alfred Nzo, Chris Hani, Sarah Baartman, Amathole, Joe Gqabi</strong>.</li>
++  </ul>
++
++  <h2>Where Eastern Cape tenders are advertised</h2>
++  <p>
++    All provincial and municipal tenders appear on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++    The Eastern Cape Provincial Treasury publishes annual procurement plans, and the two metros maintain
++    their own supplier portals alongside CSD records.
++  </p>
++
++  <h2>What sets the Eastern Cape apart</h2>
++  <p>
++    Three factors stand out. First, the <strong>scale of the school-infrastructure programme</strong> — the
++    province has worked through a multi-year pipeline of replacing mud schools and adding ablution facilities,
++    sustaining steady demand for civil and building contractors. Second, the <strong>rural road network</strong>
++    — Transport tenders cover gravel road maintenance across vast districts. Third, the
++    <strong>automotive industrial corridor</strong> around Gqeberha and East London means industrial services,
++    security, and specialised construction tenders linked to OEM and supplier-park infrastructure.
++  </p>
++
++  <h2>Bidding strategy</h2>
++  <ul>
++    <li>For rural infrastructure work, build partnerships with locally-based emerging contractors — many tenders carry locality and CIDB Grade-based preference goals.</li>
++    <li>Watch the Department of Education's procurement plan closely; school construction is the steadiest pipeline in the province.</li>
++    <li>Plan for travel — compulsory briefings can be deep in OR Tambo or Alfred Nzo district.</li>
++  </ul>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/education.astro a/src/pages/tenders/education.astro
+new file mode 100644
+index 0000000..7d06d17
+--- /dev/null
++++ a/src/pages/tenders/education.astro
+@@ -0,0 +1,58 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Education Sector Tenders in South Africa"
++  description="Government education tender opportunities — school infrastructure, scholar transport, stationery and furniture, e-learning devices, and post-school institution procurement."
++  hubType="Sector"
++  hubName="Education"
++  contextLabel="education"
++  lastUpdated="2026-05-14"
++>
++  <h2>About education procurement</h2>
++  <p>
++    Education is one of the largest line items in South Africa's national budget. Procurement spans basic
++    education (primary and secondary schools), post-school education (TVET colleges, universities, SETAs),
++    and the operational supply chain for over 24 000 public schools — stationery, furniture, scholar
++    transport, school nutrition, and ICT.
++  </p>
++
++  <h2>Key procuring entities</h2>
++  <ul>
++    <li><strong>Department of Basic Education (DBE)</strong> — national policy, learner-teacher support material, transversal tenders.</li>
++    <li><strong>Provincial Departments of Education</strong> — the largest direct procurers; each province runs continuous tenders for school infrastructure, scholar transport, stationery, furniture, and ICT.</li>
++    <li><strong>Department of Higher Education and Training (DHET)</strong> — TVET sector infrastructure and equipment.</li>
++    <li><strong>Public universities and TVET colleges</strong> — each runs its own SCM unit (significant tender flow at the larger institutions).</li>
++    <li><strong>SETAs</strong> — skills development, learnership administration, training service procurement.</li>
++    <li><strong>Department of Public Works (provincial)</strong> — school construction is often executed via the provincial public works department.</li>
++  </ul>
++
++  <h2>The recurring tender categories</h2>
++  <ul>
++    <li><strong>School infrastructure</strong> — replacement of inappropriate structures, sanitation programmes, new builds, maintenance.</li>
++    <li><strong>Scholar transport</strong> — annual provincial tenders, with tight compliance on vehicle roadworthiness and driver PrDP / PSP.</li>
++    <li><strong>National School Nutrition Programme (NSNP)</strong> — daily meals for over 9 million learners.</li>
++    <li><strong>Stationery and learner-teacher support material</strong> — annual or multi-year contracts.</li>
++    <li><strong>School furniture</strong> — desks, chairs, lab and library furniture.</li>
++    <li><strong>E-learning devices and platforms</strong> — tablets, laptops, learning management systems.</li>
++    <li><strong>Sanitation infrastructure</strong> — driven by the SAFE Initiative replacement programme.</li>
++  </ul>
++
++  <h2>Why panel and transversal contracts matter</h2>
++  <p>
++    Many provincial education departments use panel or term contracts for predictable categories
++    (stationery, furniture, school nutrition). Getting onto a panel early gives you years of pipeline
++    rather than chasing one-off tenders. Monitor adverts for "appointment of a panel of suppliers" or
++    "term contract" language.
++  </p>
++
++  <h2>Bid readiness essentials</h2>
++  <ul>
++    <li>Sectoral compliance (e.g., for nutrition — food safety / R638, environmental health certifications)</li>
++    <li>Roadworthy and licensed vehicles plus PrDP/PSP drivers for scholar transport</li>
++    <li>Capacity proof matching the geographic spread of the tender (you may need to deliver to remote rural schools)</li>
++    <li>Current B-BBEE certificate and CSD record</li>
++    <li>Insurance appropriate to working in a learner-contact environment</li>
++  </ul>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/energy.astro a/src/pages/tenders/energy.astro
+new file mode 100644
+index 0000000..baa4742
+--- /dev/null
++++ a/src/pages/tenders/energy.astro
+@@ -0,0 +1,36 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Energy Sector Tenders in South Africa"
++  description="Government energy tender opportunities — Eskom transmission and generation, municipal embedded generation, solar PV and storage, energy efficiency, and just-energy-transition procurement."
++  hubType="Sector"
++  hubName="Energy"
++  contextLabel="energy"
++  lastUpdated="2026-05-14"
++>
++  <h2>About energy procurement</h2>
++  <p>
++    Energy-sector tenders are issued by Eskom (transmission build-out, generation refurbishment), the
++    Department of Mineral Resources and Energy, the IPP Office (REIPPPP and battery procurement), municipal
++    distribution utilities, and a growing number of public buildings procuring solar PV and storage under
++    their own energy resilience programmes. The just-energy-transition pipeline in Mpumalanga adds
++    decommissioning and repurposing tenders.
++  </p>
++
++  <h2>Detailed sector hub — coming soon</h2>
++  <p>
++    We're building a detailed energy-sector hub covering Eskom transmission tenders, IPP and balance-of-plant
++    procurement, municipal embedded generation, energy efficiency retrofits, and the JET-tied programmes.
++    We'll also cover the compliance environment — NERSA licensing, OEM accreditations, electrical
++    contractor registration, and the safety regime for high-voltage work. Join the waitlist below.
++  </p>
++
++  <p>
++    In the meantime, the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>
++    lists current energy-sector tenders. Eskom-specific procurement also goes through the
++    <a href="https://tenderbulletin.eskom.co.za" target="_blank" rel="noopener noreferrer">Eskom Tender Bulletin</a>.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/free-state.astro a/src/pages/tenders/free-state.astro
+new file mode 100644
+index 0000000..a9c63de
+--- /dev/null
++++ a/src/pages/tenders/free-state.astro
+@@ -0,0 +1,61 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Free State Government Tenders"
++  description="Tender opportunities across Free State provincial departments, Mangaung Metro, and district municipalities serving the central plateau."
++  hubType="Province"
++  hubName="Free State"
++  contextLabel="the Free State"
++  lastUpdated="2026-05-14"
++>
++  <h2>About procurement in the Free State</h2>
++  <p>
++    The Free State sits at the geographic centre of South Africa and runs a procurement environment driven
++    by agriculture, mining-adjacent services, education, and health. The Mangaung Metropolitan Municipality
++    (Bloemfontein) and four district municipalities cover a largely agrarian and small-town landscape, with
++    provincial departments coordinated by the Free State Provincial Treasury.
++  </p>
++
++  <h2>Key procuring entities</h2>
++
++  <h3>Provincial departments</h3>
++  <ul>
++    <li><strong>Free State Department of Public Works and Infrastructure</strong> — government buildings, schools, clinics.</li>
++    <li><strong>Free State Department of Police, Roads and Transport</strong> — road maintenance across the provincial network.</li>
++    <li><strong>Free State Department of Health</strong> — Universitas, Pelonomi, and Bongani regional hospitals; equipment, security, catering.</li>
++    <li><strong>Free State Department of Education</strong> — school infrastructure, scholar transport, stationery.</li>
++    <li><strong>Free State Department of Agriculture and Rural Development</strong> — agri-extension services, fencing, irrigation.</li>
++  </ul>
++
++  <h3>Municipalities</h3>
++  <ul>
++    <li><strong>Mangaung Metropolitan Municipality</strong> — water, sanitation, electricity, fleet, ICT.</li>
++    <li>District municipalities: <strong>Fezile Dabi, Lejweleputswa, Thabo Mofutsanyana, Xhariep</strong>, plus their constituent local municipalities (Matjhabeng, Maluti-a-Phofung, Setsoto, and others).</li>
++  </ul>
++
++  <h2>Where Free State tenders are advertised</h2>
++  <p>
++    All provincial and municipal tenders appear on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++    The Free State Provincial Treasury publishes annual procurement plans, and Mangaung Metro maintains
++    its own supplier registration.
++  </p>
++
++  <h2>What sets the Free State apart</h2>
++  <p>
++    The province's tender pipeline is steady rather than spectacular. The strongest segments are
++    <strong>agri-infrastructure</strong> (fencing, irrigation, post-harvest facilities), <strong>school and clinic
++    construction</strong> in smaller towns, and <strong>roads maintenance</strong>. The
++    <strong>Maluti-a-Phofung and Matjhabeng</strong> local municipalities have been under financial pressure,
++    so suppliers should verify payment terms and watch for irregular-expenditure risk before committing.
++  </p>
++
++  <h2>Bidding strategy</h2>
++  <ul>
++    <li>Focus on building relationships with the District Development Model coordinators — many small-municipality projects route through district-level coordination.</li>
++    <li>For agri-related tenders, ensure your CSD commodity codes cover the relevant agricultural service categories.</li>
++    <li>Verify the financial health of the procuring entity before committing significant working capital.</li>
++  </ul>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/gauteng.astro a/src/pages/tenders/gauteng.astro
+new file mode 100644
+index 0000000..e08f755
+--- /dev/null
++++ a/src/pages/tenders/gauteng.astro
+@@ -0,0 +1,79 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Gauteng Government Tenders"
++  description="Find tender opportunities across Gauteng's provincial departments, the City of Johannesburg, Tshwane, and Ekurhuleni metros."
++  hubType="Province"
++  hubName="Gauteng"
++  contextLabel="Gauteng"
++  lastUpdated="2026-05-14"
++>
++  <h2>About procurement in Gauteng</h2>
++  <p>
++    Gauteng is South Africa's economic centre and accounts for roughly a third of public procurement spend
++    nationally. The province runs procurement through both provincial departments (governed by the Gauteng
++    Provincial Treasury) and three major metropolitan municipalities, each with its own supply chain
++    management unit.
++  </p>
++
++  <h2>Key procuring entities</h2>
++
++  <h3>Provincial departments</h3>
++  <ul>
++    <li><strong>Gauteng Department of Health</strong> — pharmaceuticals, medical equipment, hospital maintenance, catering, security, linen.</li>
++    <li><strong>Gauteng Department of Education</strong> — school furniture, stationery, scholar transport, infrastructure, ICT.</li>
++    <li><strong>Gauteng Department of Roads and Transport</strong> — road maintenance, bridge rehabilitation, stormwater, traffic systems.</li>
++    <li><strong>Gauteng Department of Infrastructure Development</strong> — built environment, social infrastructure delivery.</li>
++    <li><strong>Gauteng Department of Human Settlements</strong> — RDP housing, mixed-use developments, subcontracting opportunities for SMMEs.</li>
++  </ul>
++
++  <h3>Metropolitan municipalities</h3>
++  <ul>
++    <li><strong>City of Johannesburg</strong> — Group Supply Chain Management runs an online portal; entities include Johannesburg Water, City Power, Joburg Roads Agency, and Pikitup.</li>
++    <li><strong>City of Tshwane</strong> — separate procurement for water, electricity, refuse, and capital projects.</li>
++    <li><strong>Ekurhuleni Metropolitan Municipality</strong> — major infrastructure spend in the East Rand industrial belt and OR Tambo precinct.</li>
++  </ul>
++
++  <h3>Provincial public entities</h3>
++  <ul>
++    <li>Gautrain Management Agency</li>
++    <li>Gauteng Growth and Development Agency (GGDA)</li>
++    <li>Gauteng Infrastructure Financing Agency (GIFA)</li>
++  </ul>
++
++  <h2>Where Gauteng tenders are advertised</h2>
++  <p>
++    All provincial and municipal tenders above the prescribed threshold appear on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++    The City of Johannesburg also publishes through its
++    <a href="https://www.joburg.org.za" target="_blank" rel="noopener noreferrer">municipal website</a>,
++    and the Gauteng Provincial Treasury publishes a weekly e-tender bulletin and procurement plans by financial year.
++  </p>
++
++  <h2>What sets Gauteng apart</h2>
++  <p>
++    Two things make Gauteng different from other provinces. First, the volume — there are more tenders here
++    in any given week than in some provinces in a quarter. Second, the township economy preference. The
++    <em>Gauteng Township Economic Development Act</em> encourages organs of state to procure from township-based
++    enterprises, and many provincial tenders allocate locality-specific preference points to bidders with bricks-and-mortar
++    operations in Soweto, Tembisa, Alexandra, Mamelodi, and other townships.
++  </p>
++
++  <h2>Bidding strategy</h2>
++  <p>
++    The volume of opportunities is matched by the volume of competition. Gauteng evaluators have low tolerance
++    for incomplete SBD forms or missing compliance documents — when there are 80 bids in the box, the
++    administratively non-compliant ones are the easiest to eliminate. Two practical moves help:
++  </p>
++  <ul>
++    <li>Subscribe to procurement plans, not just adverts. The provincial treasury publishes forecasted tenders by quarter. Aligning your business development with those plans gives you weeks of lead time.</li>
++    <li>Look at subcontracting. Large prime contractors winning Gauteng infrastructure work are routinely required to subcontract 30% to qualifying SMMEs.</li>
++  </ul>
++
++  <p>
++    Read our <a href="/blog/gauteng-government-tenders-guide">full Gauteng tenders guide</a> or the
++    <a href="/blog/how-to-win-your-first-government-tender">first-tender walkthrough</a> for more.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/health.astro a/src/pages/tenders/health.astro
+new file mode 100644
+index 0000000..11ccc87
+--- /dev/null
++++ a/src/pages/tenders/health.astro
+@@ -0,0 +1,55 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Health Sector Tenders in South Africa"
++  description="Government health tender opportunities — pharmaceuticals, medical equipment, hospital services, facility management, and clinic construction across all 9 provinces."
++  hubType="Sector"
++  hubName="Health"
++  contextLabel="health"
++  lastUpdated="2026-05-14"
++>
++  <h2>About health procurement</h2>
++  <p>
++    The South African public health system serves roughly 84% of the population through national, provincial,
++    and municipal facilities. Procurement spans pharmaceuticals, medical equipment, medical consumables,
++    facility maintenance, security and cleaning, catering, laundry, and capital infrastructure.
++  </p>
++
++  <h2>Key procuring entities</h2>
++  <ul>
++    <li><strong>National Department of Health</strong> — policy, transversal contracts, central procurement of certain commodities.</li>
++    <li><strong>Provincial Departments of Health</strong> — each province runs its own SCM for facilities, equipment, and operational supplies.</li>
++    <li><strong>Major academic and central hospitals</strong> — Charlotte Maxeke, Chris Hani Baragwanath, Tygerberg, Groote Schuur, Inkosi Albert Luthuli, Universitas, Steve Biko Academic, Pelonomi.</li>
++    <li><strong>Provincial Departments of Infrastructure / Public Works</strong> — capital build programmes (clinic construction, hospital upgrades).</li>
++    <li><strong>National Health Laboratory Service (NHLS)</strong> — laboratory consumables and equipment.</li>
++  </ul>
++
++  <h2>The categories that move</h2>
++  <ul>
++    <li><strong>Pharmaceuticals</strong> — typically procured via transversal tenders administered by National Treasury / National Department of Health, often with multi-year award periods.</li>
++    <li><strong>Medical equipment</strong> — imaging, monitoring, dialysis, theatre equipment.</li>
++    <li><strong>Medical consumables</strong> — surgical, ward, laboratory consumables.</li>
++    <li><strong>Facility services</strong> — security, cleaning, catering, laundry, gardening, waste management (the largest steady SMME segment).</li>
++    <li><strong>Capital infrastructure</strong> — new clinics, hospital extensions, electronic health record systems.</li>
++  </ul>
++
++  <h2>Compliance and quality bar</h2>
++  <p>
++    Health-sector tenders typically carry strict compliance requirements. Medical equipment must be
++    SAHPRA-registered where applicable. Pharmaceutical bidders must meet good distribution practice
++    standards. Facility-services bidders must demonstrate sectoral wage and BCEA compliance, plus relevant
++    sectoral certifications for cleaning, security (PSIRA), and catering (food safety / R638).
++  </p>
++
++  <h2>Bid readiness essentials</h2>
++  <ul>
++    <li>SAHPRA registration for medical devices</li>
++    <li>Manufacturer authorisation letters where you are a distributor</li>
++    <li>Quality management certification (ISO 13485, ISO 9001) where relevant</li>
++    <li>PSIRA registration for security services bidders</li>
++    <li>Current B-BBEE certificate and CSD record</li>
++    <li>Insurance cover appropriate to medical risk</li>
++  </ul>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/ict.astro a/src/pages/tenders/ict.astro
+new file mode 100644
+index 0000000..87b2580
+--- /dev/null
++++ a/src/pages/tenders/ict.astro
+@@ -0,0 +1,54 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="ICT Tenders in South Africa"
++  description="Government information and communication technology tender opportunities — through SITA, national departments, provinces, metros, and parastatals."
++  hubType="Sector"
++  hubName="ICT"
++  contextLabel="ICT"
++  lastUpdated="2026-05-14"
++>
++  <h2>About ICT procurement</h2>
++  <p>
++    The South African government spends billions annually on information and communication technology. The
++    sector includes hardware, software licensing, networking, cloud services, application development,
++    cybersecurity, support and maintenance, and digital transformation programmes across health, education,
++    home affairs, SARS, and almost every other department.
++  </p>
++
++  <h2>Key procuring entities</h2>
++  <ul>
++    <li><strong>State Information Technology Agency (SITA)</strong> — central procurement agency for most national and provincial government IT, plus transversal contracts.</li>
++    <li><strong>Department of Communications and Digital Technologies</strong> — policy and broad-based programmes.</li>
++    <li><strong>National departments and Chapter 9 institutions</strong> — direct procurement of specialist systems (SARS eFiling, Home Affairs, Justice).</li>
++    <li><strong>Metropolitan municipalities</strong> — smart-city systems, Wi-Fi hotspots, records management, GIS.</li>
++    <li><strong>Provincial departments of health and education</strong> — electronic health records, e-learning devices and platforms.</li>
++    <li><strong>Public entities and SOEs</strong> — Transnet, Eskom, ACSA, and others run substantial ICT procurement directly.</li>
++  </ul>
++
++  <h2>SMME entry points</h2>
++  <p>
++    A growing share of ICT tenders is structured to enable SMMEs to participate, either through set-asides,
++    subcontracting requirements, or PPPFA specific goal points for SMME status. Realistic entry routes include:
++  </p>
++  <ul>
++    <li><strong>SITA panel contracts</strong> for hardware supply, support, training, and helpdesk services — SITA breaks larger requirements into manageable lots.</li>
++    <li><strong>Subcontracting to prime contractors</strong> — large systems integrators often need to meet B-BBEE subcontracting goals. Niche services (cabling, in-field support, training, helpdesk) are accessible.</li>
++    <li><strong>Municipal ICT tenders</strong> — Wi-Fi rollouts, LED signage, document management, records digitisation often fit SMME capacity.</li>
++  </ul>
++
++  <h2>What evaluators want to see</h2>
++  <ul>
++    <li>Vendor certifications of your technical staff (Cisco, Microsoft, CompTIA, AWS, etc.)</li>
++    <li>Case studies of past projects, even small ones, with contactable references</li>
++    <li>A credible implementation methodology — not just a price</li>
++    <li>Warranty, support, and SLA commitments that match the tender's risk profile</li>
++    <li>Cyber security posture (POPIA and Cybercrimes Act exposure on government data)</li>
++  </ul>
++
++  <p>
++    Read our <a href="/blog/ict-tenders-for-smmes">SMME guide to winning ICT tenders</a> for the detailed playbook.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/kwazulu-natal.astro a/src/pages/tenders/kwazulu-natal.astro
+new file mode 100644
+index 0000000..c6895b1
+--- /dev/null
++++ a/src/pages/tenders/kwazulu-natal.astro
+@@ -0,0 +1,70 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="KwaZulu-Natal Government Tenders"
++  description="Tender opportunities across KZN provincial departments, eThekwini Metro, and district municipalities — including flood-recovery and reconstruction work."
++  hubType="Province"
++  hubName="KwaZulu-Natal"
++  contextLabel="KwaZulu-Natal"
++  lastUpdated="2026-05-14"
++>
++  <h2>About procurement in KwaZulu-Natal</h2>
++  <p>
++    KZN's procurement landscape is shaped by its geography, large rural footprint, and an ambitious
++    infrastructure programme that has been amplified by post-flood reconstruction. The province runs
++    procurement through provincial departments coordinated by the KZN Provincial Treasury, alongside
++    one metro, two large urban municipalities, and ten district municipalities each with their own
++    SCM units.
++  </p>
++
++  <h2>Key procuring entities</h2>
++
++  <h3>Provincial departments</h3>
++  <ul>
++    <li><strong>KZN Department of Public Works and Infrastructure</strong> — schools, clinics, community halls, especially in rural districts.</li>
++    <li><strong>KZN Department of Transport</strong> — major road maintenance and bridge construction; deadlines often cluster July–November.</li>
++    <li><strong>KZN Department of Health</strong> — district hospitals, central facilities (Inkosi Albert Luthuli, King Edward VIII), pharmaceuticals.</li>
++    <li><strong>KZN Department of Education</strong> — school infrastructure, scholar transport, ICT.</li>
++    <li><strong>KZN Department of Human Settlements</strong> — housing delivery and reconstruction.</li>
++    <li><strong>KZN Department of Agriculture and Rural Development</strong> — agri-infrastructure, veterinary services.</li>
++  </ul>
++
++  <h3>Municipalities</h3>
++  <ul>
++    <li><strong>eThekwini Metropolitan Municipality</strong> — multi-year water and sanitation tenders, port-adjacent infrastructure, ICT.</li>
++    <li><strong>Msunduzi (Pietermaritzburg)</strong> — capital city services, electrical, water.</li>
++    <li>District municipalities such as <strong>uMkhanyakude, Zululand, King Cetshwayo, uThukela, Harry Gwala</strong>, and the constituent local municipalities.</li>
++  </ul>
++
++  <h2>Where KZN tenders are advertised</h2>
++  <p>
++    All provincial and municipal tenders appear on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++    The KZN Provincial Treasury publishes annual procurement plans by end-March, and eThekwini Metro
++    runs its own supplier database registration alongside its CSD record.
++  </p>
++
++  <h2>What sets KZN apart</h2>
++  <p>
++    Two factors dominate KZN procurement right now. First, the <strong>flood reconstruction pipeline</strong>:
++    following the 2022 and subsequent flooding events, sustained national grant funding has produced a
++    pipeline of road, bridge, water, and housing reconstruction tenders. Many are fast-tracked with shorter
++    response times. Second, the <strong>rural geography</strong>: compulsory briefing sessions are frequently
++    held at remote project sites — uMkhanyakude, Zululand, parts of Harry Gwala — so logistical planning
++    is part of bidding here.
++  </p>
++
++  <h2>Bidding strategy</h2>
++  <ul>
++    <li>Download the Public Works and Transport procurement plans by April each year and build a 12-month rolling bid calendar.</li>
++    <li>Pre-position relationships with KZN-based consortia partners for rural infrastructure work.</li>
++    <li>Set up email alerts on eTenders with commodity codes and the "KwaZulu-Natal" province filter.</li>
++  </ul>
++
++  <p>
++    Read our <a href="/blog/kzn-procurement-deadlines">KZN procurement deadlines guide</a> for the
++    detailed calendar approach.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/legal.astro a/src/pages/tenders/legal.astro
+new file mode 100644
+index 0000000..8c03b95
+--- /dev/null
++++ a/src/pages/tenders/legal.astro
+@@ -0,0 +1,36 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Legal Services Tenders in South Africa"
++  description="Government legal services tender opportunities — panel appointments for litigation, conveyancing, labour and commercial advisory, and specialist counsel briefs."
++  hubType="Sector"
++  hubName="Legal"
++  contextLabel="legal services"
++  lastUpdated="2026-05-14"
++>
++  <h2>About legal-services procurement</h2>
++  <p>
++    Legal-services tenders are dominated by panel appointments: organs of state appoint panels of attorneys
++    for periods of typically three years, drawing briefs from the panel based on rotation and matter type.
++    Categories include general litigation, labour and employment, commercial and contractual advisory,
++    conveyancing, debt collection, and specialist areas such as competition, tax, and constitutional
++    litigation. Counsel briefs are typically governed by State Attorney rules under the Department of
++    Justice and Constitutional Development.
++  </p>
++
++  <h2>Detailed sector hub — coming soon</h2>
++  <p>
++    We're building a detailed legal-services hub covering State Attorney panel processes, departmental
++    panel tenders, the Black Briefing Patterns policy and transformation requirements, fee tariffs, and the
++    practical bidding strategy for small and emerging firms looking to get onto government panels.
++    Join the waitlist below.
++  </p>
++
++  <p>
++    Current legal-services tenders and panel adverts are published on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>
++    and on departmental websites.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/limpopo.astro a/src/pages/tenders/limpopo.astro
+new file mode 100644
+index 0000000..e39f1c6
+--- /dev/null
++++ a/src/pages/tenders/limpopo.astro
+@@ -0,0 +1,61 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Limpopo Government Tenders"
++  description="Tender opportunities across Limpopo provincial departments, district municipalities, and mining-adjacent infrastructure spend in the platinum belt."
++  hubType="Province"
++  hubName="Limpopo"
++  contextLabel="Limpopo"
++  lastUpdated="2026-05-14"
++>
++  <h2>About procurement in Limpopo</h2>
++  <p>
++    Limpopo's procurement environment is shaped by a large rural population, a substantial school and clinic
++    infrastructure backlog, and proximity to the platinum and chrome mining belt. The province has no metro;
++    five district municipalities and their constituent local municipalities run procurement alongside the
++    provincial departments coordinated by the Limpopo Provincial Treasury.
++  </p>
++
++  <h2>Key procuring entities</h2>
++
++  <h3>Provincial departments</h3>
++  <ul>
++    <li><strong>Limpopo Department of Public Works, Roads and Infrastructure</strong> — combined function covering provincial buildings and the road network.</li>
++    <li><strong>Limpopo Department of Health</strong> — Polokwane Provincial Hospital, district hospitals, equipment.</li>
++    <li><strong>Limpopo Department of Education</strong> — large school infrastructure pipeline, sanitation, scholar transport.</li>
++    <li><strong>Limpopo Department of Agriculture and Rural Development</strong> — agri-infrastructure, veterinary services, fencing.</li>
++    <li><strong>Limpopo Department of Economic Development, Environment and Tourism</strong> — SEZ-related infrastructure (Musina-Makhado).</li>
++  </ul>
++
++  <h3>Municipalities</h3>
++  <ul>
++    <li>District municipalities: <strong>Capricorn, Mopani, Sekhukhune, Vhembe, Waterberg</strong>.</li>
++    <li>Constituent locals include <strong>Polokwane, Tzaneen, Mookgophong–Modimolle, Musina, Thulamela</strong>, and others.</li>
++  </ul>
++
++  <h2>Where Limpopo tenders are advertised</h2>
++  <p>
++    All provincial and municipal tenders appear on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++    The Limpopo Provincial Treasury publishes annual procurement plans.
++  </p>
++
++  <h2>What sets Limpopo apart</h2>
++  <p>
++    Two factors define Limpopo's bid environment. First, the <strong>school infrastructure pipeline</strong>
++    — the province has run sustained programmes to replace mud schools and add proper ablution facilities,
++    with hundreds of tenders going to civil and building contractors annually. Second, the
++    <strong>cross-border and mining-adjacent infrastructure</strong> — the Musina-Makhado SEZ and the platinum
++    belt around Mokopane and Burgersfort generate periodic tenders for water, energy, and services
++    infrastructure with locality-specific preference goals.
++  </p>
++
++  <h2>Bidding strategy</h2>
++  <ul>
++    <li>For rural infrastructure work, register with local Department of Public Works district offices and attend their supplier development sessions.</li>
++    <li>Travel and logistics matter — compulsory briefings can be deep in Sekhukhune or Vhembe districts.</li>
++    <li>For mining-adjacent work, ensure your B-BBEE certificate is current and consortium arrangements with locally-owned firms are in place.</li>
++  </ul>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/mpumalanga.astro a/src/pages/tenders/mpumalanga.astro
+new file mode 100644
+index 0000000..2865891
+--- /dev/null
++++ a/src/pages/tenders/mpumalanga.astro
+@@ -0,0 +1,60 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Mpumalanga Government Tenders"
++  description="Tender opportunities across Mpumalanga provincial departments, three district municipalities, and energy-belt infrastructure spend around the Highveld."
++  hubType="Province"
++  hubName="Mpumalanga"
++  contextLabel="Mpumalanga"
++  lastUpdated="2026-05-14"
++>
++  <h2>About procurement in Mpumalanga</h2>
++  <p>
++    Mpumalanga's procurement environment is shaped by the Highveld coal-power complex, the Lowveld tourism
++    and agriculture sector, and three district municipalities covering everything from urban Emalahleni to
++    the rural areas bordering eSwatini and Mozambique. The province runs procurement through departments
++    coordinated by the Mpumalanga Provincial Treasury.
++  </p>
++
++  <h2>Key procuring entities</h2>
++
++  <h3>Provincial departments</h3>
++  <ul>
++    <li><strong>Mpumalanga Department of Public Works, Roads and Transport</strong> — provincial roads, buildings, scholar transport.</li>
++    <li><strong>Mpumalanga Department of Health</strong> — Witbank, Rob Ferreira, and district hospitals.</li>
++    <li><strong>Mpumalanga Department of Education</strong> — school infrastructure and stationery.</li>
++    <li><strong>Mpumalanga Department of Agriculture, Rural Development, Land and Environmental Affairs</strong> — agri-infrastructure, fencing.</li>
++    <li><strong>Mpumalanga Department of Human Settlements</strong> — housing developments.</li>
++  </ul>
++
++  <h3>Municipalities</h3>
++  <ul>
++    <li>District municipalities: <strong>Ehlanzeni, Gert Sibande, Nkangala</strong>.</li>
++    <li>Constituent locals include <strong>Mbombela (Nelspruit), Emalahleni (Witbank), Govan Mbeki (Secunda), Steve Tshwete (Middelburg), Bushbuckridge</strong>.</li>
++  </ul>
++
++  <h2>Where Mpumalanga tenders are advertised</h2>
++  <p>
++    All provincial and municipal tenders appear on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++    The Mpumalanga Provincial Treasury publishes annual procurement plans.
++  </p>
++
++  <h2>What sets Mpumalanga apart</h2>
++  <p>
++    The province sits at the centre of South Africa's <strong>Just Energy Transition</strong> conversation.
++    The phase-down of coal-fired power stations is generating tenders for repurposing, decommissioning,
++    skills development, and renewable energy installations. The Lowveld's
++    <strong>tourism, agriculture, and forestry economies</strong> drive a different stream of tenders
++    around the Kruger National Park boundary and the Mbombela area.
++  </p>
++
++  <h2>Bidding strategy</h2>
++  <ul>
++    <li>For energy-transition adjacent work, ensure your CSD profile includes renewable energy and decommissioning service codes.</li>
++    <li>The mining and power-station industrial corridor offers significant subcontracting opportunities for SMMEs in services.</li>
++    <li>Watch the Mbombela and Govan Mbeki municipal pipelines — they have the largest revenue bases in the province.</li>
++  </ul>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/north-west.astro a/src/pages/tenders/north-west.astro
+new file mode 100644
+index 0000000..ffdd4c9
+--- /dev/null
++++ a/src/pages/tenders/north-west.astro
+@@ -0,0 +1,61 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="North West Government Tenders"
++  description="Tender opportunities across North West provincial departments, four district municipalities, and platinum-belt mining-adjacent infrastructure."
++  hubType="Province"
++  hubName="North West"
++  contextLabel="the North West"
++  lastUpdated="2026-05-14"
++>
++  <h2>About procurement in the North West</h2>
++  <p>
++    The North West's economy is anchored by the western platinum belt (Rustenburg–Brits) and by extensive
++    agricultural production. The province runs procurement through departments coordinated by the
++    North West Provincial Treasury, alongside four district municipalities. Several provincial
++    departments and municipalities have been under administration in recent years, which makes
++    payment-terms diligence especially important.
++  </p>
++
++  <h2>Key procuring entities</h2>
++
++  <h3>Provincial departments</h3>
++  <ul>
++    <li><strong>North West Department of Public Works and Roads</strong> — provincial buildings, road network maintenance.</li>
++    <li><strong>North West Department of Health</strong> — Klerksdorp-Tshepong, Mahikeng, and district hospitals.</li>
++    <li><strong>North West Department of Education</strong> — school infrastructure, scholar transport.</li>
++    <li><strong>North West Department of Agriculture and Rural Development</strong> — agri-infrastructure, fencing, water provision for farmers.</li>
++    <li><strong>North West Department of Community Safety and Transport Management</strong> — fleet, scholar transport, public transport.</li>
++  </ul>
++
++  <h3>Municipalities</h3>
++  <ul>
++    <li>District municipalities: <strong>Bojanala Platinum, Dr Kenneth Kaunda, Dr Ruth Segomotsi Mompati, Ngaka Modiri Molema</strong>.</li>
++    <li>Constituent locals include <strong>Rustenburg, Madibeng (Brits), Matlosana (Klerksdorp), Mahikeng, Moses Kotane</strong>.</li>
++  </ul>
++
++  <h2>Where North West tenders are advertised</h2>
++  <p>
++    All provincial and municipal tenders appear on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++    The North West Provincial Treasury publishes annual procurement plans.
++  </p>
++
++  <h2>What sets the North West apart</h2>
++  <p>
++    The <strong>platinum belt municipalities</strong> — Rustenburg, Madibeng, and Moses Kotane — have
++    substantial mining-related revenue streams that drive water, sanitation, and roads tenders.
++    <strong>Mining-adjacent SMME and social-labour-plan procurement</strong> is also significant: mining houses
++    operating in the province have community development commitments that translate into local
++    contracting opportunities, often coordinated with municipal SCM units.
++  </p>
++
++  <h2>Bidding strategy</h2>
++  <ul>
++    <li>Diligence the procuring entity's financial standing — several North West municipalities have been under administration. Verify payment terms and budget cover before mobilising.</li>
++    <li>For platinum-belt work, build relationships with Social and Labour Plan coordinators at mining houses, not only with municipal SCM.</li>
++    <li>Ensure CSD profile reflects current B-BBEE level and any women-, youth-, or disability-ownership status to claim the available preference points.</li>
++  </ul>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/northern-cape.astro a/src/pages/tenders/northern-cape.astro
+new file mode 100644
+index 0000000..92357b9
+--- /dev/null
++++ a/src/pages/tenders/northern-cape.astro
+@@ -0,0 +1,61 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Northern Cape Government Tenders"
++  description="Tender opportunities across the Northern Cape's provincial departments, five district municipalities, and renewable-energy and mining infrastructure."
++  hubType="Province"
++  hubName="Northern Cape"
++  contextLabel="the Northern Cape"
++  lastUpdated="2026-05-14"
++>
++  <h2>About procurement in the Northern Cape</h2>
++  <p>
++    The Northern Cape is South Africa's largest province by area and smallest by population. That geography
++    shapes everything about procurement here: distances are vast, road networks long, and procuring entities
++    span from the Sol Plaatje (Kimberley) urban centre to remote settlements along the Orange River and in
++    the Kalahari. The Northern Cape Provincial Treasury coordinates departmental procurement; five district
++    municipalities run the local government side.
++  </p>
++
++  <h2>Key procuring entities</h2>
++
++  <h3>Provincial departments</h3>
++  <ul>
++    <li><strong>Northern Cape Department of Roads and Public Works</strong> — extensive road network maintenance, provincial buildings.</li>
++    <li><strong>Northern Cape Department of Health</strong> — Robert Mangaliso Sobukwe (Kimberley), Upington, and rural hospitals.</li>
++    <li><strong>Northern Cape Department of Education</strong> — school infrastructure, scholar transport, often over very long distances.</li>
++    <li><strong>Northern Cape Department of Agriculture, Environmental Affairs, Rural Development and Land Reform</strong> — irrigation, fencing, agri-infrastructure especially along the Orange River.</li>
++    <li><strong>Northern Cape Department of Economic Development and Tourism</strong> — SEZ and tourism infrastructure.</li>
++  </ul>
++
++  <h3>Municipalities</h3>
++  <ul>
++    <li>District municipalities: <strong>Frances Baard, John Taolo Gaetsewe, Namakwa, Pixley ka Seme, ZF Mgcawu</strong>.</li>
++    <li>Constituent locals include <strong>Sol Plaatje (Kimberley), //Khara Hais–Mier (Upington), Ga-Segonyana (Kuruman), Gamagara (Kathu)</strong>.</li>
++  </ul>
++
++  <h2>Where Northern Cape tenders are advertised</h2>
++  <p>
++    All provincial and municipal tenders appear on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++    The Northern Cape Provincial Treasury publishes annual procurement plans.
++  </p>
++
++  <h2>What sets the Northern Cape apart</h2>
++  <p>
++    Two segments dominate the opportunity pipeline. First, <strong>renewable energy</strong>: the province
++    hosts most of South Africa's utility-scale solar PV and CSP capacity, plus a growing wind portfolio.
++    Independent Power Producer balance-of-plant tenders, social and labour plan procurement, and grid
++    infrastructure tenders all flow from this. Second, <strong>mining-adjacent services</strong> around
++    Kathu (iron ore), Postmasburg (manganese), and the Kalahari (diamonds and base metals).
++  </p>
++
++  <h2>Bidding strategy</h2>
++  <ul>
++    <li>For renewable energy work, monitor not only public-sector eTenders but also IPP balance-of-plant tenders advertised by project SPVs in the REIPPPP rounds.</li>
++    <li>Travel and mobilisation logistics need to be priced realistically — distances between briefings, sites, and project locations are large.</li>
++    <li>Build consortium arrangements with Kimberley- and Upington-based SMMEs to access locality preference points.</li>
++  </ul>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/security.astro a/src/pages/tenders/security.astro
+new file mode 100644
+index 0000000..dd6a32e
+--- /dev/null
++++ a/src/pages/tenders/security.astro
+@@ -0,0 +1,63 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Security Sector Tenders in South Africa"
++  description="Government security services tender opportunities — physical guarding, electronic security, access control, and specialist security for departments, hospitals, schools, and parastatals."
++  hubType="Sector"
++  hubName="Security"
++  contextLabel="security services"
++  lastUpdated="2026-05-14"
++>
++  <h2>About security procurement</h2>
++  <p>
++    Security services are one of the steadiest tender pipelines in South Africa, with virtually every
++    government department, hospital, school complex, and SOE running term contracts for physical guarding,
++    electronic security, and specialist services. The sector is highly competitive and tightly regulated
++    by the Private Security Industry Regulatory Authority (PSIRA).
++  </p>
++
++  <h2>Key procuring entities</h2>
++  <ul>
++    <li><strong>Provincial Departments of Health</strong> — hospital and clinic guarding, often the largest single line items per province.</li>
++    <li><strong>Provincial Departments of Education</strong> — school security, especially in higher-risk districts.</li>
++    <li><strong>Department of Public Works (national and provincial)</strong> — government building guarding.</li>
++    <li><strong>SOEs and parastatals</strong> — Transnet, Eskom, ACSA, Prasa, Telkom; substantial multi-year contracts.</li>
++    <li><strong>Metropolitan municipalities</strong> — facility guarding, by-law enforcement support, electronic monitoring.</li>
++    <li><strong>Universities, TVET colleges, public entities</strong> — campus and facility security.</li>
++  </ul>
++
++  <h2>The typical service categories</h2>
++  <ul>
++    <li><strong>Physical guarding</strong> — armed and unarmed, with site-specific risk grading.</li>
++    <li><strong>Electronic security</strong> — CCTV, alarm systems, intrusion detection, perimeter monitoring.</li>
++    <li><strong>Access control</strong> — biometric, card-based, vehicle access management.</li>
++    <li><strong>Armed response and patrol</strong>.</li>
++    <li><strong>Specialist services</strong> — cash-in-transit, VIP protection, executive close protection.</li>
++    <li><strong>Integrated security solutions</strong> — combined guarding, electronic, and monitoring.</li>
++  </ul>
++
++  <h2>Compliance is non-negotiable</h2>
++  <p>
++    Security tender compliance is unusually strict because regulatory exposure is high. Non-negotiable items:
++  </p>
++  <ul>
++    <li><strong>PSIRA registration</strong> for the business and every officer deployed.</li>
++    <li><strong>Sectoral Determination 6</strong> wage compliance — failure to pay PSIRA minimums and benefits can void the contract.</li>
++    <li><strong>UIF and COIDA registration</strong> in good standing.</li>
++    <li><strong>SARS tax compliance</strong> reflecting "Compliant" on the CSD.</li>
++    <li><strong>Public liability insurance</strong> at the level specified.</li>
++    <li><strong>Firearm licensing and Section 21 (Business) firearm permits</strong> where armed guarding is involved.</li>
++    <li><strong>Training records</strong> for each PSIRA grade required by the tender.</li>
++  </ul>
++
++  <h2>Bid strategy notes</h2>
++  <p>
++    Security tenders are notoriously price-driven. The trap is that abnormally low pricing usually means
++    cutting wages below the sectoral determination, which exposes the supplier — and the procuring entity —
++    to labour disputes and contract termination. Most evaluators now demand a wage cost breakdown to detect
++    this. Bid sustainably or you will lose either the bid (rejected as abnormally low) or the contract
++    (terminated for non-compliance).
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/thanks.astro a/src/pages/tenders/thanks.astro
+new file mode 100644
+index 0000000..7ecf0fb
+--- /dev/null
++++ a/src/pages/tenders/thanks.astro
+@@ -0,0 +1,33 @@
++---
++import BaseLayout from "../../layouts/BaseLayout.astro";
++
++const hub = Astro.url.searchParams.get("hub") || "";
++const [hubType = "", hubName = ""] = hub.split(":");
++const niceName = hubName || "the next tender feed";
++---
++
++<BaseLayout
++  title="You're on the waitlist — Tenderpreneurs"
++  description="Thanks for joining the Tenderpreneurs waitlist."
++>
++  <article class="container mx-auto px-4 py-16 max-w-2xl text-center">
++    <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">You're in.</h1>
++    <p class="text-lg text-slate-700 mb-6">
++      We'll email you the moment the {niceName} feed goes live. No spam, ever — just the launch notice
++      and the first batch of opportunities.
++    </p>
++
++    <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
++      <a href="/tenders" class="rounded-md bg-amber-700 px-5 py-2 font-semibold text-white hover:bg-amber-800">
++        Back to Tenders
++      </a>
++      <a href="/blog" class="rounded-md border border-slate-300 px-5 py-2 font-semibold text-slate-700 hover:bg-slate-50">
++        Read the procurement guides
++      </a>
++    </div>
++
++    {hubType && hubName && (
++      <p class="text-xs text-slate-500 mt-10">Signed up for: {hubType} — {hubName}</p>
++    )}
++  </article>
++</BaseLayout>
+diff --git a/src/pages/tenders/transport.astro a/src/pages/tenders/transport.astro
+new file mode 100644
+index 0000000..5322e04
+--- /dev/null
++++ a/src/pages/tenders/transport.astro
+@@ -0,0 +1,35 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Transport Sector Tenders in South Africa"
++  description="Government transport tender opportunities — fleet services, scholar and public transport, rail and aviation infrastructure, and roads-adjacent procurement."
++  hubType="Sector"
++  hubName="Transport"
++  contextLabel="transport"
++  lastUpdated="2026-05-14"
++>
++  <h2>About transport procurement</h2>
++  <p>
++    Transport-sector tenders span provincial scholar transport contracts, government fleet leasing and
++    maintenance, rail and aviation infrastructure procurement (Transnet, Prasa, ACSA), and a continuous
++    flow of roads-adjacent services such as traffic signal maintenance, signage, and road marking.
++    Major procuring entities include the Department of Transport, provincial transport departments,
++    Transnet, Prasa, ACSA, the RTMC, and metropolitan municipalities operating BRT systems.
++  </p>
++
++  <h2>Detailed sector hub — coming soon</h2>
++  <p>
++    We're building a detailed transport-sector hub covering the major procuring entities, typical contract
++    structures, key compliance requirements (operating licences, K53, PrDP, vehicle roadworthiness, sectoral
++    determinations), and the recurring tender categories. Join the waitlist below to be notified when it
++    publishes.
++  </p>
++
++  <p>
++    In the meantime, the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>
++    lists all current transport-sector tenders. Filter by category and by organ of state.
++  </p>
++</TenderHubLayout>
+diff --git a/src/pages/tenders/western-cape.astro a/src/pages/tenders/western-cape.astro
+new file mode 100644
+index 0000000..7a5b361
+--- /dev/null
++++ a/src/pages/tenders/western-cape.astro
+@@ -0,0 +1,70 @@
++---
++import TenderHubLayout from "../../layouts/TenderHubLayout.astro";
++---
++
++<TenderHubLayout
++  title="Western Cape Government Tenders"
++  description="Tender opportunities across Western Cape provincial departments, the City of Cape Town, and district municipalities from Drakenstein to Mossel Bay."
++  hubType="Province"
++  hubName="Western Cape"
++  contextLabel="the Western Cape"
++  lastUpdated="2026-05-14"
++>
++  <h2>About procurement in the Western Cape</h2>
++  <p>
++    The Western Cape consistently posts the cleanest audit outcomes of any province, which means tighter
++    compliance enforcement on bidders too. The province's procurement spans transversal term contracts,
++    one-off infrastructure tenders, and a substantial municipal pipeline anchored by the City of Cape Town —
++    one of the largest single procuring entities in South Africa outside the national departments.
++  </p>
++
++  <h2>Key procuring entities</h2>
++
++  <h3>Provincial departments</h3>
++  <ul>
++    <li><strong>Western Cape Department of Health and Wellness</strong> — Tygerberg, Groote Schuur, and district hospital upgrades; pharmaceuticals; clinic builds in Khayelitsha and Mitchells Plain.</li>
++    <li><strong>Western Cape Education Department (WCED)</strong> — school construction, sanitation, e-learning devices, scholar transport, often via panel contracts.</li>
++    <li><strong>Department of Transport and Public Works</strong> — N1, N2, and rural corridor maintenance; provincial building works.</li>
++    <li><strong>Department of Human Settlements</strong> — well-located mixed-income housing projects with subcontracting goals.</li>
++    <li><strong>Department of Agriculture</strong> — fresh produce market upgrades, cold-chain infrastructure, irrigation.</li>
++  </ul>
++
++  <h3>Municipalities</h3>
++  <ul>
++    <li><strong>City of Cape Town</strong> — water resilience, sanitation, electricity, refuse, MyCiTi expansion, ICT systems.</li>
++    <li><strong>Stellenbosch, Drakenstein, Mossel Bay, George</strong> — embedded generation programmes and local infrastructure.</li>
++    <li>The five district municipalities (Cape Winelands, Central Karoo, Garden Route, Overberg, West Coast) and their constituent local municipalities run their own SCM units.</li>
++  </ul>
++
++  <h2>Where Western Cape tenders are advertised</h2>
++  <p>
++    All provincial and municipal tenders appear on the
++    <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer">eTenders Publication Portal</a>.
++    The Western Cape Provincial Treasury also publishes a
++    <a href="https://www.westerncape.gov.za/general-publication/western-cape-government-tender-bulletin" target="_blank" rel="noopener noreferrer">weekly tender bulletin</a>,
++    and the City of Cape Town runs its own
++    <a href="https://www.capetown.gov.za" target="_blank" rel="noopener noreferrer">supplier portal</a>.
++  </p>
++
++  <h2>What sets the Western Cape apart</h2>
++  <p>
++    Three factors shape the bidding environment here. First, the province's <strong>Energy Resilience Programme</strong>
++    has unlocked a steady pipeline of solar PV, battery storage, and energy management tenders at government buildings.
++    Second, the <strong>City of Cape Town's water resilience plan</strong> drives continuous tenders for leak detection,
++    pipe replacement, and treatment works. Third, the province's emphasis on
++    <strong>local content and B-BBEE specific goals</strong> means bidders should ensure documentation is current
++    and consortium arrangements are in place well before adverts go out.
++  </p>
++
++  <h2>Bidding strategy</h2>
++  <ul>
++    <li>Get on the WCED transversal term contracts early — these panel contracts run for multi-year periods.</li>
++    <li>Verify your CSD commodity codes match the sectors you serve; the province's evaluators check carefully.</li>
++    <li>Attend Provincial Treasury Supplier Development Unit information sessions.</li>
++  </ul>
++
++  <p>
++    Read our <a href="/blog/western-cape-tender-opportunities-2026">2026 Western Cape outlook</a> for the
++    detailed sector pipeline.
++  </p>
++</TenderHubLayout>

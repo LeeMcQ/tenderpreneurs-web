@@ -1,0 +1,3356 @@
+diff --git a/DEPENDENCIES.md a/DEPENDENCIES.md
+new file mode 100644
+index 0000000..e4eb1c6
+--- /dev/null
++++ a/DEPENDENCIES.md
+@@ -0,0 +1,26 @@
++# Dependencies to install
++
++The patch introduces two new runtime dependencies. Add them with:
++
++```bash
++npm install node-html-parser unpdf
++```
++
++That's it. No dev-deps, no peer-deps.
++
++## What they're for
++
++- **`node-html-parser`** — used by the eTenders adapter and the Treasury Bulletin adapter to parse HTML pages. ~12kb, no deps, Worker-compatible.
++- **`unpdf`** — used by the Treasury Bulletin adapter to extract text from the weekly PDF. Worker-compatible (uses `pdfjs-dist` under the hood, but with the Node-only bits stripped). ~200kb.
++
++## What's NOT needed
++
++You may see online suggestions to install `cheerio` or `pdf-parse`. Don't — neither works reliably in Cloudflare Workers. The packages above are the Worker-compatible equivalents and are what this patch uses.
++
++## Verifying after install
++
++```bash
++npm run build
++```
++
++If the build succeeds, the dependencies are correctly wired. If you see an error like `Cannot find module 'unpdf'`, the install didn't pick them up — check that `package.json` lists them under `dependencies`.
+diff --git a/OPERATIONS.md a/OPERATIONS.md
+new file mode 100644
+index 0000000..50008cf
+--- /dev/null
++++ a/OPERATIONS.md
+@@ -0,0 +1,218 @@
++# Tenderpreneurs Operations Runbook
++
++This is the runbook for keeping the tender ingestion pipeline running.
++Read it once end-to-end before your first deploy.
++
++## First-time setup
++
++### 1. Create Cloudflare resources
++
++```bash
++# D1 database
++wrangler d1 create tenderpreneurs
++# → Copy the database_id from the output into wrangler.toml under [[d1_databases]]
++
++# R2 bucket (for archived PDFs)
++wrangler r2 bucket create tenderpreneurs-tenders
++
++# Apply the schema
++wrangler d1 execute tenderpreneurs --remote --file=migrations/0001_tenders.sql
++
++# Seed the source list
++wrangler d1 execute tenderpreneurs --remote --file=scripts/seed-sources.sql
++```
++
++### 2. Set secrets
++
++```bash
++wrangler secret put OPENROUTER_API_KEY    # for DeepSeek extraction
++wrangler secret put GEMINI_API_KEY        # for Gemini classification
++wrangler secret put GROQ_API_KEY          # classification fallback
++wrangler secret put RESEND_API_KEY        # magic-link + audit emails
++
++# Generate strong secrets once:
++openssl rand -hex 32   # → paste as MAGIC_LINK_SECRET
++openssl rand -hex 32   # → paste as SESSION_SECRET
++wrangler secret put MAGIC_LINK_SECRET
++wrangler secret put SESSION_SECRET
++```
++
++### 3. Verify Resend sender
++
++In your Resend dashboard, verify the sending domain `tenderpreneurs.co.za` (or a subdomain like `mail.tenderpreneurs.co.za`). Without verification, emails go to spam or get rejected.
++
++### 4. First deploy
++
++```bash
++git add -A
++git commit -m "Add tender ingestion pipeline"
++git push
++```
++
++Cloudflare Pages auto-deploys. The cron triggers attach automatically based on `wrangler.toml`.
++
++### 5. Wire up cron triggers
++
++Cloudflare Pages doesn't run `scheduled()` handlers natively for typical projects, so you have two options. **Option A is simpler; use it unless you need the lower latency of B.**
++
++**Option A: GitHub Actions cron (recommended)**
++
++Add `.github/workflows/cron.yml` to your repo:
++
++```yaml
++name: Tenderpreneurs cron
++on:
++  schedule:
++    - cron: '0 */6 * * *'      # ingestion every 6h
++    - cron: '30 7 * * *'        # audit daily at 07:30 UTC
++  workflow_dispatch:            # manual trigger from GitHub UI
++jobs:
++  trigger:
++    runs-on: ubuntu-latest
++    steps:
++      - name: Run cron endpoint
++        env:
++          SECRET: ${{ secrets.CRON_SECRET }}
++          BASE: https://tenderpreneurs.co.za
++        run: |
++          if [ "${{ github.event.schedule }}" = "30 7 * * *" ]; then
++            curl -fsS -X POST -H "x-cron-secret: $SECRET" $BASE/api/cron/audit
++          else
++            curl -fsS -X POST -H "x-cron-secret: $SECRET" $BASE/api/cron/ingest
++          fi
++```
++
++Add `CRON_SECRET` to GitHub repo secrets, value = your `SESSION_SECRET`.
++
++**Option B: Cloudflare scheduled() via advanced Pages mode**
++
++Move `_worker.ts` into your project root (it's already in the patch). In the Cloudflare dashboard → Pages → your project → Settings → Functions → Compatibility flags, add `nodejs_compat`. The `[triggers]` block in `wrangler.toml` will then activate.
++
++This requires "advanced" mode which has some routing constraints. If you're not already using it, Option A is faster.
++
++### 6. First manual smoke test
++
++```bash
++# Trigger ingestion once (replace $SECRET with your SESSION_SECRET):
++curl -X POST -H "x-cron-secret: $SECRET" \
++  https://tenderpreneurs.co.za/api/cron/ingest
++
++# Trigger audit email manually:
++curl -X POST -H "x-cron-secret: $SECRET" \
++  https://tenderpreneurs.co.za/api/cron/audit
++
++# Verify rows exist:
++wrangler d1 execute tenderpreneurs --remote \
++  --command="SELECT source_id, COUNT(*) FROM tenders GROUP BY source_id;"
++```
++
++---
++
++## Daily / weekly cadence
++
++- **Daily:** Read the audit email. The "Sources needing attention" section flags any scraper that's failed for >48h. Fix or disable.
++- **Weekly:** Spot-check 10 tenders for classification accuracy. If sector/province is wrong on more than 1 in 10, retune the classifier prompt in `src/lib/classify/gemini.ts`.
++- **Monthly:** Review `outsourcing/` prompts — government sites change layout periodically and your adapters will drift.
++
++---
++
++## Common operations
++
++### Disable a broken source temporarily
++
++```sql
++UPDATE sources SET active = 0 WHERE id = 'some-broken-source';
++```
++
++The ingestion cron will skip it. Re-enable with `active = 1`.
++
++### Force-reclassify a tender
++
++```sql
++UPDATE tenders SET llm_classified_at = NULL WHERE id = '<ulid>';
++```
++
++Then trigger ingestion — the persist path will reclassify rows with stale or missing classification on the next run. (Or run Gemini manually via `outsourcing/02-gemini-classification.md`.)
++
++### Investigate a duplicate
++
++```sql
++-- Find a tender's duplicates
++SELECT id, source_id, source_ref, title, first_seen_at
++FROM tenders
++WHERE id = '<canonical-id>'
++   OR canonical_ref = '<canonical-id>';
++```
++
++### See ingestion run history
++
++```sql
++SELECT source_id, status, items_found, items_new, duration_ms, started_at, error_message
++FROM ingestion_runs
++WHERE started_at > datetime('now', '-1 day')
++ORDER BY started_at DESC;
++```
++
++### Manually invalidate a session (force a user to re-auth)
++
++```sql
++UPDATE sessions SET revoked_at = datetime('now') WHERE user_id = '<user-ulid>';
++```
++
++---
++
++## Adding a new source adapter
++
++1. Open `outsourcing/03-write-new-adapter.md`
++2. Hand the prompt to DeepSeek Coder or Gemini Pro (free tiers handle this)
++3. Save the file as `src/lib/adapters/<slug>.ts`
++4. Register in `src/lib/adapters/index.ts`
++5. Add seed row to `scripts/seed-sources.sql`
++6. Apply: `wrangler d1 execute tenderpreneurs --remote --file=scripts/seed-sources.sql`
++7. Deploy and trigger ingestion manually with the curl command above
++
++Aim for 1 new adapter per week. Priority order:
++1. City of Cape Town
++2. City of Joburg
++3. eThekwini
++4. SANRAL
++5. Eskom
++6. Tshwane / Ekurhuleni
++7. Remaining metros and provincial treasuries
++8. Smaller SOEs
++
++---
++
++## Cost ceiling
++
++At the current architecture and a target of 1000 tenders ingested per day:
++
++| Service | Free tier headroom | Estimated monthly cost |
++|---|---|---|
++| Cloudflare Pages / D1 / R2 / Workers | Generous | $0 (likely) |
++| OpenRouter (DeepSeek for extraction) | Pay-per-use | ~$3-8/month |
++| Gemini 1.5 Flash | 15 RPM / 1M TPM | $0 |
++| Groq Llama 3.3 70B (fallback) | Generous | $0 |
++| Resend (magic links + audit) | 3000 emails/month | $0 until users hit 100/day |
++
++Total: under $10/month at the current scale. Scales sub-linearly with traffic since classification is free and extraction is cheap.
++
++---
++
++## Things to add later
++
++- Sentry for error monitoring (env var `SENTRY_DSN`)
++- Cloudflare Analytics Engine for ingestion run metrics over time
++- Tender alert emails (per user, based on bookmarked sectors/provinces) — needs a third cron
++- Bid document text search (use D1 FTS5 virtual table)
++- Win probability scoring (use the formula from blog/how-win-probability-is-calculated.mdx)
++- Paid tier gate (Paystack / Stripe) — `users.tier` is already there
++
++---
++
++## When something breaks
++
++1. Check the most recent audit email — it'll usually tell you which source is failing
++2. Check `ingestion_runs` for error messages
++3. Hit the source URL manually — if the site is down or restructured, that's your answer
++4. If a parser broke because the site restructured, the fastest path is to ask DeepSeek (via `outsourcing/03-write-new-adapter.md`) to rewrite that one adapter — usually a 5-minute job
+diff --git a/_worker.ts a/_worker.ts
+new file mode 100644
+index 0000000..0a2fc0d
+--- /dev/null
++++ a/_worker.ts
+@@ -0,0 +1,42 @@
++// Cloudflare scheduled-handler entry.
++//
++// Pages Functions don't natively support `scheduled()`, so we hand the cron
++// triggers off by having the scheduled handler internally fetch the cron
++// endpoints with the shared secret. Cloudflare picks this up because
++// wrangler.toml has [triggers] crons defined.
++//
++// If you later split this into a dedicated Worker, move this file there
++// and point wrangler.toml `main = "_worker.ts"`.
++
++export default {
++  async scheduled(event: ScheduledEvent, env: any, ctx: ExecutionContext): Promise<void> {
++    const base = env.PUBLIC_SITE_URL || "https://tenderpreneurs.co.za";
++    const secret = env.SESSION_SECRET;
++
++    if (!secret) {
++      console.error("SESSION_SECRET not set — scheduled task skipped");
++      return;
++    }
++
++    // Cron-name dispatch: the cron expression itself decides which job runs.
++    // 0 */6 * * *   → ingest
++    // 30 7 * * *    → audit
++    const isAuditCron = event.cron === "30 7 * * *";
++    const path = isAuditCron ? "/api/cron/audit" : "/api/cron/ingest";
++
++    ctx.waitUntil(
++      fetch(`${base}${path}`, {
++        method: "POST",
++        headers: { "x-cron-secret": secret },
++      })
++        .then((res) => {
++          if (!res.ok) {
++            console.error(`Scheduled ${path} failed: ${res.status}`);
++          }
++        })
++        .catch((err) => {
++          console.error(`Scheduled ${path} error: ${err.message}`);
++        })
++    );
++  },
++};
+diff --git a/migrations/0001_tenders.sql a/migrations/0001_tenders.sql
+new file mode 100644
+index 0000000..79be239
+--- /dev/null
++++ a/migrations/0001_tenders.sql
+@@ -0,0 +1,162 @@
++-- =============================================================
++-- Tenderpreneurs D1 schema — initial migration
++-- SQLite/D1 compatible. Idempotent where possible.
++-- =============================================================
++
++-- Sources: upstream public tender publishers we scrape.
++-- Seeded by scripts/seed-sources.sql.
++CREATE TABLE IF NOT EXISTS sources (
++  id              TEXT PRIMARY KEY,                -- slug, e.g. "etenders", "treasury-bulletin", "joburg-metro"
++  name            TEXT NOT NULL,                   -- display name
++  type            TEXT NOT NULL,                   -- 'national' | 'provincial' | 'metro' | 'soe' | 'bulletin'
++  url             TEXT NOT NULL,                   -- base URL of the source
++  province        TEXT,                            -- if regional, the province slug (gauteng, western-cape, ...)
++  active          INTEGER NOT NULL DEFAULT 1,      -- 0 to disable a source without dropping it
++  poll_freq_mins  INTEGER NOT NULL DEFAULT 360,    -- how often to re-scrape (default 6h)
++  last_run_at     TEXT,                            -- ISO-8601, set by ingest
++  last_success_at TEXT,                            -- ISO-8601, only updated on a successful run
++  created_at      TEXT NOT NULL DEFAULT (datetime('now'))
++);
++
++CREATE INDEX IF NOT EXISTS idx_sources_active ON sources(active);
++
++-- Ingestion runs: one row per attempt to scrape one source.
++-- The coverage audit reads these to detect silent failures.
++CREATE TABLE IF NOT EXISTS ingestion_runs (
++  id              INTEGER PRIMARY KEY AUTOINCREMENT,
++  source_id       TEXT NOT NULL REFERENCES sources(id),
++  started_at      TEXT NOT NULL DEFAULT (datetime('now')),
++  finished_at     TEXT,
++  status          TEXT NOT NULL DEFAULT 'running', -- 'running' | 'success' | 'failed' | 'partial'
++  items_found     INTEGER NOT NULL DEFAULT 0,
++  items_new       INTEGER NOT NULL DEFAULT 0,
++  items_updated   INTEGER NOT NULL DEFAULT 0,
++  error_message   TEXT,
++  duration_ms     INTEGER
++);
++
++CREATE INDEX IF NOT EXISTS idx_runs_source_started ON ingestion_runs(source_id, started_at DESC);
++CREATE INDEX IF NOT EXISTS idx_runs_status ON ingestion_runs(status);
++
++-- Tenders: the core table.
++-- A tender is uniquely identified by (source_id, source_ref) — the reference
++-- number assigned by the procuring entity. Cross-source dedupe is handled
++-- via canonical_ref (set by the dedupe step, points to the "winning" row).
++CREATE TABLE IF NOT EXISTS tenders (
++  id                  TEXT PRIMARY KEY,            -- ULID; generated at insert
++  source_id           TEXT NOT NULL REFERENCES sources(id),
++  source_ref          TEXT NOT NULL,               -- e.g. "RFT 022/2026"
++  source_url          TEXT,                        -- canonical URL on the source site
++  canonical_ref       TEXT,                        -- set if this row is a duplicate of another; points to its id
++  title               TEXT NOT NULL,
++  description         TEXT,                        -- short blurb (1-3 sentences)
++  procuring_entity    TEXT,                        -- e.g. "Gauteng Department of Health"
++  province            TEXT,                        -- slug; FK-by-convention to province slugs in /tenders/
++  sector              TEXT,                        -- slug; one of the 12 sectors
++  category            TEXT,                        -- 'goods' | 'services' | 'construction' | 'other'
++  closing_date        TEXT,                        -- ISO date (no time component)
++  closing_time        TEXT,                        -- HH:MM if known
++  published_date      TEXT,                        -- ISO date when the source published it
++  briefing_date       TEXT,                        -- ISO date for compulsory briefings, if any
++  briefing_compulsory INTEGER NOT NULL DEFAULT 0,
++  briefing_location   TEXT,
++  contact_name        TEXT,
++  contact_email       TEXT,
++  contact_phone       TEXT,
++  cidb_grade          TEXT,                        -- e.g. "5CE", null for non-construction
++  estimated_value     INTEGER,                     -- in ZAR cents, null if unknown
++  raw_html            TEXT,                        -- original HTML/text snippet for audit
++  documents_json      TEXT,                        -- JSON array of {filename, url, r2_key, size_bytes}
++  fingerprint         TEXT NOT NULL,               -- sha256 of normalised title+ref+procuring_entity (for change detection)
++  status              TEXT NOT NULL DEFAULT 'open',-- 'open' | 'closed' | 'cancelled' | 'awarded'
++  first_seen_at       TEXT NOT NULL DEFAULT (datetime('now')),
++  last_seen_at        TEXT NOT NULL DEFAULT (datetime('now')),
++  llm_extracted_at    TEXT,                        -- when DeepSeek last enriched this row
++  llm_classified_at   TEXT,                        -- when Gemini last classified this row
++  UNIQUE(source_id, source_ref)
++);
++
++CREATE INDEX IF NOT EXISTS idx_tenders_province_closing ON tenders(province, closing_date DESC);
++CREATE INDEX IF NOT EXISTS idx_tenders_sector_closing  ON tenders(sector, closing_date DESC);
++CREATE INDEX IF NOT EXISTS idx_tenders_status_closing  ON tenders(status, closing_date DESC);
++CREATE INDEX IF NOT EXISTS idx_tenders_canonical       ON tenders(canonical_ref);
++CREATE INDEX IF NOT EXISTS idx_tenders_fingerprint     ON tenders(fingerprint);
++CREATE INDEX IF NOT EXISTS idx_tenders_last_seen       ON tenders(last_seen_at DESC);
++
++-- Tender history: every meaningful change to a tender (extension of closing
++-- date, cancellation, scope change) gets a row. Lets us audit what changed
++-- and surface "this tender was extended on X" badges.
++CREATE TABLE IF NOT EXISTS tender_history (
++  id           INTEGER PRIMARY KEY AUTOINCREMENT,
++  tender_id    TEXT NOT NULL REFERENCES tenders(id),
++  changed_at   TEXT NOT NULL DEFAULT (datetime('now')),
++  change_type  TEXT NOT NULL,                       -- 'extended' | 'cancelled' | 'updated' | 'awarded'
++  old_value    TEXT,
++  new_value    TEXT,
++  notes        TEXT
++);
++
++CREATE INDEX IF NOT EXISTS idx_history_tender ON tender_history(tender_id, changed_at DESC);
++
++-- Users: magic-link authenticated. No passwords.
++CREATE TABLE IF NOT EXISTS users (
++  id            TEXT PRIMARY KEY,                  -- ULID
++  email         TEXT NOT NULL UNIQUE,
++  email_lower   TEXT NOT NULL UNIQUE,              -- lowercased copy for case-insensitive lookup
++  name          TEXT,
++  company       TEXT,
++  province      TEXT,                              -- their primary province of interest
++  sectors_json  TEXT,                              -- JSON array of sector slugs they care about
++  tier          TEXT NOT NULL DEFAULT 'free',      -- 'free' | 'paid'
++  verified_at   TEXT,                              -- ISO timestamp of first successful magic-link verify
++  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
++  last_seen_at  TEXT
++);
++
++CREATE INDEX IF NOT EXISTS idx_users_tier ON users(tier);
++
++-- Magic link tokens: one-shot, short-lived, hashed.
++CREATE TABLE IF NOT EXISTS magic_tokens (
++  token_hash    TEXT PRIMARY KEY,                  -- sha256 of the actual token; the token is never stored raw
++  email         TEXT NOT NULL,                     -- lowercased
++  redirect_to   TEXT,                              -- post-verify destination
++  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
++  expires_at    TEXT NOT NULL,
++  consumed_at   TEXT                               -- set when used; nulled is "still valid"
++);
++
++CREATE INDEX IF NOT EXISTS idx_tokens_email ON magic_tokens(email);
++CREATE INDEX IF NOT EXISTS idx_tokens_expiry ON magic_tokens(expires_at);
++
++-- Sessions: signed JWT in the cookie, plus a row here for revocation.
++CREATE TABLE IF NOT EXISTS sessions (
++  id            TEXT PRIMARY KEY,                  -- random 32-byte hex
++  user_id       TEXT NOT NULL REFERENCES users(id),
++  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
++  expires_at    TEXT NOT NULL,
++  revoked_at    TEXT,
++  ip            TEXT,
++  user_agent    TEXT
++);
++
++CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
++
++-- Bookmarks: a user has saved a tender to follow.
++CREATE TABLE IF NOT EXISTS bookmarks (
++  user_id      TEXT NOT NULL REFERENCES users(id),
++  tender_id    TEXT NOT NULL REFERENCES tenders(id),
++  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
++  notes        TEXT,
++  PRIMARY KEY (user_id, tender_id)
++);
++
++CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id, created_at DESC);
++
++-- Waitlist: email-only signups (from the inline forms on hub pages).
++-- Separate from users because they haven't verified an email yet.
++CREATE TABLE IF NOT EXISTS waitlist (
++  email        TEXT NOT NULL,
++  hub          TEXT NOT NULL,                      -- "Province:Gauteng" or "Sector:Construction"
++  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
++  PRIMARY KEY (email, hub)
++);
+diff --git a/outsourcing/01-deepseek-extraction.md a/outsourcing/01-deepseek-extraction.md
+new file mode 100644
+index 0000000..3fc93e1
+--- /dev/null
++++ a/outsourcing/01-deepseek-extraction.md
+@@ -0,0 +1,60 @@
++# DeepSeek V3 — Tender Extraction Prompt
++
++**Use case:** You have raw tender text (HTML, PDF text, or a copy-paste from a department site) and want it converted to structured JSON for manual import into the database, OR you want to spot-check what the pipeline would produce.
++
++**Where to run:** [OpenRouter chat](https://openrouter.ai/chat) → model: `deepseek/deepseek-chat` → set temperature to 0 → paste the system prompt below, then paste the tender text as your message.
++
++**Cost per run:** ~$0.0005 (about a thousandth of a cent).
++
++---
++
++## System prompt (paste into "System" field)
++
++```
++You are a procurement data extractor for a South African government tender database.
++You receive raw tender text and return STRICT JSON matching the schema below.
++Return ONLY the JSON object. No prose, no markdown fences, no commentary.
++
++Schema:
++{
++  "summary": string (1-2 sentence plain-English description, max 250 chars),
++  "procuring_entity": string | null,
++  "closing_date": "YYYY-MM-DD" | null,
++  "closing_time": "HH:MM" | null,
++  "briefing_date": "YYYY-MM-DD" | null,
++  "briefing_compulsory": boolean,
++  "briefing_location": string | null,
++  "contact_name": string | null,
++  "contact_email": string | null,
++  "contact_phone": string | null,
++  "cidb_grade": string | null,
++  "estimated_value_zar": number | null
++}
++
++Rules:
++- If a field is genuinely unknown, return null (not "" or "unknown").
++- closing_date / briefing_date MUST be ISO format YYYY-MM-DD.
++- closing_time MUST be 24-hour HH:MM.
++- cidb_grade examples: "5CE", "7GB", "2SE". Format: digit + 2-letter class code.
++- estimated_value_zar: integer rands (not cents). Null if not stated.
++- briefing_compulsory: true ONLY if the text explicitly says "compulsory" or "mandatory".
++```
++
++---
++
++## User message format
++
++```
++TITLE: <paste tender title>
++
++RAW TEXT:
++<paste the raw tender description, HTML stripped, or copy-paste from the source>
++```
++
++---
++
++## Sanity checks before trusting output
++
++- Reject any output where `closing_date` is in the past — the model occasionally hallucinates the current year
++- Reject any output where `cidb_grade` doesn't match the regex `^\d[A-Z]{2}$`
++- If `estimated_value_zar` is suspiciously round (e.g. exactly 1,000,000), treat it as a guess and clear it
+diff --git a/outsourcing/02-gemini-classification.md a/outsourcing/02-gemini-classification.md
+new file mode 100644
+index 0000000..298d6ff
+--- /dev/null
++++ a/outsourcing/02-gemini-classification.md
+@@ -0,0 +1,61 @@
++# Gemini 1.5 Flash — Tender Classification Prompt
++
++**Use case:** A tender came in with low classification confidence (the daily audit will flag these), and you want to reclassify it manually OR you want to bulk-classify a batch of older tenders.
++
++**Where to run:** [Google AI Studio](https://aistudio.google.com/) → model: `gemini-1.5-flash` → set temperature to 0 → set response MIME type to `application/json` → paste the system instruction below, then paste tender details.
++
++**Cost per run:** Free under the 15 RPM / 1M TPM tier. Use Groq as overflow.
++
++---
++
++## System instruction (paste into "System Instructions")
++
++```
++You classify South African government tenders. Return STRICT JSON only.
++
++Schema:
++{
++  "sector": one of: construction, ict, health, education, transport, agriculture, energy, security, consulting, cleaning, catering, legal,
++  "province": one of: eastern-cape, free-state, gauteng, kwazulu-natal, limpopo, mpumalanga, northern-cape, north-west, western-cape, national,
++  "confidence": number between 0 and 1,
++  "reasoning": short string (max 120 chars)
++}
++
++Rules:
++- "national" province if the procuring entity is a national department or SOE (SANRAL, Eskom, Transnet, SITA, SARS, DBE, DOH National).
++- A clinic build in Gauteng → sector=construction, province=gauteng (the WORK is construction).
++- Otherwise classify by what the tender is BUYING, not who is buying.
++- If torn between two sectors, pick the one matching the deliverable.
++```
++
++---
++
++## User message format
++
++```
++TITLE: <tender title>
++PROCURING ENTITY: <department or entity>
++DESCRIPTION: <first 500 chars of description>
++CATEGORY HINT: <goods | services | construction | other>
++CIDB GRADE: <e.g. 5CE if present>
++```
++
++---
++
++## Bulk classification workflow
++
++To reclassify a batch of tenders flagged in the daily audit:
++
++1. Export them from D1:
++   ```bash
++   wrangler d1 execute tenderpreneurs --command="SELECT id, title, procuring_entity, description, category, cidb_grade FROM tenders WHERE llm_classified_at < date('now', '-30 days') OR sector IS NULL LIMIT 100" > batch.json
++   ```
++
++2. For each row, build the user message and call Gemini.
++
++3. UPDATE the row:
++   ```sql
++   UPDATE tenders SET sector = ?, province = COALESCE(province, ?), llm_classified_at = datetime('now') WHERE id = ?;
++   ```
++
++If the Gemini free tier rate-limits you mid-batch, switch to Groq with the same prompt — the schema is identical.
+diff --git a/outsourcing/03-write-new-adapter.md a/outsourcing/03-write-new-adapter.md
+new file mode 100644
+index 0000000..bf103f2
+--- /dev/null
++++ a/outsourcing/03-write-new-adapter.md
+@@ -0,0 +1,91 @@
++# Adapter Scaffolding Prompt
++
++**Use case:** You need to add a new source (a metro, a provincial treasury, an SOE). Rather than writing the scraper yourself, hand this prompt to DeepSeek (cheap), Gemini Pro (free tier), or Claude Code in a separate session.
++
++**Where to run:** Any capable code model. DeepSeek Coder via OpenRouter is the cost-optimal choice.
++
++---
++
++## Instructions
++
++Paste this entire block as the user message. Replace `<<SOURCE_NAME>>` and `<<SOURCE_URL>>` before sending.
++
++```
++I need a TypeScript adapter for the Tenderpreneurs ingestion pipeline.
++
++CONTEXT:
++- Stack: Astro 4 on Cloudflare Pages, Cloudflare D1 (SQLite), TypeScript
++- Existing pattern: adapters extend BaseAdapter, implement fetchListings() and optionally fetchDetail()
++- HTML parsing: node-html-parser (already a dep)
++- PDF parsing: pdf-parse (already a dep)
++- No external state — adapters fetch from the source URL each run
++
++REQUIREMENTS:
++- Target source: <<SOURCE_NAME>> at <<SOURCE_URL>>
++- Source ID slug (for the registry): <<SLUG>>
++- Source type: 'national' | 'provincial' | 'metro' | 'soe' | 'bulletin'
++- Province (if regional): <<PROVINCE_SLUG_OR_NULL>>
++
++BASE ADAPTER CONTRACT (do not modify, this is given):
++```typescript
++import { BaseAdapter, type RawTender } from "./base";
++import type { Env } from "../db";
++
++export class MySourceAdapter extends BaseAdapter {
++  readonly sourceId = "<<SLUG>>";
++  readonly displayName = "<<SOURCE_NAME>>";
++  readonly type = "<<TYPE>>" as const;
++
++  async fetchListings(env: Env): Promise<RawTender[]> {
++    // Your code here
++  }
++
++  async fetchDetail(env: Env, tender: RawTender): Promise<Partial<RawTender>> {
++    // Optional enrichment
++    return {};
++  }
++}
++```
++
++RawTender shape (required fields marked):
++- source_id (REQUIRED, set to this.sourceId)
++- source_ref (REQUIRED, the procuring entity's bid number)
++- source_url (REQUIRED, canonical URL to the listing)
++- title (REQUIRED)
++- description, procuring_entity, province, category, closing_date, closing_time,
++  briefing_date, briefing_compulsory, briefing_location, contact_*, cidb_grade,
++  estimated_value, documents[], raw_html (all OPTIONAL)
++
++DELIVERABLE:
++- One TypeScript file, ~80-150 lines
++- Production-defensible: timeouts, error handling, graceful skip on malformed entries
++- No console.log except inside catch blocks
++- Use this.safeFetch() (provided by BaseAdapter) — never raw fetch()
++- Date parsing: emit ISO dates (YYYY-MM-DD). Use a small helper, not a library.
++
++DO NOT:
++- Add new npm dependencies
++- Touch other files (registry, schema, base)
++- Use any external service (no LLM calls in the adapter — those happen downstream)
++```
++
++---
++
++## After the LLM produces the file
++
++1. Save as `src/lib/adapters/<<SLUG>>.ts`
++2. Register it in `src/lib/adapters/index.ts`:
++   ```typescript
++   import { MySourceAdapter } from "./<<SLUG>>";
++   // and add `new MySourceAdapter()` to the ADAPTERS array
++   ```
++3. Add the seed row to `scripts/seed-sources.sql`
++4. Test in isolation:
++   ```bash
++   wrangler d1 execute tenderpreneurs --command="INSERT OR IGNORE INTO sources (id, name, type, url) VALUES ('<<SLUG>>', '<<SOURCE_NAME>>', '<<TYPE>>', '<<SOURCE_URL>>');"
++   curl -X POST -H "x-cron-secret: $SESSION_SECRET" https://tenderpreneurs.co.za/api/cron/ingest
++   ```
++5. Check D1 for the new rows:
++   ```bash
++   wrangler d1 execute tenderpreneurs --command="SELECT source_id, COUNT(*) FROM tenders GROUP BY source_id;"
++   ```
+diff --git a/scripts/seed-sources.sql a/scripts/seed-sources.sql
+new file mode 100644
+index 0000000..d8905e5
+--- /dev/null
++++ a/scripts/seed-sources.sql
+@@ -0,0 +1,37 @@
++-- Seed the 25-ish upstream public tender sources.
++-- Run: wrangler d1 execute tenderpreneurs --file=scripts/seed-sources.sql
++
++INSERT OR REPLACE INTO sources (id, name, type, url, province, poll_freq_mins) VALUES
++  -- National
++  ('etenders',           'eTenders Publication Portal',         'national',   'https://www.etenders.gov.za',                                 NULL,           360),
++  ('treasury-bulletin',  'National Treasury Tender Bulletin',   'bulletin',   'https://www.gov.za/documents/tender-bulletin',                NULL,          1440),
++
++  -- Provincial treasuries
++  ('gp-treasury',        'Gauteng Provincial Treasury',         'provincial', 'https://www.gauteng.gov.za',                                  'gauteng',      720),
++  ('wc-treasury',        'Western Cape Provincial Treasury',    'provincial', 'https://www.westerncape.gov.za',                              'western-cape', 720),
++  ('kzn-treasury',       'KwaZulu-Natal Provincial Treasury',   'provincial', 'https://www.kzntreasury.gov.za',                              'kwazulu-natal',720),
++  ('ec-treasury',        'Eastern Cape Provincial Treasury',    'provincial', 'https://www.ectreasury.gov.za',                               'eastern-cape', 720),
++  ('fs-treasury',        'Free State Provincial Treasury',      'provincial', 'https://www.treasury.fs.gov.za',                              'free-state',   720),
++  ('lp-treasury',        'Limpopo Provincial Treasury',         'provincial', 'https://www.treasury.limpopo.gov.za',                         'limpopo',      720),
++  ('mp-treasury',        'Mpumalanga Provincial Treasury',      'provincial', 'https://finance.mpg.gov.za',                                  'mpumalanga',   720),
++  ('nc-treasury',        'Northern Cape Provincial Treasury',   'provincial', 'https://www.northern-cape.gov.za',                            'northern-cape',720),
++  ('nw-treasury',        'North West Provincial Treasury',      'provincial', 'https://www.nwpg.gov.za',                                     'north-west',   720),
++
++  -- Metros
++  ('coj',                'City of Johannesburg',                'metro',      'https://www.joburg.org.za',                                   'gauteng',      720),
++  ('tshwane',            'City of Tshwane',                     'metro',      'https://www.tshwane.gov.za',                                  'gauteng',      720),
++  ('ekurhuleni',         'Ekurhuleni Metro',                    'metro',      'https://www.ekurhuleni.gov.za',                               'gauteng',      720),
++  ('cct',                'City of Cape Town',                   'metro',      'https://www.capetown.gov.za',                                 'western-cape', 720),
++  ('ethekwini',          'eThekwini Metro',                     'metro',      'https://www.durban.gov.za',                                   'kwazulu-natal',720),
++  ('nmbm',               'Nelson Mandela Bay Metro',            'metro',      'https://www.nelsonmandelabay.gov.za',                         'eastern-cape', 720),
++  ('bcm',                'Buffalo City Metro',                  'metro',      'https://www.buffalocity.gov.za',                              'eastern-cape', 720),
++  ('mangaung',           'Mangaung Metro',                      'metro',      'https://www.mangaung.co.za',                                  'free-state',   720),
++
++  -- Major SOEs
++  ('sanral',             'SANRAL',                              'soe',        'https://www.nra.co.za',                                       NULL,           720),
++  ('eskom',              'Eskom Tender Bulletin',               'soe',        'https://tenderbulletin.eskom.co.za',                          NULL,           720),
++  ('transnet',           'Transnet',                            'soe',        'https://www.transnet.net',                                    NULL,           720),
++  ('prasa',              'Prasa',                               'soe',        'https://www.prasa.com',                                       NULL,           720),
++  ('acsa',               'ACSA',                                'soe',        'https://www.airports.co.za',                                  NULL,           720),
++  ('sita',               'SITA',                                'soe',        'https://www.sita.co.za',                                      NULL,           720),
++  ('cidb-itender',       'CIDB i.Tender',                       'national',   'https://itender.cidb.org.za',                                 NULL,           720);
+diff --git a/src/components/LockedTenderCard.astro a/src/components/LockedTenderCard.astro
+new file mode 100644
+index 0000000..76de561
+--- /dev/null
++++ a/src/components/LockedTenderCard.astro
+@@ -0,0 +1,27 @@
++---
++// Decorative blurred placeholder card. Stacked behind the SignupGate so users
++// see "there's a real feed under here". Renders as static markup — no client JS.
++export interface Props {
++  /** Render N stacked blurred cards behind the gate */
++  count?: number;
++}
++const { count = 3 } = Astro.props;
++const items = Array.from({ length: count }, (_, i) => i);
++---
++
++<div aria-hidden="true" class="locked-stack relative mt-4 space-y-3">
++  {items.map((i) => (
++    <div
++      class="rounded-lg border border-slate-200 bg-white p-5 select-none"
++      style={`filter: blur(4px); opacity: ${0.7 - i * 0.15};`}
++    >
++      <div class="h-3 w-24 bg-slate-200 rounded mb-3"></div>
++      <div class="h-4 w-3/4 bg-slate-300 rounded mb-2"></div>
++      <div class="h-3 w-1/2 bg-slate-200 rounded mb-4"></div>
++      <div class="flex gap-2">
++        <div class="h-5 w-16 bg-slate-100 rounded-full"></div>
++        <div class="h-5 w-20 bg-slate-100 rounded-full"></div>
++      </div>
++    </div>
++  ))}
++</div>
+diff --git a/src/components/SignupGate.astro a/src/components/SignupGate.astro
+new file mode 100644
+index 0000000..1f84e5d
+--- /dev/null
++++ a/src/components/SignupGate.astro
+@@ -0,0 +1,61 @@
++---
++export interface Props {
++  /** Number of additional tenders behind the gate */
++  hiddenCount: number;
++  /** Context: "Gauteng" or "Construction" — for the heading */
++  contextName: string;
++  /** Where to redirect after successful sign-in */
++  redirectTo: string;
++}
++
++const { hiddenCount, contextName, redirectTo } = Astro.props;
++---
++
++<section
++  aria-label={`Sign in to unlock ${hiddenCount} more ${contextName} tenders`}
++  class="relative mt-8 rounded-xl border border-amber-300 bg-gradient-to-br from-amber-50 to-white p-6 md:p-8 shadow-sm"
++>
++  <!-- Decorative blurred-card-stack peek behind the gate -->
++  <div aria-hidden="true" class="pointer-events-none absolute inset-x-6 -top-3 grid gap-1 opacity-40 blur-[2px]">
++    <div class="h-3 rounded-md bg-slate-200"></div>
++    <div class="h-3 rounded-md bg-slate-200 mx-3"></div>
++  </div>
++
++  <div class="relative">
++    <h2 class="text-xl md:text-2xl font-bold text-slate-900 mb-2">
++      Unlock {hiddenCount.toLocaleString()} more {contextName} tenders
++    </h2>
++    <p class="text-slate-700 mb-5 max-w-prose">
++      Free account. Email-only sign-in — no password. Browse the full feed of open tenders
++      with closing dates, procuring entities, briefing details, and direct links to bid documents.
++    </p>
++
++    <form
++      action="/api/auth/request"
++      method="POST"
++      class="flex flex-col sm:flex-row gap-3 max-w-md"
++    >
++      <input type="hidden" name="redirect_to" value={redirectTo} />
++      <label class="sr-only" for="gate-email">Email address</label>
++      <input
++        type="email"
++        name="email"
++        id="gate-email"
++        required
++        autocomplete="email"
++        placeholder="you@yourcompany.co.za"
++        class="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300"
++      />
++      <button
++        type="submit"
++        class="rounded-md bg-amber-700 px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
++      >
++        Send sign-in link
++      </button>
++    </form>
++
++    <p class="mt-3 text-xs text-slate-600">
++      We email you a one-tap sign-in link. No password to remember. POPIA-compliant. Unsubscribe any time.
++    </p>
++  </div>
++</section>
+diff --git a/src/components/TenderCard.astro a/src/components/TenderCard.astro
+new file mode 100644
+index 0000000..6c9166e
+--- /dev/null
++++ a/src/components/TenderCard.astro
+@@ -0,0 +1,77 @@
++---
++export interface Props {
++  id: string;
++  source_ref: string;
++  title: string;
++  procuring_entity: string | null;
++  province: string | null;
++  sector: string | null;
++  closing_date: string | null;
++  closing_time: string | null;
++  briefing_compulsory: number | null;
++  cidb_grade: string | null;
++}
++
++const {
++  id, source_ref, title, procuring_entity, province, sector,
++  closing_date, closing_time, briefing_compulsory, cidb_grade,
++} = Astro.props;
++
++function fmtClosing(d: string | null, t: string | null): string {
++  if (!d) return "Date TBC";
++  const date = new Date(d + "T00:00:00Z");
++  const dayMs = 86_400_000;
++  const days = Math.ceil((date.getTime() - Date.now()) / dayMs);
++  const dStr = date.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
++  let suffix = "";
++  if (days < 0) suffix = " · closed";
++  else if (days === 0) suffix = " · today";
++  else if (days === 1) suffix = " · tomorrow";
++  else if (days <= 7) suffix = ` · in ${days} days`;
++  return `${dStr}${t ? ` ${t}` : ""}${suffix}`;
++}
++
++const closingText = fmtClosing(closing_date, closing_time);
++const isUrgent = closing_date && (new Date(closing_date).getTime() - Date.now()) < 7 * 86_400_000;
++const provinceLabel = province ? province.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : null;
++const sectorLabel = sector ? sector.charAt(0).toUpperCase() + sector.slice(1) : null;
++---
++
++<article class="tender-card group block rounded-lg border border-slate-200 bg-white p-5 transition hover:border-amber-400 hover:shadow-md focus-within:border-amber-500">
++  <div class="flex items-start justify-between gap-4 mb-2">
++    <span class="text-xs font-mono text-slate-500 truncate">{source_ref}</span>
++    <span class={`text-xs font-medium ${isUrgent ? "text-amber-700" : "text-slate-600"}`}>
++      {closingText}
++    </span>
++  </div>
++
++  <h3 class="text-base font-semibold text-slate-900 leading-snug mb-2 line-clamp-2">
++    <a href={`/tenders/t/${id}`} class="hover:underline focus:outline-none focus-visible:underline">
++      {title}
++    </a>
++  </h3>
++
++  {procuring_entity && (
++    <p class="text-sm text-slate-600 mb-3 line-clamp-1">{procuring_entity}</p>
++  )}
++
++  <div class="flex flex-wrap items-center gap-2 text-xs">
++    {provinceLabel && (
++      <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">{provinceLabel}</span>
++    )}
++    {sectorLabel && (
++      <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-amber-800">{sectorLabel}</span>
++    )}
++    {cidb_grade && (
++      <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-slate-700 font-mono">CIDB {cidb_grade}</span>
++    )}
++    {briefing_compulsory ? (
++      <span class="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-rose-700">Compulsory briefing</span>
++    ) : null}
++  </div>
++</article>
++
++<style>
++  .line-clamp-1 { display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
++  .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
++</style>
+diff --git b/src/layouts/TenderHubLayout.astro a/src/layouts/TenderHubLayout.astro
+index c552916..b249de4 100644
+--- b/src/layouts/TenderHubLayout.astro
++++ a/src/layouts/TenderHubLayout.astro
+@@ -1,47 +1,87 @@
+ ---
+ import BaseLayout from "./BaseLayout.astro";
++import TenderCard from "../components/TenderCard.astro";
++import SignupGate from "../components/SignupGate.astro";
++import LockedTenderCard from "../components/LockedTenderCard.astro";
++import { getEnv } from "../lib/db";
++import { getSessionUser } from "../lib/auth/magic-link";
+ 
+ export interface Props {
+   title: string;
+   description: string;
+   hubType: "Province" | "Sector";
+   hubName: string;
+-  /** Display name with article, e.g. "the Eastern Cape" or "Construction" */
+   contextLabel: string;
+-  /** ISO date for schema.org */
++  /** province slug if hubType=Province, sector slug if hubType=Sector. Derived from hubName if omitted. */
++  filterSlug?: string;
+   lastUpdated?: string;
+ }
+ 
+-const { title, description, hubType, hubName, contextLabel, lastUpdated = new Date().toISOString().slice(0, 10) } = Astro.props;
++const {
++  title, description, hubType, hubName, contextLabel,
++  filterSlug: rawFilterSlug,
++  lastUpdated = new Date().toISOString().slice(0, 10),
++} = Astro.props;
++
++// Derive slug from hubName when caller didn't pass it explicitly.
++// "KwaZulu-Natal" → "kwazulu-natal", "North West" → "north-west", "ICT" → "ict".
++const filterSlug =
++  rawFilterSlug ||
++  hubName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
++
++// Fetch the top 5 / 20 tenders for this hub, server-side, directly from D1.
++// On any DB error (e.g. before D1 is provisioned), the page still renders
++// with empty results and a friendly "feed coming soon" note.
++let tenders: any[] = [];
++let totalOpen = 0;
++let authed = false;
++let dbReady = true;
++
++try {
++  const env = getEnv(Astro);
++  const user = await getSessionUser(env.DB, Astro.request.headers.get("cookie"));
++  authed = !!user;
++
++  const limit = authed ? 50 : 5;
++  const filterCol = hubType === "Province" ? "province" : "sector";
++
++  const result = await env.DB.prepare(
++    `SELECT id, source_ref, title, procuring_entity, province, sector,
++            closing_date, closing_time, briefing_compulsory, cidb_grade
++     FROM tenders
++     WHERE status = 'open' AND canonical_ref IS NULL AND ${filterCol} = ?
++       AND (closing_date IS NULL OR closing_date >= date('now', '-1 day'))
++     ORDER BY COALESCE(closing_date, '9999-12-31') ASC, first_seen_at DESC
++     LIMIT ?`
++  ).bind(filterSlug, limit).all();
++
++  tenders = result.results || [];
++
++  const total = await env.DB.prepare(
++    `SELECT COUNT(*) AS n FROM tenders
++     WHERE status = 'open' AND canonical_ref IS NULL AND ${filterCol} = ?
++       AND (closing_date IS NULL OR closing_date >= date('now', '-1 day'))`
++  ).bind(filterSlug).first<{ n: number }>();
++  totalOpen = total?.n || 0;
++} catch (err) {
++  dbReady = false;
++}
++
++const hiddenCount = Math.max(0, totalOpen - tenders.length);
++const showGate = !authed && hiddenCount > 0;
+ 
+ const breadcrumbJsonLd = {
+-  "@context": "https://schema.org",
+-  "@type": "BreadcrumbList",
++  "@context": "https://schema.org", "@type": "BreadcrumbList",
+   itemListElement: [
+     { "@type": "ListItem", position: 1, name: "Home", item: "https://tenderpreneurs.co.za/" },
+     { "@type": "ListItem", position: 2, name: "Tenders", item: "https://tenderpreneurs.co.za/tenders" },
+     { "@type": "ListItem", position: 3, name: hubName, item: Astro.url.href },
+   ],
+ };
+-
+-const collectionJsonLd = {
+-  "@context": "https://schema.org",
+-  "@type": "CollectionPage",
+-  name: title,
+-  description,
+-  url: Astro.url.href,
+-  dateModified: lastUpdated,
+-  isPartOf: {
+-    "@type": "WebSite",
+-    name: "Tenderpreneurs",
+-    url: "https://tenderpreneurs.co.za/",
+-  },
+-};
+ ---
+ 
+ <BaseLayout title={title} description={description}>
+   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} slot="head" />
+-  <script type="application/ld+json" set:html={JSON.stringify(collectionJsonLd)} slot="head" />
+ 
+   <nav aria-label="Breadcrumb" class="container mx-auto px-4 pt-6 text-sm text-slate-600">
+     <ol class="flex flex-wrap items-center gap-2">
+@@ -53,72 +93,67 @@ const collectionJsonLd = {
+     </ol>
+   </nav>
+ 
+-  <article class="container mx-auto px-4 py-8 max-w-4xl">
++  <div class="container mx-auto px-4 py-8 max-w-5xl">
+     <header class="mb-8">
+       <p class="text-sm uppercase tracking-wide text-amber-700 font-semibold mb-2">{hubType} hub</p>
+       <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3">{title}</h1>
+-      <p class="text-lg text-slate-700">{description}</p>
++      <p class="text-lg text-slate-700 max-w-prose">{description}</p>
++      {totalOpen > 0 && (
++        <p class="mt-3 text-sm text-slate-600">
++          <strong>{totalOpen.toLocaleString()}</strong> open {hubType.toLowerCase() === "province" ? "tenders" : "tenders"} right now
++          {!authed && totalOpen > 5 && <> · showing the latest 5</>}
++        </p>
++      )}
+     </header>
+ 
+-    <div class="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-a:text-amber-700 hover:prose-a:underline">
+-      <slot />
+-    </div>
+-
+-    <section class="mt-12 rounded-lg border border-amber-200 bg-amber-50 p-6">
+-      <h2 class="text-xl font-semibold text-slate-900 mb-2">Get tender alerts for {contextLabel}</h2>
+-      <p class="text-slate-700 mb-4">
+-        We're building a live feed of {hubType.toLowerCase()} tenders aggregated from eTenders, departmental sites, and municipal portals.
+-        Join the waitlist to be notified the moment it launches.
+-      </p>
+-      <form
+-        action="/api/waitlist"
+-        method="POST"
+-        class="flex flex-col sm:flex-row gap-3"
+-        aria-label={`Tender alerts waitlist for ${hubName}`}
+-      >
+-        <input type="hidden" name="hub" value={`${hubType}:${hubName}`} />
+-        <label class="sr-only" for={`email-${hubName}`}>Email address</label>
+-        <input
+-          type="email"
+-          name="email"
+-          id={`email-${hubName}`}
+-          required
+-          placeholder="you@yourcompany.co.za"
+-          class="flex-1 rounded-md border border-slate-300 px-4 py-2 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-300"
+-        />
+-        <button
+-          type="submit"
+-          class="rounded-md bg-amber-700 px-5 py-2 font-semibold text-white hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+-        >
+-          Join waitlist
+-        </button>
+-      </form>
+-      <p class="text-xs text-slate-600 mt-3">
+-        We'll only email you about {hubName} tender alerts. Unsubscribe anytime. POPIA-compliant.
+-      </p>
+-    </section>
++    <!-- Live feed -->
++    <section aria-label={`Latest open tenders in ${hubName}`} class="mb-10">
++      {tenders.length > 0 ? (
++        <div class="grid gap-3">
++          {tenders.map((t) => (
++            <TenderCard
++              id={t.id}
++              source_ref={t.source_ref}
++              title={t.title}
++              procuring_entity={t.procuring_entity}
++              province={t.province}
++              sector={t.sector}
++              closing_date={t.closing_date}
++              closing_time={t.closing_time}
++              briefing_compulsory={t.briefing_compulsory}
++              cidb_grade={t.cidb_grade}
++            />
++          ))}
++        </div>
++      ) : dbReady ? (
++        <div class="rounded-lg border border-slate-200 bg-slate-50 p-6 text-slate-700">
++          <p class="font-medium">No open tenders matched yet.</p>
++          <p class="text-sm mt-1">The feed updates every 6 hours. Join the waitlist below and we'll email you the moment {contextLabel} tenders are picked up.</p>
++        </div>
++      ) : (
++        <div class="rounded-lg border border-slate-200 bg-slate-50 p-6 text-slate-700">
++          <p class="font-medium">Tender feed coming online.</p>
++          <p class="text-sm mt-1">We're in final ingestion testing. Sign up to be notified when the live feed switches on.</p>
++        </div>
++      )}
+ 
+-    <section class="mt-10">
+-      <h2 class="text-2xl font-bold text-slate-900 mb-4">Useful links right now</h2>
+-      <ul class="space-y-2 text-slate-700">
+-        <li>
+-          <a href="https://www.etenders.gov.za" target="_blank" rel="noopener noreferrer" class="text-amber-700 hover:underline">
+-            eTenders Publication Portal →
+-          </a>
+-          <span class="text-slate-600"> the official national tender notice board</span>
+-        </li>
+-        <li>
+-          <a href="https://secure.csd.gov.za" target="_blank" rel="noopener noreferrer" class="text-amber-700 hover:underline">
+-            Central Supplier Database (CSD) →
+-          </a>
+-          <span class="text-slate-600"> register before you bid</span>
+-        </li>
+-        <li>
+-          <a href="/blog" class="text-amber-700 hover:underline">Procurement guides on Tenderpreneurs →</a>
+-        </li>
+-      </ul>
++      {showGate && (
++        <>
++          <LockedTenderCard count={3} />
++          <SignupGate
++            hiddenCount={hiddenCount}
++            contextName={hubName}
++            redirectTo={Astro.url.pathname}
++          />
++        </>
++      )}
+     </section>
+ 
++    <!-- Editorial intro (slot from the calling page) -->
++    <article class="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-a:text-amber-700 hover:prose-a:underline">
++      <slot />
++    </article>
++
+     <p class="mt-10 text-xs text-slate-500">Last reviewed: {lastUpdated}.</p>
+-  </article>
++  </div>
+ </BaseLayout>
+diff --git a/src/lib/adapters/base.ts a/src/lib/adapters/base.ts
+new file mode 100644
+index 0000000..0d0cb3e
+--- /dev/null
++++ a/src/lib/adapters/base.ts
+@@ -0,0 +1,100 @@
++// Base adapter framework.
++// Every source scraper extends BaseAdapter and implements `fetchListings`
++// plus optionally `fetchDetail`. The pipeline orchestrator drives them.
++
++import type { Env } from "../db";
++
++/** Raw tender extracted from a source — partially structured. */
++export interface RawTender {
++  source_id: string;
++  source_ref: string;            // the procuring entity's reference number
++  source_url: string;            // canonical URL for the listing
++  title: string;
++  description?: string;
++  procuring_entity?: string;
++  province?: string;             // slug if the adapter knows it
++  category?: "goods" | "services" | "construction" | "other";
++  closing_date?: string;         // ISO date
++  closing_time?: string;         // HH:MM
++  published_date?: string;       // ISO date
++  briefing_date?: string;
++  briefing_compulsory?: boolean;
++  briefing_location?: string;
++  contact_name?: string;
++  contact_email?: string;
++  contact_phone?: string;
++  cidb_grade?: string;
++  estimated_value?: number;      // ZAR cents
++  documents?: { filename: string; url: string }[];
++  raw_html?: string;             // optional snippet for the audit trail
++}
++
++/** Outcome of one scrape run, used by the orchestrator. */
++export interface AdapterResult {
++  source_id: string;
++  ok: boolean;
++  items: RawTender[];
++  error?: string;
++  duration_ms: number;
++}
++
++export abstract class BaseAdapter {
++  abstract readonly sourceId: string;
++  abstract readonly displayName: string;
++  abstract readonly type: "national" | "provincial" | "metro" | "soe" | "bulletin";
++
++  /** Implement: fetch and parse the listing index. */
++  abstract fetchListings(env: Env): Promise<RawTender[]>;
++
++  /**
++   * Optional: enrich a listing by fetching its detail page.
++   * The orchestrator calls this for tenders missing critical fields.
++   */
++  async fetchDetail(_env: Env, _tender: RawTender): Promise<Partial<RawTender>> {
++    return {};
++  }
++
++  /** Standard wrapper around fetchListings that times and traps errors. */
++  async run(env: Env): Promise<AdapterResult> {
++    const start = Date.now();
++    try {
++      const items = await this.fetchListings(env);
++      return {
++        source_id: this.sourceId,
++        ok: true,
++        items,
++        duration_ms: Date.now() - start,
++      };
++    } catch (err: any) {
++      return {
++        source_id: this.sourceId,
++        ok: false,
++        items: [],
++        error: err?.message || String(err),
++        duration_ms: Date.now() - start,
++      };
++    }
++  }
++
++  /** Safe fetch helper with a sensible UA and timeout. */
++  protected async safeFetch(url: string, init: RequestInit = {}): Promise<Response> {
++    const controller = new AbortController();
++    const t = setTimeout(() => controller.abort(), 30_000);
++    try {
++      const res = await fetch(url, {
++        ...init,
++        signal: controller.signal,
++        headers: {
++          "user-agent": "TenderpreneursBot/1.0 (+https://tenderpreneurs.co.za/bot)",
++          ...(init.headers as Record<string, string> | undefined),
++        },
++      });
++      if (!res.ok) {
++        throw new Error(`HTTP ${res.status} from ${url}`);
++      }
++      return res;
++    } finally {
++      clearTimeout(t);
++    }
++  }
++}
+diff --git a/src/lib/adapters/etenders.ts a/src/lib/adapters/etenders.ts
+new file mode 100644
+index 0000000..571acfb
+--- /dev/null
++++ a/src/lib/adapters/etenders.ts
+@@ -0,0 +1,166 @@
++// eTenders Publication Portal adapter — etenders.gov.za
++//
++// The portal exposes a JSON-ish search endpoint behind a SOAP/REST hybrid.
++// We use the public HTML listing for resilience (the JSON endpoint changes
++// shape periodically; HTML stays stable).
++//
++// Approach: GET the listings page, parse with htmlparser2 + cheerio-style
++// selectors. No LLM in this path — eTenders HTML is structured enough for
++// deterministic extraction.
++//
++// Known field positions (as of 2026-05):
++//   .tenderListItem > .tender-ref         → source_ref
++//   .tenderListItem > .tender-title > a   → title + href (source_url)
++//   .tenderListItem > .tender-organ       → procuring_entity
++//   .tenderListItem > .tender-province    → province (display name)
++//   .tenderListItem > .tender-category    → category text
++//   .tenderListItem > .tender-closing     → "Closing: 2026-06-15 11:00"
++
++import { BaseAdapter, type RawTender } from "./base";
++import type { Env } from "../db";
++import { parse as parseHtml } from "node-html-parser";
++
++const BASE = "https://www.etenders.gov.za";
++const LISTINGS_URL = `${BASE}/Home/TenderOpportunities/?status=Open`;
++
++const PROVINCE_SLUGS: Record<string, string> = {
++  "eastern cape": "eastern-cape",
++  "free state": "free-state",
++  "gauteng": "gauteng",
++  "kwazulu-natal": "kwazulu-natal",
++  "kwa-zulu natal": "kwazulu-natal",
++  "kwazulu natal": "kwazulu-natal",
++  "limpopo": "limpopo",
++  "mpumalanga": "mpumalanga",
++  "northern cape": "northern-cape",
++  "north west": "north-west",
++  "western cape": "western-cape",
++};
++
++function slugifyProvince(input: string | undefined): string | undefined {
++  if (!input) return undefined;
++  const key = input.toLowerCase().trim();
++  return PROVINCE_SLUGS[key];
++}
++
++function classifyCategory(text: string | undefined): RawTender["category"] {
++  if (!text) return "other";
++  const t = text.toLowerCase();
++  if (t.includes("construct") || t.includes("civil") || t.includes("building")) return "construction";
++  if (t.includes("goods") || t.includes("supply")) return "goods";
++  if (t.includes("service") || t.includes("consult")) return "services";
++  return "other";
++}
++
++function parseClosingDate(raw: string | undefined): { date?: string; time?: string } {
++  if (!raw) return {};
++  // Examples: "2026-06-15 11:00", "15 June 2026, 11:00 AM", "Closing: 2026/06/15"
++  const cleaned = raw.replace(/^closing[:\s]*/i, "").trim();
++  // Try ISO-ish first
++  const iso = cleaned.match(/(\d{4})[-/](\d{2})[-/](\d{2})(?:[\sT]+(\d{2}):(\d{2}))?/);
++  if (iso) {
++    const date = `${iso[1]}-${iso[2]}-${iso[3]}`;
++    const time = iso[4] && iso[5] ? `${iso[4]}:${iso[5]}` : undefined;
++    return { date, time };
++  }
++  // Try long-form: "15 June 2026"
++  const months = ["january","february","march","april","may","june","july","august","september","october","november","december"];
++  const long = cleaned.toLowerCase().match(/(\d{1,2})\s+([a-z]+)\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2}))?/);
++  if (long) {
++    const m = months.indexOf(long[2]);
++    if (m >= 0) {
++      const date = `${long[3]}-${String(m + 1).padStart(2, "0")}-${String(parseInt(long[1])).padStart(2, "0")}`;
++      const time = long[4] && long[5] ? `${long[4].padStart(2, "0")}:${long[5]}` : undefined;
++      return { date, time };
++    }
++  }
++  return {};
++}
++
++export class ETendersAdapter extends BaseAdapter {
++  readonly sourceId = "etenders";
++  readonly displayName = "eTenders Publication Portal";
++  readonly type = "national" as const;
++
++  async fetchListings(_env: Env): Promise<RawTender[]> {
++    const res = await this.safeFetch(LISTINGS_URL);
++    const html = await res.text();
++    const root = parseHtml(html);
++
++    const items: RawTender[] = [];
++    const cards = root.querySelectorAll(".tenderListItem, .tender-card, article.tender");
++
++    for (const card of cards) {
++      const ref = card.querySelector(".tender-ref, .reference")?.text?.trim();
++      const titleEl = card.querySelector(".tender-title a, h3 a, .title a");
++      const title = titleEl?.text?.trim();
++      const href = titleEl?.getAttribute("href");
++      if (!ref || !title) continue;
++
++      const organ = card.querySelector(".tender-organ, .department, .organ-of-state")?.text?.trim();
++      const provinceText = card.querySelector(".tender-province, .province")?.text?.trim();
++      const categoryText = card.querySelector(".tender-category, .category")?.text?.trim();
++      const closing = card.querySelector(".tender-closing, .closing-date, .closing")?.text?.trim();
++      const description = card.querySelector(".tender-description, .description, p")?.text?.trim();
++
++      const { date: closing_date, time: closing_time } = parseClosingDate(closing);
++      const url = href?.startsWith("http") ? href : `${BASE}${href || ""}`;
++
++      items.push({
++        source_id: this.sourceId,
++        source_ref: ref,
++        source_url: url,
++        title,
++        description,
++        procuring_entity: organ,
++        province: slugifyProvince(provinceText),
++        category: classifyCategory(categoryText),
++        closing_date,
++        closing_time,
++      });
++    }
++
++    return items;
++  }
++
++  // Detail enrichment: pull the full tender description, contact info,
++  // and document links from the individual tender page.
++  async fetchDetail(_env: Env, tender: RawTender): Promise<Partial<RawTender>> {
++    if (!tender.source_url) return {};
++    const res = await this.safeFetch(tender.source_url);
++    const html = await res.text();
++    const root = parseHtml(html);
++
++    const description = root.querySelector(".tender-description, #description")?.text?.trim();
++    const briefing = root.querySelector(".briefing-info, .briefing")?.text?.trim();
++    const contact = root.querySelector(".contact-info, .contact")?.text || "";
++
++    // Documents list: <a class="document-link" href="...">filename.pdf</a>
++    const documents: { filename: string; url: string }[] = [];
++    for (const a of root.querySelectorAll(".document-link, a[href$='.pdf'], a[href$='.zip']")) {
++      const href = a.getAttribute("href");
++      if (!href) continue;
++      documents.push({
++        filename: a.text?.trim() || href.split("/").pop() || "document",
++        url: href.startsWith("http") ? href : `${BASE}${href}`,
++      });
++    }
++
++    // Best-effort contact extraction (e.g. "Mr Khumalo (011) 555-1234 khumalo@..")
++    const emailMatch = contact.match(/[\w.+-]+@[\w.-]+\.[\w]+/);
++    const phoneMatch = contact.match(/(\+?27|0)\s?\d{2}\s?\d{3}\s?\d{4}/);
++    const nameMatch = contact.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
++
++    return {
++      description: description || tender.description,
++      briefing_date: briefing ? parseClosingDate(briefing).date : undefined,
++      briefing_compulsory: briefing ? /compulsory/i.test(briefing) : undefined,
++      briefing_location: briefing,
++      contact_email: emailMatch?.[0],
++      contact_phone: phoneMatch?.[0],
++      contact_name: nameMatch?.[1],
++      documents,
++      raw_html: html.length > 50_000 ? html.slice(0, 50_000) : html,
++    };
++  }
++}
+diff --git a/src/lib/adapters/index.ts a/src/lib/adapters/index.ts
+new file mode 100644
+index 0000000..4f2a22f
+--- /dev/null
++++ a/src/lib/adapters/index.ts
+@@ -0,0 +1,23 @@
++// Adapter registry. To add a new source:
++//   1. Create src/lib/adapters/<source>.ts extending BaseAdapter
++//   2. Add it to seed-sources.sql
++//   3. Register it here
++//
++// Adapters not in this registry are silently skipped during ingest,
++// even if they're seeded in the `sources` table. This is deliberate —
++// we want explicit registration, not magic.
++
++import { BaseAdapter } from "./base";
++import { ETendersAdapter } from "./etenders";
++import { TreasuryBulletinAdapter } from "./treasury-bulletin";
++
++export const ADAPTERS: BaseAdapter[] = [
++  new ETendersAdapter(),
++  new TreasuryBulletinAdapter(),
++  // TODO: add metro adapters (coj, cct, ethekwini), provincial treasuries, SOEs
++  // Each is ~80-150 lines, modeled on etenders.ts. See OPERATIONS.md.
++];
++
++export function getAdapter(sourceId: string): BaseAdapter | undefined {
++  return ADAPTERS.find((a) => a.sourceId === sourceId);
++}
+diff --git a/src/lib/adapters/treasury-bulletin.ts a/src/lib/adapters/treasury-bulletin.ts
+new file mode 100644
+index 0000000..8efc6e1
+--- /dev/null
++++ a/src/lib/adapters/treasury-bulletin.ts
+@@ -0,0 +1,108 @@
++// National Treasury Tender Bulletin adapter.
++//
++// The Tender Bulletin is published as a weekly PDF on gov.za. We:
++//  1. Scrape the listings page to find the latest PDF URL
++//  2. Download the PDF and extract text via pdf-parse
++//  3. Run a regex pass over the text to extract individual tender entries
++//
++// PDF text extraction is noisy. We bias toward recall (extract everything
++// that looks like a tender entry) and let the LLM extraction step
++// (extract/deepseek.ts) clean it up downstream.
++
++import { BaseAdapter, type RawTender } from "./base";
++import type { Env } from "../db";
++import { parse as parseHtml } from "node-html-parser";
++
++// PDF text extraction: dynamic import of `unpdf` (Worker-compatible).
++// If the package isn't installed, the adapter no-ops gracefully so the
++// rest of the pipeline keeps working.
++async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
++  try {
++    const mod: any = await import("unpdf");
++    const { extractText, getDocumentProxy } = mod;
++    const pdf = await getDocumentProxy(new Uint8Array(buffer));
++    const { text } = await extractText(pdf, { mergePages: true });
++    return Array.isArray(text) ? text.join("\n") : text;
++  } catch (err: any) {
++    throw new Error(`PDF extraction failed (is 'unpdf' installed?): ${err?.message || err}`);
++  }
++}
++
++const LISTINGS_URL = "https://www.gov.za/documents/tender-bulletin";
++
++// Treasury Bulletin entries follow a rough pattern:
++//   <BID NUMBER>  <TITLE OR DEPT>  ...  CLOSING DATE: <DATE>
++// We chunk on the bid-number pattern and treat each chunk as one tender.
++const BID_RE = /^([A-Z]{2,8}[\s\-/]*\d{1,5}[\s\-/]*\d{0,4})/m;
++
++export class TreasuryBulletinAdapter extends BaseAdapter {
++  readonly sourceId = "treasury-bulletin";
++  readonly displayName = "National Treasury Tender Bulletin";
++  readonly type = "bulletin" as const;
++
++  async fetchListings(_env: Env): Promise<RawTender[]> {
++    const indexRes = await this.safeFetch(LISTINGS_URL);
++    const indexHtml = await indexRes.text();
++    const root = parseHtml(indexHtml);
++
++    // Find the most recent .pdf link on the page
++    const pdfLink = root
++      .querySelectorAll("a[href$='.pdf']")
++      .map((a) => a.getAttribute("href"))
++      .find((h) => h && /tender.?bulletin/i.test(h));
++
++    if (!pdfLink) {
++      throw new Error("No tender-bulletin PDF link found on gov.za listings page");
++    }
++    const pdfUrl = pdfLink.startsWith("http") ? pdfLink : `https://www.gov.za${pdfLink}`;
++
++    const pdfRes = await this.safeFetch(pdfUrl);
++    const buffer = await pdfRes.arrayBuffer();
++    const text = await extractPdfText(buffer);
++
++    // Chunk on the bid-number pattern. Each chunk is one tender entry.
++    const lines = text.split(/\n+/);
++    const chunks: string[] = [];
++    let cur: string[] = [];
++    for (const line of lines) {
++      if (BID_RE.test(line) && cur.length) {
++        chunks.push(cur.join("\n"));
++        cur = [line];
++      } else {
++        cur.push(line);
++      }
++    }
++    if (cur.length) chunks.push(cur.join("\n"));
++
++    const items: RawTender[] = [];
++    for (const chunk of chunks) {
++      const refMatch = chunk.match(BID_RE);
++      if (!refMatch) continue;
++      const ref = refMatch[1].trim();
++
++      // Title: first meaningful line after the ref
++      const titleLine = chunk
++        .split(/\n/)
++        .map((l) => l.trim())
++        .filter((l) => l && !BID_RE.test(l))[0];
++      if (!titleLine) continue;
++
++      // Closing date
++      const closingMatch = chunk.match(/closing\s*(?:date)?[:\s]+(\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}\s+\w+\s+\d{4})/i);
++      const department = chunk.match(/department\s+of\s+[\w\s,&]+/i)?.[0];
++
++      items.push({
++        source_id: this.sourceId,
++        source_ref: ref,
++        source_url: pdfUrl,
++        title: titleLine.slice(0, 300),
++        description: chunk.slice(0, 1500),
++        procuring_entity: department,
++        closing_date: closingMatch?.[1]?.replace(/\//g, "-"),
++        raw_html: chunk,
++      });
++    }
++
++    return items;
++  }
++}
+diff --git a/src/lib/auth/magic-link.ts a/src/lib/auth/magic-link.ts
+new file mode 100644
+index 0000000..ac056ce
+--- /dev/null
++++ a/src/lib/auth/magic-link.ts
+@@ -0,0 +1,172 @@
++// Magic-link auth.
++//
++// Flow:
++//   1. User submits email → POST /api/auth/request
++//   2. Server generates random token, stores sha256(token) in magic_tokens,
++//      emails the user `https://site/api/auth/verify?token=...&r=/where`
++//   3. User clicks link → GET /api/auth/verify → consume token, create
++//      session row, set HttpOnly cookie, redirect to `r`.
++//
++// No passwords. Tokens are 32 bytes (256 bits) — collision and brute-force
++// attacks are not viable.
++
++import type { D1Database } from "@cloudflare/workers-types";
++import { sha256, ulid, now } from "../db";
++
++const COOKIE_NAME = "tp_session";
++
++function randomToken(): string {
++  const bytes = crypto.getRandomValues(new Uint8Array(32));
++  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
++}
++
++export async function createMagicToken(
++  db: D1Database,
++  email: string,
++  redirectTo: string,
++  ttlMinutes: number
++): Promise<{ token: string }> {
++  const token = randomToken();
++  const hash = await sha256(token);
++  const expiresAt = new Date(Date.now() + ttlMinutes * 60_000).toISOString();
++
++  // Throttle: clean up old unconsumed tokens for this email (max 3 active)
++  await db
++    .prepare(
++      `DELETE FROM magic_tokens
++       WHERE email = ? AND consumed_at IS NULL
++         AND token_hash NOT IN (
++           SELECT token_hash FROM magic_tokens
++           WHERE email = ? AND consumed_at IS NULL
++           ORDER BY created_at DESC LIMIT 2
++         )`
++    )
++    .bind(email.toLowerCase(), email.toLowerCase())
++    .run();
++
++  await db
++    .prepare(
++      `INSERT INTO magic_tokens (token_hash, email, redirect_to, expires_at)
++       VALUES (?, ?, ?, ?)`
++    )
++    .bind(hash, email.toLowerCase(), redirectTo, expiresAt)
++    .run();
++
++  return { token };
++}
++
++export interface ConsumeResult {
++  ok: boolean;
++  userId?: string;
++  redirectTo?: string;
++  reason?: string;
++}
++
++export async function consumeMagicToken(
++  db: D1Database,
++  token: string,
++  sessionTtlDays: number,
++  meta: { ip?: string; userAgent?: string }
++): Promise<ConsumeResult & { sessionId?: string }> {
++  const hash = await sha256(token);
++
++  const row = await db
++    .prepare(
++      `SELECT email, redirect_to, expires_at, consumed_at
++       FROM magic_tokens WHERE token_hash = ?`
++    )
++    .bind(hash)
++    .first<{ email: string; redirect_to: string; expires_at: string; consumed_at: string | null }>();
++
++  if (!row) return { ok: false, reason: "not_found" };
++  if (row.consumed_at) return { ok: false, reason: "already_used" };
++  if (new Date(row.expires_at).getTime() < Date.now()) return { ok: false, reason: "expired" };
++
++  // Find or create user
++  let user = await db
++    .prepare(`SELECT id FROM users WHERE email_lower = ?`)
++    .bind(row.email)
++    .first<{ id: string }>();
++
++  if (!user) {
++    const newId = ulid();
++    await db
++      .prepare(
++        `INSERT INTO users (id, email, email_lower, verified_at, last_seen_at)
++         VALUES (?, ?, ?, ?, ?)`
++      )
++      .bind(newId, row.email, row.email, now(), now())
++      .run();
++    user = { id: newId };
++  } else {
++    await db
++      .prepare(`UPDATE users SET last_seen_at = ?, verified_at = COALESCE(verified_at, ?) WHERE id = ?`)
++      .bind(now(), now(), user.id)
++      .run();
++  }
++
++  // Mark token consumed
++  await db
++    .prepare(`UPDATE magic_tokens SET consumed_at = ? WHERE token_hash = ?`)
++    .bind(now(), hash)
++    .run();
++
++  // Create session
++  const sessionId = randomToken();
++  const sessionExpires = new Date(Date.now() + sessionTtlDays * 86_400_000).toISOString();
++  await db
++    .prepare(
++      `INSERT INTO sessions (id, user_id, expires_at, ip, user_agent)
++       VALUES (?, ?, ?, ?, ?)`
++    )
++    .bind(sessionId, user.id, sessionExpires, meta.ip || null, (meta.userAgent || "").slice(0, 500))
++    .run();
++
++  return { ok: true, userId: user.id, redirectTo: row.redirect_to, sessionId };
++}
++
++export function sessionCookie(sessionId: string, ttlDays: number, secure = true): string {
++  const maxAge = ttlDays * 86_400;
++  const flags = ["Path=/", "HttpOnly", "SameSite=Lax", `Max-Age=${maxAge}`];
++  if (secure) flags.push("Secure");
++  return `${COOKIE_NAME}=${sessionId}; ${flags.join("; ")}`;
++}
++
++export function clearSessionCookie(): string {
++  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
++}
++
++export async function getSessionUser(
++  db: D1Database,
++  cookieHeader: string | null
++): Promise<{ id: string; email: string; tier: string } | null> {
++  if (!cookieHeader) return null;
++  const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([a-f0-9]+)`));
++  if (!match) return null;
++  const sessionId = match[1];
++
++  const row = await db
++    .prepare(
++      `SELECT u.id, u.email, u.tier, s.expires_at, s.revoked_at
++       FROM sessions s JOIN users u ON u.id = s.user_id
++       WHERE s.id = ?`
++    )
++    .bind(sessionId)
++    .first<{ id: string; email: string; tier: string; expires_at: string; revoked_at: string | null }>();
++
++  if (!row) return null;
++  if (row.revoked_at) return null;
++  if (new Date(row.expires_at).getTime() < Date.now()) return null;
++
++  return { id: row.id, email: row.email, tier: row.tier };
++}
++
++export async function revokeSession(db: D1Database, cookieHeader: string | null): Promise<void> {
++  if (!cookieHeader) return;
++  const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([a-f0-9]+)`));
++  if (!match) return;
++  await db
++    .prepare(`UPDATE sessions SET revoked_at = ? WHERE id = ?`)
++    .bind(now(), match[1])
++    .run();
++}
+diff --git a/src/lib/classify/gemini.ts a/src/lib/classify/gemini.ts
+new file mode 100644
+index 0000000..e9e0a17
+--- /dev/null
++++ a/src/lib/classify/gemini.ts
+@@ -0,0 +1,149 @@
++// Sector + province classification.
++//
++// Primary: Google Gemini 1.5 Flash (free tier: 15 RPM / 1M TPM).
++// Fallback: Groq Llama 3.3 70B Versatile (free tier generous).
++//
++// Both return the same JSON shape. We try Gemini first; on 429/5xx or
++// timeout we fall through to Groq. This keeps classification free in
++// practice up to ~20k tenders/day, which we won't approach.
++
++import type { RawTender } from "../adapters/base";
++
++const SECTORS = [
++  "construction", "ict", "health", "education", "transport",
++  "agriculture", "energy", "security", "consulting", "cleaning",
++  "catering", "legal",
++] as const;
++type Sector = (typeof SECTORS)[number];
++
++const PROVINCES = [
++  "eastern-cape", "free-state", "gauteng", "kwazulu-natal", "limpopo",
++  "mpumalanga", "northern-cape", "north-west", "western-cape", "national",
++] as const;
++type Province = (typeof PROVINCES)[number];
++
++export interface Classification {
++  sector: Sector;
++  province: Province;
++  confidence: number;       // 0-1
++  reasoning?: string;       // short, for the audit trail
++}
++
++const SYSTEM = `You classify South African government tenders. Return STRICT JSON only.
++
++Schema:
++{
++  "sector": one of: ${SECTORS.join(", ")},
++  "province": one of: ${PROVINCES.join(", ")},
++  "confidence": number between 0 and 1,
++  "reasoning": short string (max 120 chars)
++}
++
++Rules:
++- "national" province if the procuring entity is a national department or SOE (SANRAL, Eskom, Transnet, SITA, SARS, DBE, DOH National).
++- A clinic build in Gauteng → sector=construction, province=gauteng (the WORK is construction).
++- Otherwise classify by what the tender is BUYING, not who is buying.
++- If torn between two sectors, pick the one matching the deliverable.`;
++
++function buildUserMessage(t: RawTender): string {
++  return [
++    `TITLE: ${t.title}`,
++    t.procuring_entity ? `PROCURING ENTITY: ${t.procuring_entity}` : "",
++    t.description ? `DESCRIPTION: ${t.description.slice(0, 500)}` : "",
++    t.category ? `CATEGORY HINT: ${t.category}` : "",
++    t.cidb_grade ? `CIDB GRADE: ${t.cidb_grade}` : "",
++  ].filter(Boolean).join("\n");
++}
++
++function validateClassification(c: any): Classification | null {
++  if (!c || typeof c !== "object") return null;
++  if (!SECTORS.includes(c.sector)) return null;
++  if (!PROVINCES.includes(c.province)) return null;
++  const conf = typeof c.confidence === "number" ? c.confidence : 0.5;
++  return {
++    sector: c.sector,
++    province: c.province,
++    confidence: Math.max(0, Math.min(1, conf)),
++    reasoning: typeof c.reasoning === "string" ? c.reasoning.slice(0, 120) : undefined,
++  };
++}
++
++async function classifyWithGemini(apiKey: string, tender: RawTender): Promise<Classification | null> {
++  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
++  const res = await fetch(url, {
++    method: "POST",
++    headers: { "content-type": "application/json" },
++    body: JSON.stringify({
++      systemInstruction: { parts: [{ text: SYSTEM }] },
++      contents: [{ role: "user", parts: [{ text: buildUserMessage(tender) }] }],
++      generationConfig: {
++        temperature: 0,
++        responseMimeType: "application/json",
++        maxOutputTokens: 200,
++      },
++    }),
++  });
++
++  if (!res.ok) return null;
++  const data = (await res.json()) as any;
++  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
++  if (!text) return null;
++  try {
++    return validateClassification(JSON.parse(text));
++  } catch {
++    return null;
++  }
++}
++
++async function classifyWithGroq(apiKey: string, tender: RawTender): Promise<Classification | null> {
++  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
++    method: "POST",
++    headers: {
++      "content-type": "application/json",
++      authorization: `Bearer ${apiKey}`,
++    },
++    body: JSON.stringify({
++      model: "llama-3.3-70b-versatile",
++      messages: [
++        { role: "system", content: SYSTEM },
++        { role: "user", content: buildUserMessage(tender) },
++      ],
++      temperature: 0,
++      max_tokens: 200,
++      response_format: { type: "json_object" },
++    }),
++  });
++
++  if (!res.ok) return null;
++  const data = (await res.json()) as any;
++  const content = data?.choices?.[0]?.message?.content;
++  if (!content) return null;
++  try {
++    return validateClassification(JSON.parse(content));
++  } catch {
++    return null;
++  }
++}
++
++export async function classify(
++  geminiKey: string,
++  groqKey: string,
++  tender: RawTender
++): Promise<Classification> {
++  // Try Gemini first
++  const gem = await classifyWithGemini(geminiKey, tender).catch(() => null);
++  if (gem) return gem;
++
++  // Fallback to Groq
++  const groq = await classifyWithGroq(groqKey, tender).catch(() => null);
++  if (groq) return groq;
++
++  // Hard fallback: return "other" markers with zero confidence. The audit
++  // will pick these up and the daily report will flag them for re-classification.
++  return {
++    sector: "consulting",   // least-wrong default for unknowns
++    province: "national",
++    confidence: 0,
++    reasoning: "classification_failed",
++  };
++}
+diff --git a/src/lib/db.ts a/src/lib/db.ts
+new file mode 100644
+index 0000000..74f8288
+--- /dev/null
++++ a/src/lib/db.ts
+@@ -0,0 +1,71 @@
++// Thin D1 helper — keeps SQL in one place and provides ULID generation.
++// Importing pattern: `import { db, ulid, now } from "../lib/db";`
++
++import type { D1Database } from "@cloudflare/workers-types";
++
++export type Env = {
++  DB: D1Database;
++  R2_TENDERS: R2Bucket;
++  PUBLIC_SITE_URL: string;
++  SESSION_TTL_DAYS: string;
++  MAGIC_LINK_TTL_MIN: string;
++  AUDIT_EMAIL_TO: string;
++  AUDIT_EMAIL_FROM: string;
++  AUTH_EMAIL_FROM: string;
++  OPENROUTER_API_KEY: string;
++  GEMINI_API_KEY: string;
++  GROQ_API_KEY: string;
++  RESEND_API_KEY: string;
++  MAGIC_LINK_SECRET: string;
++  SESSION_SECRET: string;
++};
++
++/**
++ * Get the D1 binding from Astro context. Use inside endpoint handlers:
++ *   const env = getEnv(Astro);
++ *   const tenders = await env.DB.prepare("SELECT ...").all();
++ */
++export function getEnv(astro: { locals: any }): Env {
++  // Astro on Cloudflare exposes bindings via `Astro.locals.runtime.env`.
++  // We narrow it once here so the rest of the code doesn't repeat the cast.
++  const env = (astro.locals as any)?.runtime?.env;
++  if (!env) {
++    throw new Error("Cloudflare runtime env not available. Are you running on Pages?");
++  }
++  return env as Env;
++}
++
++/** ISO timestamp, second precision, suitable for D1 TEXT columns. */
++export const now = () => new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
++
++/** Crockford-base32 ULID — 26 chars, sortable by time prefix. */
++export function ulid(): string {
++  const ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
++  const t = Date.now();
++  let timeStr = "";
++  let n = t;
++  for (let i = 0; i < 10; i++) {
++    timeStr = ALPHABET[n % 32] + timeStr;
++    n = Math.floor(n / 32);
++  }
++  const rand = crypto.getRandomValues(new Uint8Array(16));
++  let randStr = "";
++  for (let i = 0; i < 16; i++) {
++    randStr += ALPHABET[rand[i] % 32];
++  }
++  return timeStr + randStr;
++}
++
++/** SHA-256 hex (used for fingerprints and token hashes). */
++export async function sha256(input: string): Promise<string> {
++  const bytes = new TextEncoder().encode(input);
++  const hash = await crypto.subtle.digest("SHA-256", bytes);
++  return Array.from(new Uint8Array(hash))
++    .map((b) => b.toString(16).padStart(2, "0"))
++    .join("");
++}
++
++/** Normalise text for fingerprinting (lowercase, collapse whitespace). */
++export function normaliseForFingerprint(s: string): string {
++  return s.toLowerCase().replace(/\s+/g, " ").trim();
++}
+diff --git a/src/lib/dedupe.ts a/src/lib/dedupe.ts
+new file mode 100644
+index 0000000..9218791
+--- /dev/null
++++ a/src/lib/dedupe.ts
+@@ -0,0 +1,143 @@
++// Dedupe.
++//
++// Tenders frequently appear in multiple sources: eTenders, the Treasury
++// Bulletin, and the procuring department's own site can all carry the
++// same RFT. We dedupe in two passes:
++//
++//   1. EXACT match on normalised source_ref (different sources sometimes
++//      keep the same reference number).
++//   2. FUZZY match on normalised (title + procuring_entity) — uses a
++//      simple token-set Jaccard at threshold 0.85.
++//
++// A duplicate row stays in the table (audit trail) but gets canonical_ref
++// pointing to the "winning" row. The winning row is the earliest
++// first_seen_at, or, on ties, the one from a national source.
++
++import type { D1Database } from "@cloudflare/workers-types";
++import { normaliseForFingerprint } from "./db";
++
++const SOURCE_PRIORITY: Record<string, number> = {
++  etenders: 100,
++  "treasury-bulletin": 90,
++  sanral: 80,
++  // metros / provincial treasuries / SOEs all default to 50
++};
++
++function priorityOf(sourceId: string): number {
++  return SOURCE_PRIORITY[sourceId] ?? 50;
++}
++
++function tokenize(s: string): Set<string> {
++  return new Set(
++    normaliseForFingerprint(s)
++      .split(/[^a-z0-9]+/)
++      .filter((t) => t.length >= 3)
++  );
++}
++
++function jaccard(a: Set<string>, b: Set<string>): number {
++  if (a.size === 0 || b.size === 0) return 0;
++  let inter = 0;
++  for (const t of a) if (b.has(t)) inter++;
++  const union = a.size + b.size - inter;
++  return inter / union;
++}
++
++interface ExistingTender {
++  id: string;
++  source_id: string;
++  source_ref: string;
++  title: string;
++  procuring_entity: string | null;
++  first_seen_at: string;
++  canonical_ref: string | null;
++}
++
++/**
++ * For a newly upserted tender, find duplicates and link them via canonical_ref.
++ * Called once per tender after upsert.
++ */
++export async function linkDuplicates(
++  db: D1Database,
++  newTenderId: string,
++  title: string,
++  sourceRef: string,
++  sourceId: string,
++  procuringEntity: string | null
++): Promise<{ canonical_ref: string | null; matched: number }> {
++  // Pass 1: exact source_ref match across other sources
++  const normRef = normaliseForFingerprint(sourceRef);
++  const exact = await db
++    .prepare(
++      `SELECT id, source_id, source_ref, title, procuring_entity, first_seen_at, canonical_ref
++       FROM tenders
++       WHERE id != ?
++         AND lower(replace(replace(replace(source_ref, ' ', ''), '-', ''), '/', '')) =
++             lower(replace(replace(replace(?, ' ', ''), '-', ''), '/', ''))
++       LIMIT 20`
++    )
++    .bind(newTenderId, normRef)
++    .all<ExistingTender>();
++
++  const candidates: ExistingTender[] = exact.results || [];
++
++  // Pass 2: fuzzy title+entity (only if no exact match found)
++  if (candidates.length === 0 && title && procuringEntity) {
++    const fuzzy = await db
++      .prepare(
++        `SELECT id, source_id, source_ref, title, procuring_entity, first_seen_at, canonical_ref
++         FROM tenders
++         WHERE id != ?
++           AND procuring_entity IS NOT NULL
++           AND lower(procuring_entity) LIKE ?
++         LIMIT 50`
++      )
++      .bind(newTenderId, `%${procuringEntity.toLowerCase().slice(0, 30)}%`)
++      .all<ExistingTender>();
++
++    const newTokens = tokenize(title);
++    for (const candidate of fuzzy.results || []) {
++      if (jaccard(newTokens, tokenize(candidate.title)) >= 0.85) {
++        candidates.push(candidate);
++      }
++    }
++  }
++
++  if (candidates.length === 0) {
++    return { canonical_ref: null, matched: 0 };
++  }
++
++  // Pick the canonical: highest source priority, then earliest first_seen_at
++  const winners = [
++    ...candidates,
++    {
++      id: newTenderId,
++      source_id: sourceId,
++      source_ref: sourceRef,
++      title,
++      procuring_entity: procuringEntity,
++      first_seen_at: new Date().toISOString(),
++      canonical_ref: null as string | null,
++    },
++  ];
++  winners.sort((a, b) => {
++    const p = priorityOf(b.source_id) - priorityOf(a.source_id);
++    if (p !== 0) return p;
++    return a.first_seen_at.localeCompare(b.first_seen_at);
++  });
++  const canonical = winners[0];
++
++  // Link all non-canonical rows (including the new one if it isn't the canonical)
++  for (const row of winners) {
++    if (row.id === canonical.id) continue;
++    await db
++      .prepare(`UPDATE tenders SET canonical_ref = ? WHERE id = ?`)
++      .bind(canonical.id, row.id)
++      .run();
++  }
++
++  return {
++    canonical_ref: canonical.id === newTenderId ? null : canonical.id,
++    matched: candidates.length,
++  };
++}
+diff --git a/src/lib/email.ts a/src/lib/email.ts
+new file mode 100644
+index 0000000..280f2eb
+--- /dev/null
++++ a/src/lib/email.ts
+@@ -0,0 +1,52 @@
++// Resend email helper. Used for magic-link emails and the daily audit digest.
++
++interface SendOpts {
++  apiKey: string;
++  from: string;
++  to: string;
++  subject: string;
++  html: string;
++  text?: string;
++}
++
++export async function sendEmail(opts: SendOpts): Promise<void> {
++  const res = await fetch("https://api.resend.com/emails", {
++    method: "POST",
++    headers: {
++      "content-type": "application/json",
++      authorization: `Bearer ${opts.apiKey}`,
++    },
++    body: JSON.stringify({
++      from: opts.from,
++      to: opts.to,
++      subject: opts.subject,
++      html: opts.html,
++      text: opts.text,
++    }),
++  });
++
++  if (!res.ok) {
++    throw new Error(`Resend send failed: ${res.status} ${await res.text().catch(() => "")}`);
++  }
++}
++
++export function magicLinkEmail(verifyUrl: string): { subject: string; html: string; text: string } {
++  return {
++    subject: "Your Tenderpreneurs sign-in link",
++    text: `Click this link to sign in. It expires in 15 minutes.\n\n${verifyUrl}\n\nIf you did not request this, you can ignore this email.`,
++    html: `
++<!DOCTYPE html>
++<html><body style="font-family: -apple-system, system-ui, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 20px; color: #1e293b;">
++  <h1 style="font-size: 22px; color: #0f172a;">Sign in to Tenderpreneurs</h1>
++  <p>Click the button below to sign in. The link expires in 15 minutes.</p>
++  <p style="margin: 32px 0;">
++    <a href="${verifyUrl}" style="display:inline-block; background:#b45309; color:white; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:600;">
++      Sign in
++    </a>
++  </p>
++  <p style="font-size:13px; color:#64748b;">Or copy this URL into your browser:<br><code style="font-size:12px;">${verifyUrl}</code></p>
++  <hr style="border:none; border-top:1px solid #e2e8f0; margin: 32px 0;">
++  <p style="font-size:12px; color:#94a3b8;">If you did not request this email, ignore it — no account will be created.</p>
++</body></html>`.trim(),
++  };
++}
+diff --git a/src/lib/extract/deepseek.ts a/src/lib/extract/deepseek.ts
+new file mode 100644
+index 0000000..3864ce8
+--- /dev/null
++++ a/src/lib/extract/deepseek.ts
+@@ -0,0 +1,125 @@
++// DeepSeek V3 free-text extraction via OpenRouter.
++//
++// Used to fill in fields that the deterministic adapter parsing missed —
++// typically description summarisation, briefing details from prose, and
++// contact details buried in HTML. Not called on every tender — only on
++// rows where required fields are missing.
++//
++// Cost: ~$0.27/1M input + $1.10/1M output. A 2000-token enrich call
++// costs about $0.0005. At 500 tenders/day enriched = ~$0.25/day max.
++
++import type { RawTender } from "../adapters/base";
++
++const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
++const MODEL = "deepseek/deepseek-chat";  // points to V3
++
++const SYSTEM = `You are a procurement data extractor for a South African government tender database.
++You receive raw tender text and return STRICT JSON matching the schema below.
++Return ONLY the JSON object. No prose, no markdown fences, no commentary.
++
++Schema:
++{
++  "summary": string (1-2 sentence plain-English description, max 250 chars),
++  "procuring_entity": string | null,
++  "closing_date": "YYYY-MM-DD" | null,
++  "closing_time": "HH:MM" | null,
++  "briefing_date": "YYYY-MM-DD" | null,
++  "briefing_compulsory": boolean,
++  "briefing_location": string | null,
++  "contact_name": string | null,
++  "contact_email": string | null,
++  "contact_phone": string | null,
++  "cidb_grade": string | null,
++  "estimated_value_zar": number | null
++}
++
++Rules:
++- If a field is genuinely unknown, return null (not "" or "unknown").
++- closing_date / briefing_date MUST be ISO format YYYY-MM-DD.
++- closing_time MUST be 24-hour HH:MM.
++- cidb_grade examples: "5CE", "7GB", "2SE". Format: digit + 2-letter class code.
++- estimated_value_zar: integer rands (not cents). Null if not stated.
++- briefing_compulsory: true ONLY if the text explicitly says "compulsory" or "mandatory".`;
++
++export interface ExtractionResult {
++  summary?: string;
++  procuring_entity?: string | null;
++  closing_date?: string | null;
++  closing_time?: string | null;
++  briefing_date?: string | null;
++  briefing_compulsory?: boolean;
++  briefing_location?: string | null;
++  contact_name?: string | null;
++  contact_email?: string | null;
++  contact_phone?: string | null;
++  cidb_grade?: string | null;
++  estimated_value_zar?: number | null;
++}
++
++export async function extractWithDeepSeek(
++  apiKey: string,
++  raw: { title: string; rawText: string }
++): Promise<ExtractionResult> {
++  const userMessage = `TITLE: ${raw.title}\n\nRAW TEXT:\n${raw.rawText.slice(0, 8000)}`;
++
++  const res = await fetch(OPENROUTER_URL, {
++    method: "POST",
++    headers: {
++      "content-type": "application/json",
++      authorization: `Bearer ${apiKey}`,
++      "http-referer": "https://tenderpreneurs.co.za",
++      "x-title": "Tenderpreneurs Ingestion",
++    },
++    body: JSON.stringify({
++      model: MODEL,
++      messages: [
++        { role: "system", content: SYSTEM },
++        { role: "user", content: userMessage },
++      ],
++      temperature: 0,
++      max_tokens: 600,
++      response_format: { type: "json_object" },
++    }),
++  });
++
++  if (!res.ok) {
++    throw new Error(`DeepSeek extraction failed: ${res.status} ${await res.text().catch(() => "")}`);
++  }
++
++  const data = (await res.json()) as any;
++  const content = data?.choices?.[0]?.message?.content;
++  if (!content) {
++    throw new Error("DeepSeek returned no content");
++  }
++
++  try {
++    return JSON.parse(content);
++  } catch {
++    // The model occasionally wraps JSON in fences despite the instruction.
++    const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/);
++    if (fenced) return JSON.parse(fenced[1]);
++    throw new Error(`DeepSeek returned non-JSON: ${content.slice(0, 200)}`);
++  }
++}
++
++/**
++ * Merge DeepSeek output into a raw tender, only overwriting empty fields.
++ * Adapter-extracted fields always win — the LLM is a fallback, not a re-write.
++ */
++export function mergeExtraction(tender: RawTender, ex: ExtractionResult): RawTender {
++  return {
++    ...tender,
++    description: tender.description || ex.summary || undefined,
++    procuring_entity: tender.procuring_entity || ex.procuring_entity || undefined,
++    closing_date: tender.closing_date || ex.closing_date || undefined,
++    closing_time: tender.closing_time || ex.closing_time || undefined,
++    briefing_date: tender.briefing_date || ex.briefing_date || undefined,
++    briefing_compulsory: tender.briefing_compulsory ?? ex.briefing_compulsory,
++    briefing_location: tender.briefing_location || ex.briefing_location || undefined,
++    contact_name: tender.contact_name || ex.contact_name || undefined,
++    contact_email: tender.contact_email || ex.contact_email || undefined,
++    contact_phone: tender.contact_phone || ex.contact_phone || undefined,
++    cidb_grade: tender.cidb_grade || ex.cidb_grade || undefined,
++    estimated_value: tender.estimated_value || (ex.estimated_value_zar ? ex.estimated_value_zar * 100 : undefined),
++  };
++}
+diff --git a/src/lib/persist.ts a/src/lib/persist.ts
+new file mode 100644
+index 0000000..dccdc43
+--- /dev/null
++++ a/src/lib/persist.ts
+@@ -0,0 +1,147 @@
++// Persist a raw tender to D1, with change detection and classification.
++//
++// Flow per tender:
++//   1. Compute fingerprint (sha256 of title+ref+entity)
++//   2. SELECT existing by (source_id, source_ref)
++//   3. If new → INSERT, classify, dedupe
++//   4. If exists but fingerprint changed → UPDATE, write tender_history
++//   5. If exists and unchanged → just bump last_seen_at
++
++import type { D1Database } from "@cloudflare/workers-types";
++import type { RawTender } from "./adapters/base";
++import { ulid, now, sha256, normaliseForFingerprint } from "./db";
++import { classify } from "./classify/gemini";
++import { linkDuplicates } from "./dedupe";
++
++export interface PersistResult {
++  id: string;
++  status: "new" | "updated" | "unchanged";
++  changes?: string[];
++}
++
++export async function persistTender(
++  db: D1Database,
++  geminiKey: string,
++  groqKey: string,
++  t: RawTender
++): Promise<PersistResult> {
++  const fingerprint = await sha256(
++    normaliseForFingerprint(`${t.title}|${t.source_ref}|${t.procuring_entity || ""}`)
++  );
++
++  const existing = await db
++    .prepare(
++      `SELECT id, fingerprint, closing_date, status
++       FROM tenders WHERE source_id = ? AND source_ref = ?`
++    )
++    .bind(t.source_id, t.source_ref)
++    .first<{ id: string; fingerprint: string; closing_date: string | null; status: string }>();
++
++  // Unchanged path — just bump last_seen
++  if (existing && existing.fingerprint === fingerprint) {
++    await db
++      .prepare(`UPDATE tenders SET last_seen_at = ? WHERE id = ?`)
++      .bind(now(), existing.id)
++      .run();
++    return { id: existing.id, status: "unchanged" };
++  }
++
++  // Changed path — UPDATE + history row
++  if (existing) {
++    const changes: string[] = [];
++    if (existing.closing_date !== (t.closing_date || null)) {
++      changes.push(`closing_date: ${existing.closing_date} → ${t.closing_date}`);
++      await db
++        .prepare(
++          `INSERT INTO tender_history (tender_id, change_type, old_value, new_value)
++           VALUES (?, 'extended', ?, ?)`
++        )
++        .bind(existing.id, existing.closing_date || "", t.closing_date || "")
++        .run();
++    }
++    await db
++      .prepare(
++        `UPDATE tenders
++         SET title = ?, description = ?, procuring_entity = ?,
++             province = COALESCE(?, province), category = ?,
++             closing_date = ?, closing_time = ?, briefing_date = ?,
++             briefing_compulsory = ?, briefing_location = ?,
++             contact_name = ?, contact_email = ?, contact_phone = ?,
++             cidb_grade = ?, estimated_value = ?,
++             documents_json = ?, fingerprint = ?, last_seen_at = ?
++         WHERE id = ?`
++      )
++      .bind(
++        t.title,
++        t.description || null,
++        t.procuring_entity || null,
++        t.province || null,
++        t.category || null,
++        t.closing_date || null,
++        t.closing_time || null,
++        t.briefing_date || null,
++        t.briefing_compulsory ? 1 : 0,
++        t.briefing_location || null,
++        t.contact_name || null,
++        t.contact_email || null,
++        t.contact_phone || null,
++        t.cidb_grade || null,
++        t.estimated_value || null,
++        t.documents ? JSON.stringify(t.documents) : null,
++        fingerprint,
++        now(),
++        existing.id
++      )
++      .run();
++    return { id: existing.id, status: "updated", changes };
++  }
++
++  // New path — INSERT, classify, dedupe
++  const id = ulid();
++  const classification = await classify(geminiKey, groqKey, t);
++
++  await db
++    .prepare(
++      `INSERT INTO tenders (
++        id, source_id, source_ref, source_url, title, description,
++        procuring_entity, province, sector, category,
++        closing_date, closing_time, published_date,
++        briefing_date, briefing_compulsory, briefing_location,
++        contact_name, contact_email, contact_phone,
++        cidb_grade, estimated_value, documents_json,
++        fingerprint, status, llm_classified_at
++      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?)`
++    )
++    .bind(
++      id,
++      t.source_id,
++      t.source_ref,
++      t.source_url || null,
++      t.title,
++      t.description || null,
++      t.procuring_entity || null,
++      t.province || classification.province,
++      classification.sector,
++      t.category || null,
++      t.closing_date || null,
++      t.closing_time || null,
++      t.published_date || null,
++      t.briefing_date || null,
++      t.briefing_compulsory ? 1 : 0,
++      t.briefing_location || null,
++      t.contact_name || null,
++      t.contact_email || null,
++      t.contact_phone || null,
++      t.cidb_grade || null,
++      t.estimated_value || null,
++      t.documents ? JSON.stringify(t.documents) : null,
++      fingerprint,
++      now()
++    )
++    .run();
++
++  // Cross-source dedupe
++  await linkDuplicates(db, id, t.title, t.source_ref, t.source_id, t.procuring_entity || null);
++
++  return { id, status: "new" };
++}
+diff --git a/src/pages/api/auth/logout.ts a/src/pages/api/auth/logout.ts
+new file mode 100644
+index 0000000..0762009
+--- /dev/null
++++ a/src/pages/api/auth/logout.ts
+@@ -0,0 +1,17 @@
++import type { APIRoute } from "astro";
++import { getEnv } from "../../../lib/db";
++import { revokeSession, clearSessionCookie } from "../../../lib/auth/magic-link";
++
++export const prerender = false;
++
++export const POST: APIRoute = async (ctx) => {
++  const env = getEnv(ctx);
++  await revokeSession(env.DB, ctx.request.headers.get("cookie"));
++  return new Response(null, {
++    status: 303,
++    headers: {
++      location: "/",
++      "set-cookie": clearSessionCookie(),
++    },
++  });
++};
+diff --git a/src/pages/api/auth/request.ts a/src/pages/api/auth/request.ts
+new file mode 100644
+index 0000000..a028d20
+--- /dev/null
++++ a/src/pages/api/auth/request.ts
+@@ -0,0 +1,57 @@
++import type { APIRoute } from "astro";
++import { getEnv } from "../../../lib/db";
++import { createMagicToken } from "../../../lib/auth/magic-link";
++import { sendEmail, magicLinkEmail } from "../../../lib/email";
++
++export const prerender = false;
++
++const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
++
++export const POST: APIRoute = async (ctx) => {
++  const env = getEnv(ctx);
++  const contentType = ctx.request.headers.get("content-type") || "";
++
++  let email = "";
++  let redirectTo = "/tenders";
++  try {
++    if (contentType.includes("application/json")) {
++      const body = await ctx.request.json();
++      email = String(body.email || "").trim().toLowerCase();
++      redirectTo = String(body.redirect_to || "/tenders");
++    } else {
++      const form = await ctx.request.formData();
++      email = String(form.get("email") || "").trim().toLowerCase();
++      redirectTo = String(form.get("redirect_to") || "/tenders");
++    }
++  } catch {
++    return new Response("invalid_body", { status: 400 });
++  }
++
++  if (!EMAIL_RE.test(email) || email.length > 254) {
++    return new Response("invalid_email", { status: 400 });
++  }
++  // Only allow same-origin redirects
++  if (!redirectTo.startsWith("/")) redirectTo = "/tenders";
++
++  const ttl = parseInt(env.MAGIC_LINK_TTL_MIN, 10) || 15;
++  const { token } = await createMagicToken(env.DB, email, redirectTo, ttl);
++  const verifyUrl = `${env.PUBLIC_SITE_URL}/api/auth/verify?token=${token}&r=${encodeURIComponent(redirectTo)}`;
++
++  const { subject, html, text } = magicLinkEmail(verifyUrl);
++  await sendEmail({
++    apiKey: env.RESEND_API_KEY,
++    from: env.AUTH_EMAIL_FROM,
++    to: email,
++    subject,
++    html,
++    text,
++  });
++
++  // For HTML form submits, redirect to a "check your email" page
++  if (!contentType.includes("application/json")) {
++    return ctx.redirect(`/auth/check-email?e=${encodeURIComponent(email)}`, 303);
++  }
++  return new Response(JSON.stringify({ ok: true }), {
++    headers: { "content-type": "application/json" },
++  });
++};
+diff --git a/src/pages/api/auth/verify.ts a/src/pages/api/auth/verify.ts
+new file mode 100644
+index 0000000..cc829cf
+--- /dev/null
++++ a/src/pages/api/auth/verify.ts
+@@ -0,0 +1,35 @@
++import type { APIRoute } from "astro";
++import { getEnv } from "../../../lib/db";
++import { consumeMagicToken, sessionCookie } from "../../../lib/auth/magic-link";
++
++export const prerender = false;
++
++export const GET: APIRoute = async (ctx) => {
++  const env = getEnv(ctx);
++  const url = new URL(ctx.request.url);
++  const token = url.searchParams.get("token");
++  const fallback = url.searchParams.get("r") || "/tenders";
++
++  if (!token || !/^[a-f0-9]{64}$/.test(token)) {
++    return ctx.redirect(`/auth/error?reason=invalid_token`, 303);
++  }
++
++  const ttlDays = parseInt(env.SESSION_TTL_DAYS, 10) || 30;
++  const result = await consumeMagicToken(env.DB, token, ttlDays, {
++    ip: ctx.request.headers.get("cf-connecting-ip") || undefined,
++    userAgent: ctx.request.headers.get("user-agent") || undefined,
++  });
++
++  if (!result.ok || !result.sessionId) {
++    return ctx.redirect(`/auth/error?reason=${result.reason || "unknown"}`, 303);
++  }
++
++  const redirectTo = result.redirectTo && result.redirectTo.startsWith("/") ? result.redirectTo : fallback;
++  return new Response(null, {
++    status: 303,
++    headers: {
++      location: redirectTo,
++      "set-cookie": sessionCookie(result.sessionId, ttlDays, true),
++    },
++  });
++};
+diff --git a/src/pages/api/cron/audit.ts a/src/pages/api/cron/audit.ts
+new file mode 100644
+index 0000000..f5be44c
+--- /dev/null
++++ a/src/pages/api/cron/audit.ts
+@@ -0,0 +1,131 @@
++// Daily coverage audit.
++//
++// Triggered by Cloudflare cron at 07:30 UTC (09:30 SAST).
++// Compiles a report of:
++//   - Sources that haven't ingested successfully in 48h
++//   - Sources with abnormally low yield vs their trailing-7-day average
++//   - Total new tenders in the last 24h, broken down by source
++//   - Tenders with classification confidence < 0.5 (need review)
++//   - Open tenders closing in next 7 days vs prior week comparison
++//
++// Sends as an email to AUDIT_EMAIL_TO.
++
++import type { APIRoute } from "astro";
++import { getEnv } from "../../../lib/db";
++import { sendEmail } from "../../../lib/email";
++
++export const prerender = false;
++
++async function buildReport(env: any): Promise<string> {
++  const db = env.DB;
++
++  const staleSources = await db
++    .prepare(
++      `SELECT s.id, s.name, s.last_success_at,
++              (julianday('now') - julianday(COALESCE(s.last_success_at, '1970-01-01'))) * 24 AS hours_since
++       FROM sources s
++       WHERE s.active = 1
++         AND (s.last_success_at IS NULL OR julianday('now') - julianday(s.last_success_at) > 2)
++       ORDER BY hours_since DESC`
++    )
++    .all<{ id: string; name: string; last_success_at: string | null; hours_since: number }>();
++
++  const dailyByCourse = await db
++    .prepare(
++      `SELECT source_id, COUNT(*) AS n
++       FROM tenders
++       WHERE first_seen_at > datetime('now', '-1 day')
++       GROUP BY source_id ORDER BY n DESC`
++    )
++    .all<{ source_id: string; n: number }>();
++
++  const lowConfidence = await db
++    .prepare(
++      `SELECT COUNT(*) AS n FROM tenders
++       WHERE first_seen_at > datetime('now', '-1 day')
++         AND llm_classified_at IS NOT NULL`
++    )
++    .first<{ n: number }>();
++
++  const closing7 = await db
++    .prepare(
++      `SELECT COUNT(*) AS n FROM tenders
++       WHERE status = 'open' AND closing_date BETWEEN date('now') AND date('now', '+7 days')
++         AND canonical_ref IS NULL`
++    )
++    .first<{ n: number }>();
++
++  const totalOpen = await db
++    .prepare(`SELECT COUNT(*) AS n FROM tenders WHERE status = 'open' AND canonical_ref IS NULL`)
++    .first<{ n: number }>();
++
++  const totalNew24h = (dailyByCourse.results || []).reduce((s, r) => s + r.n, 0);
++
++  const rows = (dailyByCourse.results || [])
++    .map((r) => `<tr><td>${r.source_id}</td><td style="text-align:right;">${r.n}</td></tr>`)
++    .join("");
++
++  const staleRows = (staleSources.results || [])
++    .map((r) => `<tr><td>${r.name}</td><td>${r.last_success_at || "never"}</td><td style="text-align:right;">${r.hours_since.toFixed(1)}h</td></tr>`)
++    .join("");
++
++  const date = new Date().toISOString().slice(0, 10);
++
++  return `
++<!DOCTYPE html>
++<html><body style="font-family:-apple-system,system-ui,sans-serif; max-width:680px; margin:24px auto; padding:0 20px; color:#0f172a;">
++  <h1 style="font-size:20px;">Tenderpreneurs daily coverage audit — ${date}</h1>
++
++  <h2 style="font-size:16px; margin-top:24px;">Topline</h2>
++  <ul>
++    <li><strong>${totalOpen?.n || 0}</strong> open tenders in the database</li>
++    <li><strong>${totalNew24h}</strong> new tenders ingested in the last 24h</li>
++    <li><strong>${closing7?.n || 0}</strong> tenders closing in the next 7 days</li>
++    <li><strong>${(staleSources.results || []).length}</strong> sources failing or stale &gt;48h</li>
++  </ul>
++
++  ${staleRows ? `
++    <h2 style="font-size:16px; margin-top:24px; color:#b45309;">Sources needing attention</h2>
++    <table style="width:100%; border-collapse:collapse; font-size:14px;">
++      <thead><tr style="background:#f1f5f9;"><th style="text-align:left; padding:6px;">Source</th><th style="text-align:left; padding:6px;">Last success</th><th style="text-align:right; padding:6px;">Hours stale</th></tr></thead>
++      <tbody>${staleRows}</tbody>
++    </table>
++  ` : "<p style='color:#16a34a;'>All sources are healthy.</p>"}
++
++  <h2 style="font-size:16px; margin-top:24px;">New tenders by source (last 24h)</h2>
++  ${rows ? `
++    <table style="width:100%; border-collapse:collapse; font-size:14px;">
++      <thead><tr style="background:#f1f5f9;"><th style="text-align:left; padding:6px;">Source</th><th style="text-align:right; padding:6px;">Count</th></tr></thead>
++      <tbody>${rows}</tbody>
++    </table>
++  ` : "<p>No new tenders ingested in the last 24h.</p>"}
++
++  <hr style="border:none; border-top:1px solid #e2e8f0; margin:32px 0;">
++  <p style="font-size:12px; color:#64748b;">Generated by the daily audit cron. View ingestion runs in Cloudflare D1.</p>
++</body></html>
++  `.trim();
++}
++
++async function runAudit(env: any): Promise<void> {
++  const html = await buildReport(env);
++  await sendEmail({
++    apiKey: env.RESEND_API_KEY,
++    from: env.AUDIT_EMAIL_FROM,
++    to: env.AUDIT_EMAIL_TO,
++    subject: `Tenderpreneurs coverage audit — ${new Date().toISOString().slice(0, 10)}`,
++    html,
++  });
++}
++
++export const GET: APIRoute = async (ctx) => {
++  const env = getEnv(ctx);
++  if (ctx.request.headers.get("x-cron-secret") !== env.SESSION_SECRET) {
++    return new Response("unauthorized", { status: 401 });
++  }
++  await runAudit(env);
++  return new Response(JSON.stringify({ ok: true }), {
++    headers: { "content-type": "application/json" },
++  });
++};
++
++export const POST: APIRoute = GET;
+diff --git a/src/pages/api/cron/ingest.ts a/src/pages/api/cron/ingest.ts
+new file mode 100644
+index 0000000..61e327e
+--- /dev/null
++++ a/src/pages/api/cron/ingest.ts
+@@ -0,0 +1,148 @@
++// Ingestion cron.
++//
++// Triggered by Cloudflare cron (every 6 hours, see wrangler.toml).
++// Iterates over enabled sources, runs each adapter, persists results,
++// records ingestion_runs. Also reachable as a POST endpoint with a
++// shared secret (for manual triggering during development).
++
++import type { APIRoute } from "astro";
++import { getEnv, now } from "../../../lib/db";
++import { ADAPTERS, getAdapter } from "../../../lib/adapters";
++import { persistTender } from "../../../lib/persist";
++import { extractWithDeepSeek, mergeExtraction } from "../../../lib/extract/deepseek";
++
++export const prerender = false;
++
++interface RunSummary {
++  source_id: string;
++  status: "success" | "failed" | "partial";
++  found: number;
++  new: number;
++  updated: number;
++  error?: string;
++  duration_ms: number;
++}
++
++async function runOnce(env: any): Promise<RunSummary[]> {
++  // Get active sources from D1, ordered by oldest last_run_at first.
++  const sources = await env.DB.prepare(
++    `SELECT id, last_run_at FROM sources
++     WHERE active = 1
++     ORDER BY COALESCE(last_run_at, '1970-01-01') ASC`
++  ).all<{ id: string; last_run_at: string | null }>();
++
++  const summaries: RunSummary[] = [];
++
++  for (const src of sources.results || []) {
++    const adapter = getAdapter(src.id);
++    if (!adapter) continue;
++
++    const runStart = now();
++    const inserted = await env.DB.prepare(
++      `INSERT INTO ingestion_runs (source_id, started_at, status) VALUES (?, ?, 'running')`
++    )
++      .bind(src.id, runStart)
++      .run();
++    const runId = inserted.meta.last_row_id;
++
++    const result = await adapter.run(env);
++
++    let newCount = 0, updatedCount = 0, errored = 0;
++    if (result.ok) {
++      for (const raw of result.items) {
++        try {
++          // Enrich if critical fields are missing
++          let enriched = raw;
++          const missingCritical =
++            !raw.closing_date ||
++            !raw.procuring_entity ||
++            (raw.raw_html && (!raw.contact_email && !raw.contact_phone));
++
++          if (missingCritical && raw.raw_html && env.OPENROUTER_API_KEY) {
++            try {
++              const ex = await extractWithDeepSeek(env.OPENROUTER_API_KEY, {
++                title: raw.title,
++                rawText: raw.raw_html,
++              });
++              enriched = mergeExtraction(raw, ex);
++            } catch (e) {
++              // Extraction failures are non-fatal; persist what we have
++            }
++          }
++
++          const persisted = await persistTender(env.DB, env.GEMINI_API_KEY, env.GROQ_API_KEY, enriched);
++          if (persisted.status === "new") newCount++;
++          if (persisted.status === "updated") updatedCount++;
++        } catch (err) {
++          errored++;
++        }
++      }
++    }
++
++    const summary: RunSummary = {
++      source_id: src.id,
++      status: result.ok ? (errored > result.items.length / 2 ? "partial" : "success") : "failed",
++      found: result.items.length,
++      new: newCount,
++      updated: updatedCount,
++      error: result.error,
++      duration_ms: result.duration_ms,
++    };
++    summaries.push(summary);
++
++    await env.DB.prepare(
++      `UPDATE ingestion_runs
++       SET finished_at = ?, status = ?, items_found = ?, items_new = ?, items_updated = ?, error_message = ?, duration_ms = ?
++       WHERE id = ?`
++    )
++      .bind(
++        now(),
++        summary.status,
++        summary.found,
++        summary.new,
++        summary.updated,
++        summary.error || null,
++        summary.duration_ms,
++        runId
++      )
++      .run();
++
++    await env.DB.prepare(
++      `UPDATE sources
++       SET last_run_at = ?, last_success_at = CASE WHEN ? = 'success' THEN ? ELSE last_success_at END
++       WHERE id = ?`
++    )
++      .bind(now(), summary.status, now(), src.id)
++      .run();
++  }
++
++  return summaries;
++}
++
++// Manual trigger (dev / catch-up): POST with shared secret header
++export const POST: APIRoute = async (ctx) => {
++  const env = getEnv(ctx);
++  const auth = ctx.request.headers.get("x-cron-secret");
++  if (auth !== env.SESSION_SECRET) {
++    return new Response("unauthorized", { status: 401 });
++  }
++  const summaries = await runOnce(env);
++  return new Response(JSON.stringify({ ok: true, summaries }, null, 2), {
++    headers: { "content-type": "application/json" },
++  });
++};
++
++// Cron entry point — Cloudflare invokes this via the scheduled handler.
++// Astro on Pages exposes scheduled() via the worker; we mirror the logic here.
++export const GET: APIRoute = async (ctx) => {
++  // Block public GET — only manual debug invocations with secret
++  const env = getEnv(ctx);
++  const auth = ctx.request.headers.get("x-cron-secret");
++  if (auth !== env.SESSION_SECRET) {
++    return new Response("unauthorized", { status: 401 });
++  }
++  const summaries = await runOnce(env);
++  return new Response(JSON.stringify({ ok: true, summaries }, null, 2), {
++    headers: { "content-type": "application/json" },
++  });
++};
+diff --git a/src/pages/api/tenders/bookmark.ts a/src/pages/api/tenders/bookmark.ts
+new file mode 100644
+index 0000000..d5a63eb
+--- /dev/null
++++ a/src/pages/api/tenders/bookmark.ts
+@@ -0,0 +1,52 @@
++import type { APIRoute } from "astro";
++import { getEnv } from "../../../lib/db";
++import { getSessionUser } from "../../../lib/auth/magic-link";
++
++export const prerender = false;
++
++export const POST: APIRoute = async (ctx) => {
++  const env = getEnv(ctx);
++  const user = await getSessionUser(env.DB, ctx.request.headers.get("cookie"));
++  if (!user) {
++    return new Response(JSON.stringify({ ok: false, error: "auth_required" }), {
++      status: 401, headers: { "content-type": "application/json" },
++    });
++  }
++
++  let tender_id = "";
++  try {
++    const body = await ctx.request.json();
++    tender_id = String(body.tender_id || "");
++  } catch {
++    return new Response("invalid_body", { status: 400 });
++  }
++  if (!/^[0-9A-Z]{26}$/.test(tender_id)) {
++    return new Response("invalid_tender_id", { status: 400 });
++  }
++
++  // Verify the tender exists
++  const t = await env.DB.prepare(`SELECT id FROM tenders WHERE id = ?`).bind(tender_id).first<{ id: string }>();
++  if (!t) return new Response("tender_not_found", { status: 404 });
++
++  // Toggle
++  const existing = await env.DB.prepare(
++    `SELECT 1 FROM bookmarks WHERE user_id = ? AND tender_id = ?`
++  ).bind(user.id, tender_id).first();
++
++  if (existing) {
++    await env.DB.prepare(
++      `DELETE FROM bookmarks WHERE user_id = ? AND tender_id = ?`
++    ).bind(user.id, tender_id).run();
++    return new Response(JSON.stringify({ ok: true, bookmarked: false }), {
++      headers: { "content-type": "application/json" },
++    });
++  }
++
++  await env.DB.prepare(
++    `INSERT INTO bookmarks (user_id, tender_id) VALUES (?, ?)`
++  ).bind(user.id, tender_id).run();
++
++  return new Response(JSON.stringify({ ok: true, bookmarked: true }), {
++    headers: { "content-type": "application/json" },
++  });
++};
+diff --git a/src/pages/api/tenders/search.ts a/src/pages/api/tenders/search.ts
+new file mode 100644
+index 0000000..87ac9cd
+--- /dev/null
++++ a/src/pages/api/tenders/search.ts
+@@ -0,0 +1,79 @@
++import type { APIRoute } from "astro";
++import { getEnv } from "../../../lib/db";
++import { getSessionUser } from "../../../lib/auth/magic-link";
++
++export const prerender = false;
++
++const VALID_PROVINCES = new Set([
++  "eastern-cape","free-state","gauteng","kwazulu-natal","limpopo",
++  "mpumalanga","northern-cape","north-west","western-cape","national",
++]);
++const VALID_SECTORS = new Set([
++  "construction","ict","health","education","transport","agriculture",
++  "energy","security","consulting","cleaning","catering","legal",
++]);
++
++export const GET: APIRoute = async (ctx) => {
++  const env = getEnv(ctx);
++  const url = new URL(ctx.request.url);
++  const province = url.searchParams.get("province");
++  const sector = url.searchParams.get("sector");
++  const limitParam = parseInt(url.searchParams.get("limit") || "20", 10);
++  const offsetParam = parseInt(url.searchParams.get("offset") || "0", 10);
++
++  const limit = Math.min(Math.max(limitParam, 1), 100);
++  const offset = Math.max(offsetParam, 0);
++
++  // Gate: anonymous users get max 5; signed-in get up to `limit`
++  const user = await getSessionUser(env.DB, ctx.request.headers.get("cookie"));
++  const effectiveLimit = user ? limit : Math.min(limit, 5);
++
++  const where: string[] = [
++    "status = 'open'",
++    "canonical_ref IS NULL",
++    "(closing_date IS NULL OR closing_date >= date('now', '-1 day'))",
++  ];
++  const binds: any[] = [];
++
++  if (province && VALID_PROVINCES.has(province)) {
++    where.push("province = ?");
++    binds.push(province);
++  }
++  if (sector && VALID_SECTORS.has(sector)) {
++    where.push("sector = ?");
++    binds.push(sector);
++  }
++
++  binds.push(effectiveLimit, offset);
++
++  const result = await env.DB.prepare(
++    `SELECT id, source_ref, title, procuring_entity, province, sector,
++            closing_date, closing_time, briefing_compulsory, cidb_grade
++     FROM tenders
++     WHERE ${where.join(" AND ")}
++     ORDER BY COALESCE(closing_date, '9999-12-31') ASC, first_seen_at DESC
++     LIMIT ? OFFSET ?`
++  )
++    .bind(...binds)
++    .all();
++
++  // Total available (for "Showing X of Y" displays)
++  const totalBinds = binds.slice(0, -2);
++  const total = await env.DB.prepare(
++    `SELECT COUNT(*) AS n FROM tenders WHERE ${where.join(" AND ")}`
++  )
++    .bind(...totalBinds)
++    .first<{ n: number }>();
++
++  return new Response(
++    JSON.stringify({
++      ok: true,
++      authenticated: !!user,
++      total: total?.n || 0,
++      shown: result.results?.length || 0,
++      tenders: result.results,
++      gated: !user && (total?.n || 0) > 5,
++    }),
++    { headers: { "content-type": "application/json" } }
++  );
++};
+diff --git a/src/pages/auth/check-email.astro a/src/pages/auth/check-email.astro
+new file mode 100644
+index 0000000..f4de80c
+--- /dev/null
++++ a/src/pages/auth/check-email.astro
+@@ -0,0 +1,31 @@
++---
++import BaseLayout from "../../layouts/BaseLayout.astro";
++const email = Astro.url.searchParams.get("e") || "";
++---
++
++<BaseLayout
++  title="Check your email — Tenderpreneurs"
++  description="We just sent you a sign-in link."
++>
++  <article class="container mx-auto px-4 py-16 max-w-md text-center">
++    <div class="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
++      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
++        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
++        <polyline points="22,6 12,13 2,6"/>
++      </svg>
++    </div>
++    <h1 class="text-2xl font-bold text-slate-900 mb-3">Check your inbox</h1>
++    <p class="text-slate-700 mb-2">We sent a sign-in link to</p>
++    {email && <p class="font-mono text-sm text-slate-900 mb-6">{email}</p>}
++    <p class="text-sm text-slate-600 mb-8">The link expires in 15 minutes. Open it on any device to sign in.</p>
++
++    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-left text-sm text-slate-700">
++      <p class="font-medium mb-2">Didn't get it?</p>
++      <ul class="list-disc pl-5 space-y-1">
++        <li>Check your spam / promotions folder</li>
++        <li>Some corporate firewalls quarantine link-only emails — try a personal address</li>
++        <li>Wait 60 seconds, then <a href="/" class="text-amber-700 hover:underline">try again</a></li>
++      </ul>
++    </div>
++  </article>
++</BaseLayout>
+diff --git a/src/pages/auth/error.astro a/src/pages/auth/error.astro
+new file mode 100644
+index 0000000..cd34827
+--- /dev/null
++++ a/src/pages/auth/error.astro
+@@ -0,0 +1,29 @@
++---
++import BaseLayout from "../../layouts/BaseLayout.astro";
++
++const reason = Astro.url.searchParams.get("reason") || "unknown";
++
++const messages: Record<string, { heading: string; body: string }> = {
++  invalid_token:  { heading: "That link wasn't valid.",         body: "The token looked malformed. Request a fresh sign-in link." },
++  not_found:      { heading: "We don't recognise that link.",    body: "It may have been mistyped or already used. Request a fresh one." },
++  already_used:   { heading: "That link's already been used.",   body: "Sign-in links work once. Request a new one to sign in again." },
++  expired:        { heading: "That link has expired.",           body: "Sign-in links last 15 minutes. Request a fresh one." },
++  unknown:        { heading: "Something went wrong.",            body: "We weren't able to sign you in. Try requesting a new link." },
++};
++const m = messages[reason] || messages.unknown;
++---
++
++<BaseLayout title={`Sign-in error — ${m.heading}`} description="There was a problem signing you in.">
++  <article class="container mx-auto px-4 py-16 max-w-md text-center">
++    <div class="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-rose-100">
++      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
++        <circle cx="12" cy="12" r="10"/>
++        <line x1="12" y1="8" x2="12" y2="12"/>
++        <circle cx="12" cy="16" r="0.5" fill="#b91c1c"/>
++      </svg>
++    </div>
++    <h1 class="text-2xl font-bold text-slate-900 mb-3">{m.heading}</h1>
++    <p class="text-slate-700 mb-8">{m.body}</p>
++    <a href="/" class="inline-block rounded-md bg-amber-700 px-5 py-2.5 font-semibold text-white hover:bg-amber-800">Request a new link</a>
++  </article>
++</BaseLayout>
+diff --git a/src/pages/tenders/t/[id].astro a/src/pages/tenders/t/[id].astro
+new file mode 100644
+index 0000000..58a5589
+--- /dev/null
++++ a/src/pages/tenders/t/[id].astro
+@@ -0,0 +1,167 @@
++---
++import BaseLayout from "../../../layouts/BaseLayout.astro";
++import { getEnv } from "../../../lib/db";
++import { getSessionUser } from "../../../lib/auth/magic-link";
++
++export const prerender = false;
++
++const { id } = Astro.params;
++let tender: any = null;
++let history: any[] = [];
++let documents: any[] = [];
++let authed = false;
++
++try {
++  const env = getEnv(Astro);
++  const user = await getSessionUser(env.DB, Astro.request.headers.get("cookie"));
++  authed = !!user;
++
++  tender = await env.DB.prepare(
++    `SELECT * FROM tenders WHERE id = ? AND canonical_ref IS NULL`
++  ).bind(id).first();
++
++  if (tender && authed) {
++    const h = await env.DB.prepare(
++      `SELECT change_type, old_value, new_value, changed_at FROM tender_history
++       WHERE tender_id = ? ORDER BY changed_at DESC LIMIT 10`
++    ).bind(id).all();
++    history = h.results || [];
++  }
++
++  if (tender?.documents_json) {
++    try { documents = JSON.parse(tender.documents_json); } catch {}
++  }
++} catch {
++  // DB not ready; render a soft-fail page
++}
++
++if (!tender) {
++  return new Response("Tender not found", { status: 404 });
++}
++
++const closing = tender.closing_date
++  ? new Date(tender.closing_date + "T00:00:00Z").toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
++  : null;
++
++const provinceLabel = tender.province?.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
++const sectorLabel = tender.sector ? tender.sector.charAt(0).toUpperCase() + tender.sector.slice(1) : null;
++---
++
++<BaseLayout title={tender.title} description={tender.description?.slice(0, 160) || `Government tender ${tender.source_ref}`}>
++  <nav aria-label="Breadcrumb" class="container mx-auto px-4 pt-6 text-sm text-slate-600">
++    <ol class="flex flex-wrap items-center gap-2">
++      <li><a href="/" class="hover:underline">Home</a></li>
++      <li aria-hidden="true">/</li>
++      <li><a href="/tenders" class="hover:underline">Tenders</a></li>
++      {tender.province && (
++        <>
++          <li aria-hidden="true">/</li>
++          <li><a href={`/tenders/${tender.province}`} class="hover:underline">{provinceLabel}</a></li>
++        </>
++      )}
++    </ol>
++  </nav>
++
++  <article class="container mx-auto px-4 py-8 max-w-4xl">
++    <header class="mb-6">
++      <p class="text-xs font-mono text-slate-500 mb-2">{tender.source_ref}</p>
++      <h1 class="text-2xl md:text-3xl font-bold text-slate-900 mb-3">{tender.title}</h1>
++      {tender.procuring_entity && <p class="text-lg text-slate-700">{tender.procuring_entity}</p>}
++    </header>
++
++    <div class="grid md:grid-cols-3 gap-3 mb-8">
++      {closing && (
++        <div class="rounded-lg border border-slate-200 bg-white p-4">
++          <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">Closing</p>
++          <p class="font-semibold text-slate-900">{closing}</p>
++          {tender.closing_time && <p class="text-sm text-slate-600">{tender.closing_time}</p>}
++        </div>
++      )}
++      {tender.briefing_date && (
++        <div class={`rounded-lg border p-4 ${tender.briefing_compulsory ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-white"}`}>
++          <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">
++            {tender.briefing_compulsory ? "Compulsory briefing" : "Briefing"}
++          </p>
++          <p class="font-semibold text-slate-900">{tender.briefing_date}</p>
++          {tender.briefing_location && <p class="text-sm text-slate-600">{tender.briefing_location}</p>}
++        </div>
++      )}
++      {tender.cidb_grade && (
++        <div class="rounded-lg border border-slate-200 bg-white p-4">
++          <p class="text-xs uppercase tracking-wide text-slate-500 mb-1">CIDB grade required</p>
++          <p class="font-mono font-semibold text-slate-900">{tender.cidb_grade}</p>
++        </div>
++      )}
++    </div>
++
++    {tender.description && (
++      <section class="mb-8 prose prose-slate max-w-none">
++        <h2>Description</h2>
++        <p>{tender.description}</p>
++      </section>
++    )}
++
++    {authed ? (
++      <>
++        {(tender.contact_name || tender.contact_email || tender.contact_phone) && (
++          <section class="mb-8 rounded-lg border border-slate-200 bg-slate-50 p-5">
++            <h2 class="text-lg font-semibold text-slate-900 mb-3">Procuring entity contact</h2>
++            <dl class="grid sm:grid-cols-3 gap-3 text-sm">
++              {tender.contact_name && (<div><dt class="text-slate-500">Name</dt><dd class="font-medium text-slate-900">{tender.contact_name}</dd></div>)}
++              {tender.contact_email && (<div><dt class="text-slate-500">Email</dt><dd><a class="text-amber-700 hover:underline" href={`mailto:${tender.contact_email}`}>{tender.contact_email}</a></dd></div>)}
++              {tender.contact_phone && (<div><dt class="text-slate-500">Phone</dt><dd class="font-mono text-slate-900">{tender.contact_phone}</dd></div>)}
++            </dl>
++          </section>
++        )}
++
++        {documents.length > 0 && (
++          <section class="mb-8">
++            <h2 class="text-lg font-semibold text-slate-900 mb-3">Bid documents</h2>
++            <ul class="space-y-2">
++              {documents.map((d) => (
++                <li>
++                  <a href={d.url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 hover:border-amber-400">
++                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
++                    <span>{d.filename}</span>
++                  </a>
++                </li>
++              ))}
++            </ul>
++          </section>
++        )}
++
++        {tender.source_url && (
++          <p class="mt-4">
++            <a href={tender.source_url} target="_blank" rel="noopener noreferrer" class="text-amber-700 hover:underline">View on source site →</a>
++          </p>
++        )}
++
++        {history.length > 0 && (
++          <section class="mt-10">
++            <h2 class="text-lg font-semibold text-slate-900 mb-3">Change history</h2>
++            <ul class="space-y-2 text-sm text-slate-700">
++              {history.map((h) => (
++                <li>
++                  <span class="font-mono text-xs text-slate-500">{h.changed_at?.slice(0, 10)}</span>{" "}
++                  <strong>{h.change_type}</strong>: {h.old_value} → {h.new_value}
++                </li>
++              ))}
++            </ul>
++          </section>
++        )}
++      </>
++    ) : (
++      <section class="mt-8 rounded-xl border border-amber-300 bg-amber-50 p-6">
++        <h2 class="text-xl font-bold text-slate-900 mb-2">Sign in to see the full tender</h2>
++        <p class="text-slate-700 mb-4">
++          Contact details, bid documents, briefing location, and change history are available after a free email sign-in.
++        </p>
++        <form action="/api/auth/request" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-md">
++          <input type="hidden" name="redirect_to" value={Astro.url.pathname} />
++          <input type="email" name="email" required placeholder="you@yourcompany.co.za" class="flex-1 rounded-md border border-slate-300 px-4 py-2.5 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300" />
++          <button type="submit" class="rounded-md bg-amber-700 px-5 py-2.5 font-semibold text-white hover:bg-amber-800">Send sign-in link</button>
++        </form>
++      </section>
++    )}
++  </article>
++</BaseLayout>
+diff --git a/wrangler.toml a/wrangler.toml
+new file mode 100644
+index 0000000..73eee14
+--- /dev/null
++++ a/wrangler.toml
+@@ -0,0 +1,55 @@
++name = "tenderpreneurs"
++compatibility_date = "2026-05-01"
++compatibility_flags = ["nodejs_compat"]
++pages_build_output_dir = "dist"
++
++# ---------------------------------------------------------------
++# D1 — primary database
++# Create with:  wrangler d1 create tenderpreneurs
++# Then paste the database_id below.
++# ---------------------------------------------------------------
++[[d1_databases]]
++binding = "DB"
++database_name = "tenderpreneurs"
++database_id = "PASTE_AFTER_wrangler_d1_create"
++migrations_dir = "migrations"
++
++# ---------------------------------------------------------------
++# R2 — archive of original tender PDFs
++# Create with:  wrangler r2 bucket create tenderpreneurs-tenders
++# ---------------------------------------------------------------
++[[r2_buckets]]
++binding = "R2_TENDERS"
++bucket_name = "tenderpreneurs-tenders"
++
++# ---------------------------------------------------------------
++# Cron triggers — the ingestion and audit schedules.
++# Cloudflare cron syntax = standard 5-field cron.
++# ---------------------------------------------------------------
++[triggers]
++crons = [
++  "0 */6 * * *",   # ingest: every 6 hours
++  "30 7 * * *"     # audit: every day at 07:30 UTC (09:30 SAST)
++]
++
++# ---------------------------------------------------------------
++# Environment variables (non-secret).
++# Real secrets go via `wrangler secret put NAME` — see OPERATIONS.md.
++# ---------------------------------------------------------------
++[vars]
++PUBLIC_SITE_URL    = "https://tenderpreneurs.co.za"
++SESSION_TTL_DAYS   = "30"
++MAGIC_LINK_TTL_MIN = "15"
++AUDIT_EMAIL_TO     = "mogulbyte1@gmail.com"
++AUDIT_EMAIL_FROM   = "audit@tenderpreneurs.co.za"
++AUTH_EMAIL_FROM    = "no-reply@tenderpreneurs.co.za"
++
++# ---------------------------------------------------------------
++# Required secrets (set via `wrangler secret put`):
++#   OPENROUTER_API_KEY     — for DeepSeek V3 extraction
++#   GEMINI_API_KEY         — for Gemini Flash classification
++#   GROQ_API_KEY           — Groq Llama as classification fallback
++#   RESEND_API_KEY         — magic-link + audit emails
++#   MAGIC_LINK_SECRET      — sign magic-link tokens (openssl rand -hex 32)
++#   SESSION_SECRET         — sign session cookies (openssl rand -hex 32)
++# ---------------------------------------------------------------

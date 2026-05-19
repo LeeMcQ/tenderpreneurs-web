@@ -1,0 +1,318 @@
+---
+/**
+ * ConsentBanner.astro
+ *
+ * POPIA-compliant cookie consent banner.
+ *
+ * POPIA (Protection of Personal Information Act, Act 4 of 2013) requires:
+ *   - Consent must be voluntary, specific, and informed (s.11(1)(a))
+ *   - Pre-ticked boxes are NOT valid consent — all non-essential
+ *     categories default to OFF.
+ *   - Consent must be as easy to withdraw as to give — exposed via the
+ *     persistent "Cookie settings" link in the footer.
+ *   - Strictly necessary cookies (session, CSRF, consent itself) do
+ *     not require consent and are always on.
+ *
+ * Storage shape (localStorage key: `tp.consent.v1`):
+ *   {
+ *     version: 1,
+ *     timestamp: ISO8601 string,
+ *     categories: { necessary: true, analytics: bool, marketing: bool },
+ *     decision: "accept-all" | "reject-all" | "custom"
+ *   }
+ *
+ * Other scripts listen for the `tp:consent-changed` CustomEvent
+ * (detail = the stored object) and gate analytics/marketing loaders on
+ * `categories.analytics` / `categories.marketing`.
+ */
+---
+
+<div
+  id="tp-consent-banner"
+  role="dialog"
+  aria-modal="false"
+  aria-labelledby="tp-consent-title"
+  aria-describedby="tp-consent-desc"
+  data-state="hidden"
+  class="fixed inset-x-0 bottom-0 z-[9999] hidden translate-y-full transition-transform duration-300 ease-out data-[state=visible]:translate-y-0 data-[state=visible]:block"
+>
+  <div class="mx-auto max-w-5xl m-4 rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-black/5">
+    <!-- ============ Primary view ============ -->
+    <div id="tp-consent-primary" class="p-6 sm:p-8">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="max-w-2xl">
+          <h2 id="tp-consent-title" class="text-lg font-semibold text-slate-900">
+            Your privacy choices
+          </h2>
+          <p id="tp-consent-desc" class="mt-2 text-sm leading-relaxed text-slate-600">
+            We use cookies to run this site, understand how it is used, and
+            (with your permission) measure marketing performance. Strictly
+            necessary cookies are always on. You can accept all, reject all,
+            or choose what to allow. You may change your choice at any time
+            from the <span class="font-medium text-slate-900">Cookie settings</span>
+            link in the footer. See our
+            <a href="/cookies" class="underline decoration-slate-400 underline-offset-2 hover:text-slate-900">Cookies Policy</a>
+            and
+            <a href="/privacy" class="underline decoration-slate-400 underline-offset-2 hover:text-slate-900">Privacy Policy</a>.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+        <button
+          type="button"
+          data-tp-consent-action="customise"
+          class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+        >
+          Customise
+        </button>
+        <button
+          type="button"
+          data-tp-consent-action="reject-all"
+          class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+        >
+          Reject all
+        </button>
+        <button
+          type="button"
+          data-tp-consent-action="accept-all"
+          class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+        >
+          Accept all
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ Customise view ============ -->
+    <div id="tp-consent-customise" class="hidden p-6 sm:p-8">
+      <h2 class="text-lg font-semibold text-slate-900">Cookie preferences</h2>
+      <p class="mt-2 text-sm text-slate-600">
+        Choose which cookie categories you allow. Strictly necessary cookies
+        cannot be disabled — they are required for the site to work.
+      </p>
+
+      <ul class="mt-6 space-y-4" role="group" aria-label="Cookie categories">
+        <!-- Necessary (locked on) -->
+        <li class="flex items-start justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-semibold text-slate-900">Strictly necessary</h3>
+              <span class="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">Always on</span>
+            </div>
+            <p class="mt-1 text-sm text-slate-600">
+              Required for core site functions like session management, security
+              (CSRF tokens), load balancing, and remembering your cookie choice.
+            </p>
+          </div>
+          <label class="inline-flex shrink-0 cursor-not-allowed items-center">
+            <input
+              type="checkbox"
+              checked
+              disabled
+              aria-label="Strictly necessary cookies (always on)"
+              data-tp-consent-category="necessary"
+              class="h-5 w-5 rounded border-slate-300 text-slate-900"
+            />
+          </label>
+        </li>
+
+        <!-- Analytics (off by default) -->
+        <li class="flex items-start justify-between gap-4 rounded-lg border border-slate-200 p-4">
+          <div class="min-w-0">
+            <h3 class="text-sm font-semibold text-slate-900">Analytics</h3>
+            <p class="mt-1 text-sm text-slate-600">
+              Helps us understand how visitors use the site (pages viewed,
+              referrers, broad geography) so we can improve it. Aggregated and
+              pseudonymous — we do not identify individual visitors.
+            </p>
+          </div>
+          <label class="inline-flex shrink-0 cursor-pointer items-center">
+            <input
+              type="checkbox"
+              aria-label="Allow analytics cookies"
+              data-tp-consent-category="analytics"
+              class="h-5 w-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+            />
+          </label>
+        </li>
+
+        <!-- Marketing (off by default) -->
+        <li class="flex items-start justify-between gap-4 rounded-lg border border-slate-200 p-4">
+          <div class="min-w-0">
+            <h3 class="text-sm font-semibold text-slate-900">Marketing</h3>
+            <p class="mt-1 text-sm text-slate-600">
+              Measures the performance of campaigns and lets us show relevant
+              content on other platforms. Off by default.
+            </p>
+          </div>
+          <label class="inline-flex shrink-0 cursor-pointer items-center">
+            <input
+              type="checkbox"
+              aria-label="Allow marketing cookies"
+              data-tp-consent-category="marketing"
+              class="h-5 w-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+            />
+          </label>
+        </li>
+      </ul>
+
+      <div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          data-tp-consent-action="back"
+          class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          data-tp-consent-action="save"
+          class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+        >
+          Save preferences
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  // ------------------------------------------------------------------
+  // POPIA consent client. Inline + render-blocking-safe (deferred via
+  // DOMContentLoaded so it never blocks paint).
+  //
+  // Exposed on window:
+  //   window.tpConsent.get()       -> stored decision or null
+  //   window.tpConsent.set(cats)   -> persist + broadcast
+  //   window.tpConsent.open()      -> open the customise view
+  //   window.tpConsent.reset()     -> clear stored decision
+  //
+  // Footer "Cookie settings" link calls window.tpConsent.open().
+  // ------------------------------------------------------------------
+  (function () {
+    const STORAGE_KEY = 'tp.consent.v1';
+    const VERSION = 1;
+
+    function safeGet() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || parsed.version !== VERSION) return null;
+        return parsed;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function safeSet(categories, decision) {
+      const record = {
+        version: VERSION,
+        timestamp: new Date().toISOString(),
+        categories: {
+          necessary: true,
+          analytics: !!categories.analytics,
+          marketing: !!categories.marketing,
+        },
+        decision: decision,
+      };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+      } catch (_) {
+        /* private mode / quota — fall back to in-memory only */
+      }
+      window.dispatchEvent(
+        new CustomEvent('tp:consent-changed', { detail: record })
+      );
+      return record;
+    }
+
+    function init() {
+      const banner = document.getElementById('tp-consent-banner');
+      if (!banner) return;
+
+      const primary = document.getElementById('tp-consent-primary');
+      const customise = document.getElementById('tp-consent-customise');
+      const analyticsBox = banner.querySelector('[data-tp-consent-category="analytics"]');
+      const marketingBox = banner.querySelector('[data-tp-consent-category="marketing"]');
+
+      function show() {
+        banner.classList.remove('hidden');
+        // Force a frame so the transition runs.
+        requestAnimationFrame(() => banner.setAttribute('data-state', 'visible'));
+      }
+
+      function hide() {
+        banner.setAttribute('data-state', 'hidden');
+        // Match the 300ms transition duration before hiding completely.
+        setTimeout(() => banner.classList.add('hidden'), 300);
+      }
+
+      function showPrimary() {
+        primary.classList.remove('hidden');
+        customise.classList.add('hidden');
+      }
+
+      function showCustomise(prefill) {
+        primary.classList.add('hidden');
+        customise.classList.remove('hidden');
+        if (prefill) {
+          analyticsBox.checked = !!prefill.categories.analytics;
+          marketingBox.checked = !!prefill.categories.marketing;
+        }
+      }
+
+      banner.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const action = target.getAttribute('data-tp-consent-action');
+        if (!action) return;
+
+        if (action === 'accept-all') {
+          safeSet({ analytics: true, marketing: true }, 'accept-all');
+          hide();
+        } else if (action === 'reject-all') {
+          safeSet({ analytics: false, marketing: false }, 'reject-all');
+          hide();
+        } else if (action === 'customise') {
+          showCustomise(safeGet());
+        } else if (action === 'back') {
+          showPrimary();
+        } else if (action === 'save') {
+          safeSet(
+            { analytics: analyticsBox.checked, marketing: marketingBox.checked },
+            'custom'
+          );
+          hide();
+        }
+      });
+
+      // Public API
+      window.tpConsent = {
+        get: safeGet,
+        set: (cats) => safeSet(cats, 'custom'),
+        open: () => {
+          showCustomise(safeGet());
+          show();
+        },
+        reset: () => {
+          try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+          showPrimary();
+          show();
+        },
+      };
+
+      // First visit -> show primary view.
+      if (!safeGet()) {
+        showPrimary();
+        show();
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>

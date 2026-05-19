@@ -1,0 +1,426 @@
+---
+// src/components/PfmaAssistantDemo.astro
+// Interactive demo of the PFMA Assistant for the /pfma page.
+// 100% client-side — no API calls, no AI inference.
+//
+// User clicks a suggested question → answer types out → citations appear.
+// Honest framing: clearly labelled "Demo — canned answers".
+//
+// Drop into /pfma.astro:
+//   import PfmaAssistantDemo from "../components/PfmaAssistantDemo.astro";
+//   <PfmaAssistantDemo />
+
+import { DEMO_QA } from "../data/pfma-demo";
+import { CTA } from "../config/site";
+---
+
+<section class="pfma-demo" aria-labelledby="pfma-demo-h">
+  <header class="pfma-demo-header">
+    <p class="eyebrow">
+      <span class="dot" aria-hidden="true"></span> Live demo
+      <span class="demo-tag">Canned answers — try the real assistant for live AI</span>
+    </p>
+    <h2 id="pfma-demo-h">See the PFMA Assistant in action</h2>
+    <p class="lede">
+      Tap a question below. The real assistant uses live AI and cites the same
+      legislation in real time.
+    </p>
+  </header>
+
+  <div class="pfma-demo-chat" id="pfma-demo-chat" aria-live="polite" aria-atomic="false">
+    <div class="msg msg-assistant msg-intro">
+      <div class="msg-avatar" aria-hidden="true">⚖️</div>
+      <div class="msg-bubble">
+        <p>
+          Hi! I'm the PFMA Assistant. Tap one of the questions below to see
+          how I answer — with citations to the actual legislation.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pfma-demo-questions" role="group" aria-label="Suggested questions">
+    {DEMO_QA.map((qa, i) => (
+      <button
+        type="button"
+        class="pfma-q-chip"
+        data-qa-index={i}
+        data-question={qa.question}
+      >
+        {qa.question}
+      </button>
+    ))}
+  </div>
+
+  <div class="pfma-demo-footer">
+    <p class="footer-note">
+      Demo limited to {DEMO_QA.length} pre-written questions. The live assistant
+      handles any PFMA, PPPFA, B-BBEE, CSD, MFMA, or Treasury Regulation question.
+    </p>
+    <a href={CTA.assistant} class="footer-cta">
+      Try the live PFMA Assistant →
+    </a>
+  </div>
+</section>
+
+<!-- JSON island — the script reads from this so we don't duplicate data -->
+<script
+  type="application/json"
+  id="pfma-demo-data"
+  set:html={JSON.stringify(DEMO_QA)}
+/>
+
+<style>
+  .pfma-demo {
+    max-width: 760px;
+    margin: 56px auto;
+    padding: 0 20px;
+  }
+  .pfma-demo-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    margin: 0 0 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+  .demo-tag {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .pfma-demo h2 {
+    font-size: clamp(22px, 4vw, 28px);
+    color: #0C1B33;
+    margin: 0 0 8px;
+  }
+  .lede {
+    color: #4b5563;
+    font-size: 15px;
+    margin: 0;
+  }
+
+  /* ─── Chat panel ────────────────────────────────────────── */
+  .pfma-demo-chat {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+    min-height: 180px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    animation: msg-in 0.25s ease-out;
+  }
+  @keyframes msg-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg-avatar {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #0C1B33;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .msg-user .msg-avatar {
+    background: #fff;
+    color: #0C1B33;
+    border: 1px solid #e5e7eb;
+  }
+  .msg-user {
+    flex-direction: row-reverse;
+  }
+  .msg-bubble {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 14px;
+    max-width: 88%;
+    color: #1f2937;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .msg-user .msg-bubble {
+    background: #0C1B33;
+    color: #fff;
+    border-color: #0C1B33;
+  }
+  .msg-bubble p {
+    margin: 0;
+  }
+  .msg-bubble p + p {
+    margin-top: 8px;
+  }
+  .citations {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .citations strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #0C1B33;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+  }
+  .citations ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .citations li {
+    background: #f3f4f6;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .citations a {
+    color: #0C1B33;
+    text-decoration: none;
+  }
+  .citations a:hover { text-decoration: underline; }
+
+  /* Typing indicator */
+  .typing {
+    display: inline-flex;
+    gap: 3px;
+    padding: 4px 0;
+  }
+  .typing span {
+    width: 6px;
+    height: 6px;
+    background: #9ca3af;
+    border-radius: 50%;
+    animation: typing 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  /* ─── Question chips ────────────────────────────────────── */
+  .pfma-demo-questions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .pfma-q-chip {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    color: #0C1B33;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .pfma-q-chip:hover:not(:disabled) {
+    border-color: #0C1B33;
+    background: rgba(12, 27, 51, 0.04);
+  }
+  .pfma-q-chip:focus-visible {
+    outline: 2px solid #0C1B33;
+    outline-offset: 2px;
+  }
+  .pfma-q-chip:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .pfma-q-chip[data-asked="true"] {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+
+  /* ─── Footer ────────────────────────────────────────────── */
+  .pfma-demo-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+  .footer-note {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
+    flex: 1 1 240px;
+  }
+  .footer-cta {
+    color: #0C1B33;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .footer-cta:hover { text-decoration: underline; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .msg, .dot, .typing span { animation: none; }
+  }
+</style>
+
+<script>
+  // Demo logic — fully client-side. Pulls Q&A from the JSON island.
+  interface DemoCitation { source: string; url?: string; }
+  interface DemoQAItem {
+    question: string;
+    answer: string[];
+    citations: DemoCitation[];
+  }
+
+  const dataEl = document.getElementById("pfma-demo-data");
+  if (!dataEl) throw new Error("pfma-demo-data island missing");
+  const DEMO_QA: DemoQAItem[] = JSON.parse(dataEl.textContent ?? "[]");
+
+  const chat = document.getElementById("pfma-demo-chat")!;
+  const buttons = document.querySelectorAll<HTMLButtonElement>(".pfma-q-chip");
+
+  // Prefer no animation if user requested reduced motion.
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function el(tag: string, attrs: Record<string, string> = {}, html?: string) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function appendUser(text: string) {
+    const msg = el("div", { class: "msg msg-user" });
+    msg.appendChild(el("div", { class: "msg-avatar", "aria-hidden": "true" }, "👤"));
+    const bubble = el("div", { class: "msg-bubble" });
+    bubble.appendChild(el("p", {}, escapeHtml(text)));
+    msg.appendChild(bubble);
+    chat.appendChild(msg);
+    msg.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function appendAssistantTyping(): HTMLElement {
+    const msg = el("div", { class: "msg msg-assistant" });
+    msg.appendChild(el("div", { class: "msg-avatar", "aria-hidden": "true" }, "⚖️"));
+    const bubble = el("div", { class: "msg-bubble" });
+    bubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+    msg.appendChild(bubble);
+    chat.appendChild(msg);
+    msg.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return bubble;
+  }
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderAnswer(bubble: HTMLElement, qa: DemoQAItem) {
+    bubble.innerHTML = "";
+    for (const p of qa.answer) {
+      bubble.appendChild(el("p", {}, escapeHtml(p)));
+    }
+    if (qa.citations.length > 0) {
+      const cites = el("div", { class: "citations" });
+      cites.appendChild(el("strong", {}, "Cited"));
+      const ul = el("ul", {});
+      for (const c of qa.citations) {
+        const li = el("li", {});
+        if (c.url) {
+          const a = el("a", { href: c.url, target: "_blank", rel: "noopener" }, escapeHtml(c.source));
+          li.appendChild(a);
+        } else {
+          li.textContent = c.source;
+        }
+        ul.appendChild(li);
+      }
+      cites.appendChild(ul);
+      bubble.appendChild(cites);
+    }
+  }
+
+  function wait(ms: number): Promise<void> {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  let busy = false;
+
+  for (const btn of buttons) {
+    btn.addEventListener("click", async () => {
+      if (busy) return;
+      busy = true;
+      buttons.forEach((b) => (b.disabled = true));
+
+      const idx = parseInt(btn.dataset.qaIndex ?? "0", 10);
+      const qa = DEMO_QA[idx];
+
+      // Hide the intro the first time a question is asked
+      const intro = chat.querySelector(".msg-intro");
+      if (intro) intro.remove();
+
+      btn.dataset.asked = "true";
+
+      appendUser(qa.question);
+      await wait(reducedMotion ? 0 : 400);
+      const bubble = appendAssistantTyping();
+      await wait(reducedMotion ? 0 : 900);
+      renderAnswer(bubble, qa);
+
+      // Scroll to the latest message
+      bubble.parentElement?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+      // Re-enable buttons (but keep the asked one visually marked)
+      buttons.forEach((b) => {
+        if (b.dataset.asked !== "true") b.disabled = false;
+      });
+      busy = false;
+    });
+  }
+</script>

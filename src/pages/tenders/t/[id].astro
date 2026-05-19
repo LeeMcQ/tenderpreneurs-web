@@ -1,0 +1,166 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getEnv } from "../../../lib/db";
+import { getSessionUser } from "../../../lib/auth/magic-link";
+
+export const prerender = false;
+
+const { id } = Astro.params;
+let tender: any = null;
+let history: any[] = [];
+let documents: any[] = [];
+let authed = false;
+
+try {
+  const env = getEnv(Astro);
+  const user = await getSessionUser(env.DB, Astro.request.headers.get("cookie"));
+  authed = !!user;
+
+  tender = await env.DB.prepare(
+    `SELECT * FROM tenders WHERE id = ? AND canonical_ref IS NULL`
+  ).bind(id).first();
+
+  if (tender && authed) {
+    const h = await env.DB.prepare(
+      `SELECT change_type, old_value, new_value, changed_at FROM tender_history
+       WHERE tender_id = ? ORDER BY changed_at DESC LIMIT 10`
+    ).bind(id).all();
+    history = h.results || [];
+  }
+
+  if (tender?.documents_json) {
+    try { documents = JSON.parse(tender.documents_json); } catch {}
+  }
+} catch {
+  // DB not ready; render a soft-fail page
+}
+
+if (!tender) {
+  return new Response("Tender not found", { status: 404 });
+}
+
+const closing = tender.closing_date
+  ? new Date(tender.closing_date + "T00:00:00Z").toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+  : null;
+
+const provinceLabel = tender.province?.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+---
+
+<BaseLayout title={tender.title} description={tender.description?.slice(0, 160) || `Government tender ${tender.source_ref}`}>
+  <nav aria-label="Breadcrumb" class="container mx-auto px-4 pt-6 text-sm text-slate-400">
+    <ol class="flex flex-wrap items-center gap-2">
+      <li><a href="/" class="hover:text-amber-400 hover:underline">Home</a></li>
+      <li aria-hidden="true">/</li>
+      <li><a href="/tenders" class="hover:text-amber-400 hover:underline">Tenders</a></li>
+      {tender.province && (
+        <>
+          <li aria-hidden="true">/</li>
+          <li><a href={`/tenders/${tender.province}`} class="hover:text-amber-400 hover:underline">{provinceLabel}</a></li>
+        </>
+      )}
+    </ol>
+  </nav>
+
+  <article class="container mx-auto px-4 py-8 max-w-4xl">
+    <header class="mb-6">
+      <p class="text-xs font-mono text-slate-400 mb-2">{tender.source_ref}</p>
+      <h1 class="text-2xl md:text-3xl font-bold text-white mb-3">{tender.title}</h1>
+      {tender.procuring_entity && <p class="text-lg text-slate-300">{tender.procuring_entity}</p>}
+    </header>
+
+    <div class="grid md:grid-cols-3 gap-3 mb-8">
+      {closing && (
+        <div class="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+          <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Closing</p>
+          <p class="font-semibold text-white">{closing}</p>
+          {tender.closing_time && <p class="text-sm text-slate-300">{tender.closing_time}</p>}
+        </div>
+      )}
+      {tender.briefing_date && (
+        <div class={`rounded-lg border p-4 ${tender.briefing_compulsory ? "border-rose-500/40 bg-rose-500/10" : "border-slate-700 bg-slate-800/50"}`}>
+          <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">
+            {tender.briefing_compulsory ? "Compulsory briefing" : "Briefing"}
+          </p>
+          <p class="font-semibold text-white">{tender.briefing_date}</p>
+          {tender.briefing_location && <p class="text-sm text-slate-300">{tender.briefing_location}</p>}
+        </div>
+      )}
+      {tender.cidb_grade && (
+        <div class="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+          <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">CIDB grade required</p>
+          <p class="font-mono font-semibold text-white">{tender.cidb_grade}</p>
+        </div>
+      )}
+    </div>
+
+    {tender.description && (
+      <section class="mb-8">
+        <h2 class="text-xl font-bold text-white mb-3">Description</h2>
+        <p class="text-slate-300 leading-relaxed">{tender.description}</p>
+      </section>
+    )}
+
+    {authed ? (
+      <>
+        {(tender.contact_name || tender.contact_email || tender.contact_phone) && (
+          <section class="mb-8 rounded-lg border border-slate-700 bg-slate-800/50 p-5">
+            <h2 class="text-lg font-semibold text-white mb-3">Procuring entity contact</h2>
+            <dl class="grid sm:grid-cols-3 gap-3 text-sm">
+              {tender.contact_name && (<div><dt class="text-slate-400">Name</dt><dd class="font-medium text-white">{tender.contact_name}</dd></div>)}
+              {tender.contact_email && (<div><dt class="text-slate-400">Email</dt><dd><a class="text-amber-400 hover:underline" href={`mailto:${tender.contact_email}`}>{tender.contact_email}</a></dd></div>)}
+              {tender.contact_phone && (<div><dt class="text-slate-400">Phone</dt><dd class="font-mono text-white">{tender.contact_phone}</dd></div>)}
+            </dl>
+          </section>
+        )}
+
+        {documents.length > 0 && (
+          <section class="mb-8">
+            <h2 class="text-lg font-semibold text-white mb-3">Bid documents</h2>
+            <ul class="space-y-2">
+              {documents.map((d) => (
+                <li>
+                  <a href={d.url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-800/50 px-4 py-2 text-slate-200 hover:border-amber-500 hover:text-amber-400">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span>{d.filename}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {tender.source_url && (
+          <p class="mt-4">
+            <a href={tender.source_url} target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline">View on source site →</a>
+          </p>
+        )}
+
+        {history.length > 0 && (
+          <section class="mt-10">
+            <h2 class="text-lg font-semibold text-white mb-3">Change history</h2>
+            <ul class="space-y-2 text-sm text-slate-300">
+              {history.map((h) => (
+                <li>
+                  <span class="font-mono text-xs text-slate-500">{h.changed_at?.slice(0, 10)}</span>{" "}
+                  <strong class="text-white">{h.change_type}</strong>: {h.old_value} → {h.new_value}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </>
+    ) : (
+      <section class="mt-8 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-slate-800/50 p-6">
+        <h2 class="text-xl font-bold text-white mb-2">Sign in to see the full tender</h2>
+        <p class="text-slate-300 mb-4">
+          Contact details, bid documents, briefing location, and change history are available after a free email sign-in.
+        </p>
+        <form action="/api/auth/request" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-md">
+          <input type="hidden" name="redirect_to" value={Astro.url.pathname} />
+          <input type="email" name="email" required placeholder="you@yourcompany.co.za" class="flex-1 rounded-md border border-slate-600 bg-slate-900 px-4 py-2.5 text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40" />
+          <button type="submit" class="rounded-md bg-amber-500 px-5 py-2.5 font-semibold text-slate-900 hover:bg-amber-400">Send sign-in link</button>
+        </form>
+      </section>
+    )}
+  </article>
+</BaseLayout>

@@ -1,0 +1,61 @@
+---
+export interface Props {
+  /** Number of additional tenders behind the gate */
+  hiddenCount: number;
+  /** Context: "Gauteng" or "Construction" — for the heading */
+  contextName: string;
+  /** Where to redirect after successful sign-in */
+  redirectTo: string;
+}
+
+const { hiddenCount, contextName, redirectTo } = Astro.props;
+---
+
+<section
+  aria-label={`Sign in to unlock ${hiddenCount} more ${contextName} tenders`}
+  class="relative mt-8 rounded-xl border border-amber-300 bg-gradient-to-br from-amber-50 to-white p-6 md:p-8 shadow-sm"
+>
+  <!-- Decorative blurred-card-stack peek behind the gate -->
+  <div aria-hidden="true" class="pointer-events-none absolute inset-x-6 -top-3 grid gap-1 opacity-40 blur-[2px]">
+    <div class="h-3 rounded-md bg-slate-200"></div>
+    <div class="h-3 rounded-md bg-slate-200 mx-3"></div>
+  </div>
+
+  <div class="relative">
+    <h2 class="text-xl md:text-2xl font-bold text-slate-900 mb-2">
+      Unlock {hiddenCount.toLocaleString()} more {contextName} tenders
+    </h2>
+    <p class="text-slate-700 mb-5 max-w-prose">
+      Free account. Email-only sign-in — no password. Browse the full feed of open tenders
+      with closing dates, procuring entities, briefing details, and direct links to bid documents.
+    </p>
+
+    <form
+      action="/api/auth/request"
+      method="POST"
+      class="flex flex-col sm:flex-row gap-3 max-w-md"
+    >
+      <input type="hidden" name="redirect_to" value={redirectTo} />
+      <label class="sr-only" for="gate-email">Email address</label>
+      <input
+        type="email"
+        name="email"
+        id="gate-email"
+        required
+        autocomplete="email"
+        placeholder="you@yourcompany.co.za"
+        class="flex-1 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-300"
+      />
+      <button
+        type="submit"
+        class="rounded-md bg-amber-700 px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+      >
+        Send sign-in link
+      </button>
+    </form>
+
+    <p class="mt-3 text-xs text-slate-600">
+      We email you a one-tap sign-in link. No password to remember. POPIA-compliant. Unsubscribe any time.
+    </p>
+  </div>
+</section>
