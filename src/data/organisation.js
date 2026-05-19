@@ -1,24 +1,63 @@
 /**
  * src/data/organisation.js
  *
- * Site-wide organisation metadata used by the RSS feed, JSON-LD, and
- * Open Graph tags. Keeping it in one place means you only update it here.
+ * Named exports used by StructuredData.astro (and rss.xml.js):
+ *   - ORGANISATION  (JSON-LD Organisation schema data)
+ *   - PRODUCT_OFFERS (JSON-LD Offer[] for pricing/plans)
+ *
+ * Keep export names EXACTLY as-is — StructuredData.astro imports them
+ * by these specific names.
  */
 
-export const organisation = {
+export const ORGANISATION = {
   name: 'Tenderpreneurs',
   url: 'https://tenderpreneurs.co.za',
-  /** Used as the RSS feed's <managingEditor> and contact address */
   email: 'hello@tenderpreneurs.co.za',
-  /** Short tagline used in RSS <description> and OG meta */
   description:
     'South African government tender aggregator — find, filter, and track tenders from all provinces and sectors.',
-  /** Used in JSON-LD Organisation schema */
   logo: 'https://tenderpreneurs.co.za/logo.png',
-  /** Social / canonical links */
-  social: {
-    twitter: 'https://twitter.com/tenderpreneurs',
+  sameAs: [
+    'https://twitter.com/tenderpreneurs',
+  ],
+  address: {
+    '@type': 'PostalAddress',
+    addressCountry: 'ZA',
   },
+  foundingDate: '2025',
+  areaServed: 'ZA',
 };
 
-export default organisation;
+/**
+ * Pricing plans exposed as JSON-LD Offer items.
+ * Update prices/names here when plans change — StructuredData picks them up automatically.
+ */
+export const PRODUCT_OFFERS = [
+  {
+    '@type': 'Offer',
+    name: 'Free',
+    description: 'Browse public tender listings with basic filters.',
+    price: '0',
+    priceCurrency: 'ZAR',
+    availability: 'https://schema.org/InStock',
+    url: 'https://tenderpreneurs.co.za/#pricing',
+  },
+  {
+    '@type': 'Offer',
+    name: 'Pro',
+    description:
+      'Unlimited tender alerts, AI-powered summaries, document downloads, and saved searches.',
+    price: '299',
+    priceCurrency: 'ZAR',
+    priceSpecification: {
+      '@type': 'UnitPriceSpecification',
+      price: '299',
+      priceCurrency: 'ZAR',
+      unitText: 'MONTH',
+    },
+    availability: 'https://schema.org/InStock',
+    url: 'https://tenderpreneurs.co.za/#pricing',
+  },
+];
+
+// Default export for rss.xml.js and any other files that do `import org from ...`
+export default ORGANISATION;
