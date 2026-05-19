@@ -1,45 +1,13 @@
----
-// src/pages/blog/rss.xml.ts
-// Pure-vanilla RSS 2.0 feed, no @astrojs/rss dependency.
-//
-// Assumes your blog posts live in src/content/blog/ (Astro content collection)
-// OR src/pages/blog/*.md / *.mdx (route-based posts).
-//
-// If you use a content collection, uncomment the getCollection() branch
-// and remove the import.meta.glob() branch (or vice versa). Both work.
+// src/pages/blog/rss.xml.js
+// Pure-vanilla RSS 2.0 feed (plain JS so it works with esbuild)
 
-import type { APIRoute } from "astro";
-import { ORGANISATION } from "../../data/organisation";
+import { ORGANISATION } from "../../data/organisation.js";
 
-// ─── Option A: Content collection (recommended for Astro 4+) ───
-// import { getCollection } from "astro:content";
-// const posts = await getCollection("blog");
-
-// ─── Option B: File-based blog routes ───
-// Uses Astro's import.meta.glob() to find .md/.mdx files in src/pages/blog/
-// Adjust the glob path if your blog files live elsewhere.
-
-interface BlogFrontmatter {
-  title?: string;
-  description?: string;
-  pubDate?: string | Date;
-  publishDate?: string | Date;
-  date?: string | Date;
-  author?: string;
-  draft?: boolean;
-}
-
-interface BlogModule {
-  frontmatter: BlogFrontmatter;
-  url?: string;
-  file?: string;
-}
-
-export const GET: APIRoute = async ({ site }) => {
+export const GET = async ({ site }) => {
   const siteUrl = site?.toString().replace(/\/$/, "") ?? ORGANISATION.url;
 
-  // Glob blog posts. Change "./*.{md,mdx}" if your structure differs.
-  const modules = import.meta.glob<BlogModule>("./*.{md,mdx}", { eager: true });
+  // Glob blog posts from src/pages/blog/*.md / *.mdx
+  const modules = import.meta.glob("./*.{md,mdx}", { eager: true });
 
   const items = Object.values(modules)
     .filter((m) => m && m.frontmatter && !m.frontmatter.draft)
@@ -85,7 +53,7 @@ ${items.map((item) => `    <item>
   });
 };
 
-function escapeXml(input: string): string {
+function escapeXml(input) {
   return input
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
