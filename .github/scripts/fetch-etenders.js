@@ -2,31 +2,28 @@
 /**
  * .github/scripts/fetch-etenders.js
  *
- * Expert architecture: ignore the slow live OCDS API.
- * Download the monthly OCDS bulk file from data.etenders.gov.za instead.
+ * Uses the OCP Data Registry mirror at fastly.data.open-contracting.org
+ * which hosts the SA Treasury OCDS data as gzipped JSONL files on a CDN.
  *
- * These files are:
- *  - Pre-generated nightly by Treasury
- *  - Served from CDN (fast, reliable)
- *  - Standard OCDS JSON format (releases array)
- *  - Same data as the live API, just packaged as a static file
+ * Files are organized by year:
+ *   https://fastly.data.open-contracting.org/downloads/south_africa_national_treasury_api/3398/2026.jsonl.gz
  *
- * This is how ProTenders, Skyner, and EasyTenders all do it.
+ * Each line is one OCDS record package containing releases.
  *
- * File URL pattern (confirmed from data.etenders.gov.za/Home/ReleasesFiles):
- *   https://data.etenders.gov.za/Home/DownloadFile/?fileName=DDMMYYYY.json
- *   https://data.etenders.gov.za/Home/DownloadFile/?fileName=MMYYYY.xlsx
- *
- * Strategy:
- *  - Try yesterday's daily JSON file (most fresh)
- *  - If it doesn't exist (weekend/holiday), try previous 7 days
- *  - Parse the OCDS releases and push to ingest endpoint
+ * The ID (3398 above) is the latest collection ID. We try a known recent ID first,
+ * and fall back to scraping the registry page for the current one.
  */
 
-const DATA_BASE = 'https://data.etenders.gov.za/Home/DownloadFile';
-const FETCH_TIMEOUT_MS = 60_000;      // 60s for CDN download (should be fast)
-const MAX_RESPONSE_BYTES = 50 * 1024 * 1024; // 50MB cap (monthly files are big)
-const DAYS_TO_TRY = 7;
+import { createGunzip } from 'node:zlib';
+import { Readable } from 'node:stream';
+
+const REGISTRY_PAGE = 'https://data.open-contracting.org/en/publication/143';
+const CDN_BASE = 'https://fastly.data.open-contracting.org/downloads/south_africa_national_treasury_api';
+const KNOWN_COLLECTION_IDS = ['3398', '3500', '3600', '3700', '3800', '3900', '4000']; // try these in order
+const CURRENT_YEAR = new Date().getFullYear();
+const FALLBACK_YEAR = CURRENT_YEAR - 1;
+const FETCH_TIMEOUT_MS = 120_000;
+const MAX_RELEASES = 500; // cap total releases ingested per run
 
 const PROVINCE_MAP = {
   'Eastern Cape': 'eastern-cape', 'Free State': 'free-state',
@@ -52,105 +49,134 @@ const SECTOR_KEYWORDS = {
 };
 
 function mapSector(category = '') {
-  const lower = category.toLowerCase();
+  const lower = String(category).toLowerCase();
   for (const [sector, keywords] of Object.entries(SECTOR_KEYWORDS)) {
     if (keywords.some(k => lower.includes(k))) return sector;
   }
   return 'consulting';
 }
 
-function pad(n) { return String(n).padStart(2, '0'); }
+// ─── Step 1: discover the latest collection ID ──────────────────────────────
 
-/** Build a list of YYYYMMDD strings for the last N days, newest first */
-function recentDates(n) {
-  const dates = [];
-  const today = new Date();
-  for (let i = 0; i < n; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    dates.push({
-      ddmmyyyy: `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}`,
-      iso: d.toISOString().split('T')[0],
-    });
-  }
-  return dates;
-}
-
-async function tryFetchFile(fileName) {
-  const url = `${DATA_BASE}/?fileName=${fileName}`;
-  console.log(`  Trying: ${url}`);
-
+async function discoverCollectionId() {
+  console.log(`Looking up latest collection ID from ${REGISTRY_PAGE}`);
   try {
-    const res = await fetch(url, {
-      headers: {
-        Accept: 'application/json, application/octet-stream, */*',
-        'User-Agent': 'Tenderpreneurs/1.0 (data sync)',
-      },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      redirect: 'follow',
+    const res = await fetch(REGISTRY_PAGE, {
+      headers: { Accept: 'text/html', 'User-Agent': 'Tenderpreneurs/1.0' },
+      signal: AbortSignal.timeout(30_000),
     });
-
     if (!res.ok) {
-      console.log(`  HTTP ${res.status} — file not available`);
-      await res.body?.cancel();
+      console.log(`  Registry page returned ${res.status}, using fallback IDs`);
       return null;
     }
-
-    // Size-capped read
-    const reader = res.body.getReader();
-    const chunks = [];
-    let total = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > MAX_RESPONSE_BYTES) {
-        console.log(`  File too large (>${MAX_RESPONSE_BYTES / 1024 / 1024}MB)`);
-        await reader.cancel();
-        return null;
-      }
-      chunks.push(value);
+    const html = await res.text();
+    // Look for the south_africa_national_treasury_api/{ID}/ pattern
+    const match = html.match(/south_africa_national_treasury_api\/(\d+)\//);
+    if (match) {
+      console.log(`  Found collection ID: ${match[1]}`);
+      return match[1];
     }
-
-    const combined = new Uint8Array(total);
-    let offset = 0;
-    for (const c of chunks) { combined.set(c, offset); offset += c.byteLength; }
-
-    const text = new TextDecoder().decode(combined);
-    console.log(`  Downloaded ${(total / 1024).toFixed(0)}KB`);
-
-    // OCDS releases come either as { releases: [...] } or as JSONL
-    try {
-      const parsed = JSON.parse(text);
-      if (Array.isArray(parsed?.releases)) return parsed.releases;
-      if (Array.isArray(parsed)) return parsed;
-      // Some files wrap in { packages: [{ releases: [...] }] }
-      if (Array.isArray(parsed?.packages)) {
-        return parsed.packages.flatMap(p => p.releases ?? []);
-      }
-      console.log('  Unknown JSON shape');
-      return null;
-    } catch {
-      // Try JSONL — each line is a release or release package
-      const lines = text.split('\n').filter(l => l.trim());
-      const releases = [];
-      for (const line of lines) {
-        try {
-          const obj = JSON.parse(line);
-          if (obj.releases) releases.push(...obj.releases);
-          else if (obj.ocid) releases.push(obj);
-        } catch {}
-      }
-      if (releases.length > 0) return releases;
-      console.log('  Not parseable JSON or JSONL');
-      return null;
-    }
-
-  } catch (err) {
-    console.log(`  Error: ${err.message}`);
+    return null;
+  } catch (e) {
+    console.log(`  Registry page error: ${e.message}`);
     return null;
   }
 }
+
+// ─── Step 2: download and parse the JSONL.gz file ───────────────────────────
+
+async function downloadAndParse(collectionId, year) {
+  const url = `${CDN_BASE}/${collectionId}/${year}.jsonl.gz`;
+  console.log(`Trying: ${url}`);
+
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Tenderpreneurs/1.0' },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+
+    if (!res.ok) {
+      console.log(`  HTTP ${res.status}`);
+      return null;
+    }
+
+    console.log(`  Downloading (Content-Length: ${res.headers.get('content-length') ?? 'unknown'})...`);
+
+    // Stream-decompress and parse line by line
+    const gunzip = createGunzip();
+    Readable.fromWeb(res.body).pipe(gunzip);
+
+    const releases = [];
+    let buffer = '';
+
+    for await (const chunk of gunzip) {
+      buffer += chunk.toString('utf-8');
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep last partial line in buffer
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const pkg = JSON.parse(line);
+          if (Array.isArray(pkg.releases)) {
+            releases.push(...pkg.releases);
+          } else if (pkg.ocid) {
+            releases.push(pkg);
+          }
+          if (releases.length >= MAX_RELEASES * 3) break; // safety cap on parse
+        } catch (_) {
+          // skip bad lines
+        }
+      }
+
+      if (releases.length >= MAX_RELEASES * 3) break;
+    }
+
+    // Process last partial line
+    if (buffer.trim()) {
+      try {
+        const pkg = JSON.parse(buffer);
+        if (Array.isArray(pkg.releases)) releases.push(...pkg.releases);
+        else if (pkg.ocid) releases.push(pkg);
+      } catch (_) {}
+    }
+
+    console.log(`  Parsed ${releases.length} releases from ${year} file`);
+    return releases;
+  } catch (e) {
+    console.log(`  Error: ${e.message}`);
+    return null;
+  }
+}
+
+// ─── Step 3: filter to most recent tenders ──────────────────────────────────
+
+function filterRecent(releases, maxDaysOld = 90) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - maxDaysOld);
+  const cutoffMs = cutoff.getTime();
+
+  // Sort by date desc (most recent first), then filter, then dedupe
+  const seen = new Map();
+  for (const r of releases) {
+    const date = r.date ?? r.tender?.tenderPeriod?.endDate ?? null;
+    if (!date) continue;
+    const ts = new Date(date).getTime();
+    if (isNaN(ts) || ts < cutoffMs) continue;
+    if (!r.ocid) continue;
+    // Keep the most recent version of each ocid
+    const existing = seen.get(r.ocid);
+    if (!existing || ts > existing._ts) {
+      r._ts = ts;
+      seen.set(r.ocid, r);
+    }
+  }
+
+  const filtered = Array.from(seen.values()).sort((a, b) => b._ts - a._ts);
+  return filtered.slice(0, MAX_RELEASES);
+}
+
+// ─── Step 4: map to our schema ──────────────────────────────────────────────
 
 function mapRelease(release) {
   const t = release.tender;
@@ -177,6 +203,8 @@ function mapRelease(release) {
   };
 }
 
+// ─── Step 5: push to ingest endpoint ────────────────────────────────────────
+
 async function pushBatch(siteUrl, secret, batch) {
   const res = await fetch(`${siteUrl}/api/cron/ingest`, {
     method: 'POST',
@@ -191,6 +219,8 @@ async function pushBatch(siteUrl, secret, batch) {
   return { status: res.status, body };
 }
 
+// ─── Main ───────────────────────────────────────────────────────────────────
+
 async function main() {
   const CRON_SECRET = process.env.CRON_SECRET;
   const SITE_URL = (process.env.SITE_URL || 'https://tenderpreneurs.pages.dev').replace(/\/$/, '');
@@ -200,59 +230,54 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('eTenders bulk file ingestion');
-  console.log('============================\n');
+  console.log('eTenders ingestion (via OCP Data Registry CDN)');
+  console.log('================================================\n');
 
-  // Try the last N days of daily files, newest first
-  const dates = recentDates(DAYS_TO_TRY);
-  const allReleases = new Map(); // dedupe by ocid
-
-  for (const { ddmmyyyy, iso } of dates) {
-    console.log(`Date ${iso} (file: ${ddmmyyyy}):`);
-
-    // Try .json then .xlsx isn't useful for parsing — stick to .json
-    const candidates = [
-      `${ddmmyyyy}.json`,
-      `${ddmmyyyy}.jsonl`,
-    ];
-
-    let releases = null;
-    for (const fileName of candidates) {
-      releases = await tryFetchFile(fileName);
-      if (releases) {
-        console.log(`  ✓ Got ${releases.length} releases from ${fileName}`);
-        break;
-      }
-    }
-
-    if (releases) {
-      for (const r of releases) {
-        if (r.ocid) allReleases.set(r.ocid, r);
-      }
-    }
-    console.log('');
+  // Build list of collection IDs to try
+  const idsToTry = [];
+  const discovered = await discoverCollectionId();
+  if (discovered) idsToTry.push(discovered);
+  for (const id of KNOWN_COLLECTION_IDS) {
+    if (!idsToTry.includes(id)) idsToTry.push(id);
   }
 
-  console.log(`Total unique releases: ${allReleases.size}\n`);
+  // Try each ID with current year, then fallback year
+  let allReleases = [];
+  let foundId = null;
 
-  if (allReleases.size === 0) {
-    console.log('No releases found in last 7 days of bulk files.');
-    console.log('This is normal if Treasury hasn\'t published yet today.');
-    console.log('Exiting cleanly — will try again on next cron tick.');
-    process.exit(0);
+  outer: for (const id of idsToTry) {
+    for (const year of [CURRENT_YEAR, FALLBACK_YEAR]) {
+      const releases = await downloadAndParse(id, year);
+      if (releases && releases.length > 0) {
+        allReleases = releases;
+        foundId = id;
+        console.log(`✓ Successfully fetched from collection ${id}, year ${year}`);
+        break outer;
+      }
+    }
   }
+
+  if (allReleases.length === 0) {
+    console.error('\nFailed to fetch from any collection ID. Tried:', idsToTry);
+    console.error('The OCP Data Registry may have changed structure.');
+    console.error('Visit https://data.open-contracting.org/en/publication/143 to find the new ID.');
+    process.exit(1);
+  }
+
+  console.log(`\nFiltering to last 90 days, max ${MAX_RELEASES} tenders...`);
+  const filtered = filterRecent(allReleases, 90);
+  console.log(`Filtered: ${filtered.length} releases\n`);
 
   // Map to our schema
   const tenders = [];
-  for (const release of allReleases.values()) {
-    const mapped = mapRelease(release);
+  for (const r of filtered) {
+    const mapped = mapRelease(r);
     if (mapped) tenders.push(mapped);
   }
-
-  console.log(`Mapped to ${tenders.length} valid tenders.`);
+  console.log(`Mapped: ${tenders.length} valid tenders\n`);
 
   if (tenders.length === 0) {
-    console.log('No mappable tenders. Exiting.');
+    console.log('No mappable tenders. Exiting cleanly.');
     process.exit(0);
   }
 
@@ -262,32 +287,27 @@ async function main() {
   let totalUpdated = 0;
   let totalErrors = 0;
 
-  console.log(`\nPushing in batches of ${BATCH_SIZE}...\n`);
+  console.log(`Pushing to ${SITE_URL} in batches of ${BATCH_SIZE}...\n`);
 
   for (let i = 0; i < tenders.length; i += BATCH_SIZE) {
     const batch = tenders.slice(i, i + BATCH_SIZE);
     const batchNum = Math.floor(i / BATCH_SIZE) + 1;
     const totalBatches = Math.ceil(tenders.length / BATCH_SIZE);
-
     console.log(`Batch ${batchNum}/${totalBatches}: ${batch.length} tenders`);
 
     try {
       const { status, body } = await pushBatch(SITE_URL, CRON_SECRET, batch);
       console.log(`  HTTP ${status}`);
-
       if (status !== 200) {
         console.log(`  Response: ${body.slice(0, 500)}`);
         totalErrors++;
         continue;
       }
-
       try {
         const parsed = JSON.parse(body);
-        const itemsNew = parsed.items_new ?? 0;
-        const itemsUpdated = parsed.items_updated ?? 0;
-        totalNew += itemsNew;
-        totalUpdated += itemsUpdated;
-        console.log(`  New: ${itemsNew}  Updated: ${itemsUpdated}`);
+        totalNew += parsed.items_new ?? 0;
+        totalUpdated += parsed.items_updated ?? 0;
+        console.log(`  New: ${parsed.items_new ?? 0}  Updated: ${parsed.items_updated ?? 0}`);
       } catch {
         console.log(`  Response: ${body.slice(0, 200)}`);
       }
@@ -297,8 +317,8 @@ async function main() {
     }
   }
 
-  console.log(`\n============================`);
-  console.log(`Summary: ${totalNew} new, ${totalUpdated} updated, ${totalErrors} batch errors`);
+  console.log(`\n================================================`);
+  console.log(`Summary: ${totalNew} new, ${totalUpdated} updated, ${totalErrors} errors`);
 
   if (totalErrors > 0 && totalNew === 0 && totalUpdated === 0) {
     process.exit(1);
