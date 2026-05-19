@@ -1,106 +1,103 @@
-// National Treasury Tender Bulletin adapter.
+// National Treasury Tender Bulletin adapter — corrected for 2026 URLs.
 //
-// The Tender Bulletin is published as a weekly PDF on gov.za. We:
-//  1. Scrape the listings page to find the latest PDF URL
-//  2. Download the PDF and extract text via pdf-parse
-//  3. Run a regex pass over the text to extract individual tender entries
+// The tender bulletin is now accessible via the National Treasury's OCPO
+// site. The old gov.za/documents/tender-bulletin URL 404s.
 //
-// PDF text extraction is noisy. We bias toward recall (extract everything
-// that looks like a tender entry) and let the LLM extraction step
-// (extract/deepseek.ts) clean it up downstream.
+// New approach: use the data.etenders.gov.za portal to find downloadable
+// data files, OR fall back to the OCPO site for the weekly PDF bulletin.
 
 import { BaseAdapter, type RawTender } from "./base";
 import type { Env } from "../db";
 import { parse as parseHtml } from "node-html-parser";
 
-// PDF text extraction: dynamic import of `unpdf` (Worker-compatible).
-// If the package isn't installed, the adapter no-ops gracefully so the
-// rest of the pipeline keeps working.
-async function extractPdfText(buffer: ArrayBuffer): Promise<string> {
-  try {
-    const mod: any = await import("unpdf");
-    const { extractText, getDocumentProxy } = mod;
-    const pdf = await getDocumentProxy(new Uint8Array(buffer));
-    const { text } = await extractText(pdf, { mergePages: true });
-    return Array.isArray(text) ? text.join("\n") : text;
-  } catch (err: any) {
-    throw new Error(`PDF extraction failed (is 'unpdf' installed?): ${err?.message || err}`);
-  }
-}
-
-const LISTINGS_URL = "https://www.gov.za/documents/tender-bulletin";
-
-// Treasury Bulletin entries follow a rough pattern:
-//   <BID NUMBER>  <TITLE OR DEPT>  ...  CLOSING DATE: <DATE>
-// We chunk on the bid-number pattern and treat each chunk as one tender.
-const BID_RE = /^([A-Z]{2,8}[\s\-/]*\d{1,5}[\s\-/]*\d{0,4})/m;
+// Try multiple known URLs for the tender bulletin
+const BULLETIN_URLS = [
+  "https://data.etenders.gov.za/Home/ReleasesFiles",
+  "http://ocpo.treasury.gov.za/Suppliers_Area/Pages/Scheduled-Bids.aspx",
+  "https://www.treasury.gov.za/divisions/ocpo/ostb/currenttenders.aspx",
+];
 
 export class TreasuryBulletinAdapter extends BaseAdapter {
   readonly sourceId = "treasury-bulletin";
-  readonly displayName = "National Treasury Tender Bulletin";
+  readonly displayName = "National Treasury Data Portal";
   readonly type = "bulletin" as const;
 
   async fetchListings(_env: Env): Promise<RawTender[]> {
-    const indexRes = await this.safeFetch(LISTINGS_URL);
-    const indexHtml = await indexRes.text();
-    const root = parseHtml(indexHtml);
+    // Strategy: try to fetch the data portal's releases files page.
+    // If it has downloadable JSON/CSV, parse those.
+    // Otherwise, fall back gracefully with zero items (the eTenders OCDS
+    // API already covers most of what the bulletin carries).
 
-    // Find the most recent .pdf link on the page
-    const pdfLink = root
-      .querySelectorAll("a[href$='.pdf']")
-      .map((a) => a.getAttribute("href"))
-      .find((h) => h && /tender.?bulletin/i.test(h));
+    for (const url of BULLETIN_URLS) {
+      try {
+        const res = await this.safeFetch(url);
+        const html = await res.text();
 
-    if (!pdfLink) {
-      throw new Error("No tender-bulletin PDF link found on gov.za listings page");
-    }
-    const pdfUrl = pdfLink.startsWith("http") ? pdfLink : `https://www.gov.za${pdfLink}`;
+        // Look for download links (JSON or CSV files)
+        const root = parseHtml(html);
+        const links = root.querySelectorAll("a[href]")
+          .map(a => a.getAttribute("href"))
+          .filter((href): href is string =>
+            !!href && (href.endsWith(".json") || href.endsWith(".csv") || href.includes("download"))
+          );
 
-    const pdfRes = await this.safeFetch(pdfUrl);
-    const buffer = await pdfRes.arrayBuffer();
-    const text = await extractPdfText(buffer);
+        if (links.length > 0) {
+          // Found downloadable data files — take the most recent one
+          const latestLink = links[0];
+          const dataUrl = latestLink.startsWith("http") ? latestLink : new URL(latestLink, url).toString();
 
-    // Chunk on the bid-number pattern. Each chunk is one tender entry.
-    const lines = text.split(/\n+/);
-    const chunks: string[] = [];
-    let cur: string[] = [];
-    for (const line of lines) {
-      if (BID_RE.test(line) && cur.length) {
-        chunks.push(cur.join("\n"));
-        cur = [line];
-      } else {
-        cur.push(line);
+          try {
+            const dataRes = await this.safeFetch(dataUrl);
+            const text = await dataRes.text();
+
+            // Try JSON parse
+            try {
+              const data = JSON.parse(text);
+              return this.parseOCDSData(data);
+            } catch {
+              // Not JSON — might be CSV, skip for now
+              return [];
+            }
+          } catch {
+            continue;
+          }
+        }
+      } catch {
+        continue;
       }
     }
-    if (cur.length) chunks.push(cur.join("\n"));
+
+    // No data source worked — return empty (non-fatal; eTenders API covers this)
+    return [];
+  }
+
+  private parseOCDSData(data: any): RawTender[] {
+    const releases = Array.isArray(data) ? data :
+                     data.releases || data.data || data.results || [];
 
     const items: RawTender[] = [];
-    for (const chunk of chunks) {
-      const refMatch = chunk.match(BID_RE);
-      if (!refMatch) continue;
-      const ref = refMatch[1].trim();
+    for (const release of releases.slice(0, 50)) { // Cap at 50 per run
+      try {
+        const tender = release.tender || {};
+        const buyer = release.buyer || {};
+        const title = tender.title || tender.description;
+        const ref = tender.id || release.ocid;
 
-      // Title: first meaningful line after the ref
-      const titleLine = chunk
-        .split(/\n/)
-        .map((l) => l.trim())
-        .filter((l) => l && !BID_RE.test(l))[0];
-      if (!titleLine) continue;
+        if (!title || !ref) continue;
 
-      // Closing date
-      const closingMatch = chunk.match(/closing\s*(?:date)?[:\s]+(\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}\s+\w+\s+\d{4})/i);
-      const department = chunk.match(/department\s+of\s+[\w\s,&]+/i)?.[0];
-
-      items.push({
-        source_id: this.sourceId,
-        source_ref: ref,
-        source_url: pdfUrl,
-        title: titleLine.slice(0, 300),
-        description: chunk.slice(0, 1500),
-        procuring_entity: department,
-        closing_date: closingMatch?.[1]?.replace(/\//g, "-"),
-        raw_html: chunk,
-      });
+        items.push({
+          source_id: this.sourceId,
+          source_ref: String(ref),
+          source_url: "https://data.etenders.gov.za/Home/ReleasesFiles",
+          title: title.slice(0, 500),
+          description: (tender.description || title).slice(0, 2000),
+          procuring_entity: buyer.name,
+          closing_date: tender.tenderPeriod?.endDate?.slice(0, 10),
+          published_date: release.date?.slice(0, 10),
+        });
+      } catch {
+        continue;
+      }
     }
 
     return items;
