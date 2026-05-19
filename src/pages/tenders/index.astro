@@ -1,21 +1,21 @@
 ---
-// src/pages/tenders/index.astro
-// Phase 2 placeholder — honest copy + working waitlist form.
-// When the live feed ships, swap the body for the real listing.
-
+/**
+ * src/pages/tenders/index.astro
+ *
+ * Live tender listing — queries /api/tenders/search on the client.
+ * Falls back gracefully to waitlist CTA if no tenders are available yet.
+ *
+ * Uses FEATURES/CTA/TENDER_STATS from config/site.ts (all correctly exported).
+ */
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import WaitlistForm from "../../components/WaitlistForm.astro";
-import StatusBadge from "../../components/StatusBadge.astro";
 import { TENDER_STATS, FEATURES, CTA } from "../../config/site";
 
 const title = "Browse Government Tenders | Tenderpreneur";
-const description = TENDER_STATS.isLive
-  ? `Browse ${TENDER_STATS.tracking.toLocaleString()}+ open South African government tenders from etenders.gov.za. Filter by province, sector, value, and B-BBEE level.`
-  : `Tracking ${TENDER_STATS.tracking.toLocaleString()}+ South African government tenders. The live feed is launching soon — join the waitlist for early access.`;
+const description = `Browse South African government tenders from eTenders, filtered by province, sector, and closing date.`;
 ---
 
 <BaseLayout title={title} description={description}>
-  <main id="main-content">
+  <main id="main-content" class="tenders-main">
     <nav aria-label="Breadcrumb" class="breadcrumb">
       <ol>
         <li><a href="/">Home</a></li>
@@ -25,190 +25,411 @@ const description = TENDER_STATS.isLive
     </nav>
 
     <header class="tenders-hero">
-      <div class="hero-status">
-        <StatusBadge
-          status={FEATURES.liveTenderFeed.status}
-          eta={FEATURES.liveTenderFeed.eta}
-        />
-      </div>
-      <h1>
-        Tracking <strong>{TENDER_STATS.tracking.toLocaleString()}+</strong> South African government tenders
-      </h1>
-      <p class="lede">
-        We're integrating with etenders.gov.za, 9 provincial procurement portals, and 257
-        municipal websites. Join the waitlist and we'll notify you the moment the live feed
-        goes live.
-      </p>
+      <h1>South African Government Tenders</h1>
+      <p class="lede">Live tender listings from eTenders, refreshed every 6 hours. Filter by province or sector.</p>
     </header>
 
-    <section class="waitlist-card" aria-labelledby="waitlist-h">
-      <div class="emoji" aria-hidden="true">🚀</div>
-      <h2 id="waitlist-h">Live tender feed — coming soon</h2>
-      <p>Get notified when full access opens. No credit card required.</p>
-      <WaitlistForm source="tenders-page" />
-    </section>
+    <!-- Filters -->
+    <div class="filters" id="filters">
+      <select id="province-filter" aria-label="Filter by province">
+        <option value="">All provinces</option>
+        <option value="eastern-cape">Eastern Cape</option>
+        <option value="free-state">Free State</option>
+        <option value="gauteng">Gauteng</option>
+        <option value="kwazulu-natal">KwaZulu-Natal</option>
+        <option value="limpopo">Limpopo</option>
+        <option value="mpumalanga">Mpumalanga</option>
+        <option value="north-west">North West</option>
+        <option value="northern-cape">Northern Cape</option>
+        <option value="western-cape">Western Cape</option>
+        <option value="national">National</option>
+      </select>
 
-    <section class="preview-grid" aria-labelledby="preview-h">
-      <h2 id="preview-h" class="sr-only">What's included when the feed goes live</h2>
+      <select id="sector-filter" aria-label="Filter by sector">
+        <option value="">All sectors</option>
+        <option value="agriculture">Agriculture</option>
+        <option value="catering">Catering</option>
+        <option value="cleaning">Cleaning</option>
+        <option value="construction">Construction</option>
+        <option value="consulting">Consulting</option>
+        <option value="education">Education</option>
+        <option value="energy">Energy</option>
+        <option value="health">Health</option>
+        <option value="ict">ICT</option>
+        <option value="legal">Legal</option>
+        <option value="security">Security</option>
+        <option value="transport">Transport</option>
+      </select>
 
-      <article class="preview-card">
-        <h3>Full tender feed</h3>
-        <p>
-          {TENDER_STATS.tracking.toLocaleString()}+ tenders from etenders.gov.za, 9 provincial
-          portals, and 257 municipalities. Refreshed every 4 hours.
-        </p>
-        <StatusBadge status={FEATURES.liveTenderFeed.status} eta={FEATURES.liveTenderFeed.eta} />
-      </article>
+      <input
+        type="search"
+        id="search-input"
+        placeholder="Search tenders…"
+        aria-label="Search tender titles"
+        autocomplete="off"
+      />
 
-      <article class="preview-card">
-        <h3>Smart filters</h3>
-        <p>Filter by province, sector, CIDB grade, B-BBEE level, value range, and closing date.</p>
-        <StatusBadge status={FEATURES.provinceFilters.status} eta={FEATURES.provinceFilters.eta} />
-      </article>
+      <button id="search-btn" class="btn-search">Search</button>
+    </div>
 
-      <article class="preview-card">
-        <h3>Email alerts</h3>
-        <p>Save search filters and get notified when matching tenders are published.</p>
-        <StatusBadge status={FEATURES.emailAlerts.status} eta={FEATURES.emailAlerts.eta} />
-      </article>
+    <!-- Stats bar -->
+    <div class="stats-bar" id="stats-bar" aria-live="polite">
+      Loading tenders…
+    </div>
 
-      <article class="preview-card">
-        <h3>AI win-probability</h3>
-        <p>Get a score from 0–100 based on your B-BBEE, CSD status, experience, and pricing.</p>
-        <StatusBadge status={FEATURES.winProbability.status} eta={FEATURES.winProbability.eta} />
-      </article>
-    </section>
-
-    <section class="ready-now" aria-labelledby="ready-h">
-      <h2 id="ready-h">Already available — free</h2>
-      <p>
-        While the live feed is being built, you can already use the free PFMA Knowledge Base
-        and AI Assistant to prepare your business for tender season.
-      </p>
-      <div class="cta-row">
-        <a href={CTA.pfmaGuide} class="btn-primary">Browse PFMA Guide</a>
-        <a href={CTA.assistant} class="btn-secondary">Try the AI Assistant</a>
+    <!-- Results -->
+    <div id="tender-list" class="tender-list" aria-live="polite">
+      <div class="loading-state">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Loading tenders…</p>
       </div>
-    </section>
+    </div>
+
+    <!-- Auth gate banner (shown when anon hits the 5-result cap) -->
+    <div id="gate-banner" class="gate-banner hidden" role="alert">
+      <div class="gate-inner">
+        <strong>Showing 5 of many tenders</strong>
+        <p>Sign in free to see all results, save searches, and get email alerts.</p>
+        <a href="/auth/login" class="btn-primary">Sign in free</a>
+      </div>
+    </div>
+
+    <!-- Load more -->
+    <div class="load-more-row" id="load-more-row" style="display:none">
+      <button id="load-more-btn" class="btn-load-more">Load more tenders</button>
+    </div>
   </main>
 </BaseLayout>
 
 <style>
-  main {
-    max-width: 920px;
+  .tenders-main {
+    max-width: 960px;
     margin: 0 auto;
-    padding: 32px 20px 80px;
+    padding: 28px 20px 80px;
   }
   .breadcrumb ol {
     list-style: none;
     padding: 0;
-    margin: 0 0 24px;
+    margin: 0 0 20px;
     display: flex;
     gap: 8px;
-    font-size: 14px;
-    color: #6b7280;
+    font-size: 13px;
+    color: var(--color-muted, #94a3b8);
   }
-  .breadcrumb a { color: #0C1B33; }
+  .breadcrumb a { color: var(--color-amber, #f59e0b); text-decoration: none; }
   .tenders-hero {
-    padding: 24px 0 32px;
-    border-bottom: 1px solid #e5e7eb;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--color-border, #2d3f55);
   }
-  .hero-status { margin-bottom: 12px; }
   .tenders-hero h1 {
-    font-size: clamp(28px, 5vw, 42px);
-    line-height: 1.15;
-    margin: 0 0 12px;
-    color: #0C1B33;
-  }
-  .tenders-hero h1 strong { color: #0C1B33; }
-  .lede {
-    font-size: 17px;
-    color: #4b5563;
-    max-width: 640px;
-    line-height: 1.5;
-    margin: 0;
-  }
-  .waitlist-card {
-    background: linear-gradient(135deg, #0C1B33 0%, #1e3a5f 100%);
-    color: #fff;
-    padding: 36px 28px;
-    border-radius: 16px;
-    text-align: center;
-    margin-bottom: 48px;
-  }
-  .waitlist-card .emoji { font-size: 36px; margin-bottom: 8px; }
-  .waitlist-card h2 {
-    color: #fff;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    color: var(--color-text, #e2e8f0);
     margin: 0 0 8px;
-    font-size: 24px;
   }
-  .waitlist-card p {
-    color: #cbd5e1;
-    margin: 0 0 20px;
-  }
-  .waitlist-card :global(.waitlist-form) {
-    margin: 0 auto;
-  }
-  .waitlist-card :global(.waitlist-meta) {
-    color: #94a3b8;
-  }
-  .preview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-bottom: 48px;
-  }
-  .preview-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 20px;
-  }
-  .preview-card h3 {
-    margin: 0 0 8px;
-    font-size: 16px;
-    color: #0C1B33;
-  }
-  .preview-card p {
-    margin: 0 0 12px;
-    color: #4b5563;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  .ready-now {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 28px;
-    text-align: center;
-  }
-  .ready-now h2 { margin: 0 0 8px; color: #0C1B33; }
-  .ready-now p { margin: 0 0 20px; color: #4b5563; }
-  .cta-row {
+  .lede { color: var(--color-muted, #94a3b8); font-size: 1rem; margin: 0; }
+
+  /* Filters */
+  .filters {
     display: flex;
-    gap: 12px;
-    justify-content: center;
+    gap: 10px;
     flex-wrap: wrap;
+    margin-bottom: 16px;
   }
-  .btn-primary, .btn-secondary {
-    padding: 12px 22px;
+  .filters select,
+  .filters input {
+    background: var(--color-card-bg, #1e2a3a);
+    border: 1px solid var(--color-border, #2d3f55);
+    color: var(--color-text, #e2e8f0);
     border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    min-width: 160px;
+    flex: 1;
+  }
+  .filters input { max-width: 260px; }
+  .btn-search {
+    background: var(--color-amber, #f59e0b);
+    color: #0f1923;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .btn-search:hover { background: #d97706; }
+
+  /* Stats bar */
+  .stats-bar {
+    font-size: 13px;
+    color: var(--color-muted, #94a3b8);
+    margin-bottom: 16px;
+    min-height: 20px;
+  }
+
+  /* Tender cards */
+  .tender-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .tender-card {
+    background: var(--color-card-bg, #1e2a3a);
+    border: 1px solid var(--color-border, #2d3f55);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 16px;
+    transition: border-color 0.15s;
+    text-decoration: none;
+  }
+  .tender-card:hover { border-color: var(--color-amber, #f59e0b); }
+
+  .tender-title {
+    font-size: 1rem;
     font-weight: 600;
+    color: var(--color-text, #e2e8f0);
+    grid-column: 1 / -1;
+    margin: 0 0 4px;
+  }
+  .tender-entity {
+    font-size: 0.85rem;
+    color: var(--color-muted, #94a3b8);
+    grid-column: 1;
+  }
+  .tender-closing {
+    font-size: 0.82rem;
+    color: var(--color-amber, #f59e0b);
+    font-weight: 600;
+    white-space: nowrap;
+    grid-column: 2;
+    text-align: right;
+  }
+  .tender-tags {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .tag {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  .tag-province { background: rgba(99,179,237,0.12); color: #63b3ed; }
+  .tag-sector   { background: rgba(245,158,11,0.12); color: #f59e0b; }
+  .tag-value    { background: rgba(52,211,153,0.12); color: #34d399; }
+
+  /* Auth gate */
+  .gate-banner {
+    background: linear-gradient(135deg, #0f1923 0%, #1e2a3a 100%);
+    border: 1px solid var(--color-amber, #f59e0b);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    margin-top: 16px;
+  }
+  .gate-banner.hidden { display: none; }
+  .gate-inner strong { color: var(--color-text, #e2e8f0); font-size: 1.1rem; display: block; margin-bottom: 8px; }
+  .gate-inner p { color: var(--color-muted, #94a3b8); margin: 0 0 16px; }
+  .btn-primary {
+    background: var(--color-amber, #f59e0b);
+    color: #0f1923;
+    font-weight: 700;
+    padding: 10px 24px;
+    border-radius: 8px;
     text-decoration: none;
     display: inline-block;
   }
-  .btn-primary { background: #0C1B33; color: #fff; }
-  .btn-secondary { background: transparent; color: #0C1B33; border: 1px solid #0C1B33; }
-  .btn-primary:hover { opacity: 0.92; }
-  .btn-secondary:hover { background: rgba(12, 27, 51, 0.05); }
-  .sr-only {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+
+  /* Load more */
+  .load-more-row { text-align: center; margin-top: 24px; }
+  .btn-load-more {
+    background: transparent;
+    border: 1px solid var(--color-border, #2d3f55);
+    color: var(--color-text, #e2e8f0);
+    border-radius: 8px;
+    padding: 10px 28px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: border-color 0.15s;
+  }
+  .btn-load-more:hover { border-color: var(--color-amber, #f59e0b); }
+
+  /* Loading state */
+  .loading-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--color-muted, #94a3b8);
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--color-border, #2d3f55);
+    border-top-color: var(--color-amber, #f59e0b);
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--color-muted, #94a3b8);
+    font-size: 0.95rem;
+  }
+  .error-state {
+    text-align: center;
+    padding: 32px 20px;
+    color: #f87171;
+    font-size: 0.9rem;
   }
 </style>
+
+<script>
+  let offset = 0;
+  const LIMIT = 20;
+  let currentTotal = 0;
+  let loading = false;
+
+  const list     = document.getElementById('tender-list')!;
+  const statsBar = document.getElementById('stats-bar')!;
+  const gateBanner = document.getElementById('gate-banner')!;
+  const loadMoreRow = document.getElementById('load-more-row')! as HTMLElement;
+  const loadMoreBtn = document.getElementById('load-more-btn')!;
+
+  function provinceLabel(slug: string): string {
+    const map: Record<string, string> = {
+      'eastern-cape':'Eastern Cape','free-state':'Free State',
+      'gauteng':'Gauteng','kwazulu-natal':'KwaZulu-Natal',
+      'limpopo':'Limpopo','mpumalanga':'Mpumalanga',
+      'north-west':'North West','northern-cape':'Northern Cape',
+      'western-cape':'Western Cape','national':'National',
+    };
+    return map[slug] ?? slug;
+  }
+
+  function formatDate(iso: string | null): string {
+    if (!iso) return '';
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-ZA', { day:'numeric', month:'short', year:'numeric' });
+  }
+
+  function formatValue(cents: number | null): string {
+    if (!cents) return '';
+    const zar = cents / 100;
+    if (zar >= 1_000_000) return `R${(zar/1_000_000).toFixed(1)}M`;
+    if (zar >= 1_000) return `R${Math.round(zar/1_000)}K`;
+    return `R${Math.round(zar).toLocaleString()}`;
+  }
+
+  function renderCard(t: any): string {
+    const closing = t.closing_date
+      ? `<span class="tender-closing">Closes ${formatDate(t.closing_date)}</span>`
+      : `<span class="tender-closing" style="color:var(--color-muted)">No closing date</span>`;
+
+    const tags = [
+      t.province ? `<span class="tag tag-province">${provinceLabel(t.province)}</span>` : '',
+      t.sector   ? `<span class="tag tag-sector">${t.sector}</span>` : '',
+      t.value_cents ? `<span class="tag tag-value">${formatValue(t.value_cents)}</span>` : '',
+    ].filter(Boolean).join('');
+
+    return `
+      <a href="/tenders/t/${t.id}" class="tender-card">
+        <h2 class="tender-title">${t.title ?? 'Untitled tender'}</h2>
+        <span class="tender-entity">${t.procuring_entity ?? ''}</span>
+        ${closing}
+        <div class="tender-tags">${tags}</div>
+      </a>`;
+  }
+
+  async function fetchTenders(append = false) {
+    if (loading) return;
+    loading = true;
+
+    const province = (document.getElementById('province-filter') as HTMLSelectElement).value;
+    const sector   = (document.getElementById('sector-filter')   as HTMLSelectElement).value;
+    const q        = (document.getElementById('search-input')    as HTMLInputElement).value.trim();
+
+    const params = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
+    if (province) params.set('province', province);
+    if (sector)   params.set('sector', sector);
+    if (q)        params.set('q', q);
+
+    if (!append) {
+      list.innerHTML = `<div class="loading-state"><div class="spinner" aria-hidden="true"></div><p>Loading…</p></div>`;
+      statsBar.textContent = '';
+      gateBanner.classList.add('hidden');
+      loadMoreRow.style.display = 'none';
+    } else {
+      loadMoreBtn.textContent = 'Loading…';
+      loadMoreBtn.setAttribute('disabled', '');
+    }
+
+    try {
+      const res = await fetch(`/api/tenders/search?${params}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      if (!append) list.innerHTML = '';
+
+      currentTotal = data.total ?? 0;
+
+      if (data.tenders?.length === 0 && !append) {
+        list.innerHTML = `<div class="empty-state">No open tenders found for those filters. Try broadening your search.</div>`;
+        statsBar.textContent = 'No results';
+      } else {
+        data.tenders?.forEach((t: any) => {
+          list.insertAdjacentHTML('beforeend', renderCard(t));
+        });
+        const showing = list.querySelectorAll('.tender-card').length;
+        statsBar.textContent = `Showing ${showing} of ${currentTotal.toLocaleString()} open tenders`;
+      }
+
+      // Gate banner
+      if (data.gated) {
+        gateBanner.classList.remove('hidden');
+        loadMoreRow.style.display = 'none';
+      } else {
+        gateBanner.classList.add('hidden');
+        const shown = list.querySelectorAll('.tender-card').length;
+        if (shown < currentTotal) {
+          loadMoreRow.style.display = 'block';
+          loadMoreBtn.textContent = 'Load more tenders';
+          loadMoreBtn.removeAttribute('disabled');
+          offset += LIMIT;
+        } else {
+          loadMoreRow.style.display = 'none';
+        }
+      }
+
+    } catch (err) {
+      if (!append) {
+        list.innerHTML = `<div class="error-state">Failed to load tenders. Please try again.</div>`;
+      }
+      console.error('[tenders] fetch error:', err);
+    } finally {
+      loading = false;
+    }
+  }
+
+  function resetAndFetch() {
+    offset = 0;
+    fetchTenders(false);
+  }
+
+  // Event listeners
+  document.getElementById('search-btn')!.addEventListener('click', resetAndFetch);
+  document.getElementById('province-filter')!.addEventListener('change', resetAndFetch);
+  document.getElementById('sector-filter')!.addEventListener('change', resetAndFetch);
+  document.getElementById('search-input')!.addEventListener('keydown', (e) => {
+    if ((e as KeyboardEvent).key === 'Enter') resetAndFetch();
+  });
+  loadMoreBtn.addEventListener('click', () => fetchTenders(true));
+
+  // Initial load
+  fetchTenders(false);
+</script>

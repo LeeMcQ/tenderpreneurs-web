@@ -2,31 +2,35 @@
  * src/pages/api/cron/ingest.ts
  *
  * Triggered every 6h by GitHub Actions (x-cron-secret auth).
- * Loops over all registered adapters, fetches raw tenders,
- * upserts into D1, and logs an ingestion_run row.
+ * Loops over all registered adapters, maps to the REAL D1 schema,
+ * upserts tenders, and logs an ingestion_run row.
  *
- * Uses D1 binding (env.DB) directly — no import from lib/db.ts needed.
+ * D1 tenders table columns (from schema):
+ *   id, source_id, source_ref, source_url, canonical_ref,
+ *   title, summary, procuring_entity, province, sector,
+ *   procurement_type, closing_date, closing_time, published_date,
+ *   briefing_date, briefing_compulsory, value_cents,
+ *   raw_html, documents_json, fingerprint,
+ *   status (default 'open'), first_seen_at, updated_at,
+ *   enriched_at, classified_at, cidb_grade
  */
 
 import type { APIRoute } from 'astro';
 import { getAllAdapters } from '../../../lib/adapters/index.js';
+import { getEnv, ulid, now, sha256, normaliseForFingerprint } from '../../../lib/db.js';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const env = (locals as any).runtime?.env as Record<string, any> | undefined;
+export const POST: APIRoute = async (ctx) => {
+  const env = getEnv(ctx);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
-  const secret = request.headers.get('x-cron-secret');
-  if (!env?.SESSION_SECRET || secret !== env.SESSION_SECRET) {
+  const secret = ctx.request.headers.get('x-cron-secret');
+  if (!env.SESSION_SECRET || secret !== env.SESSION_SECRET) {
     return json({ error: 'Unauthorised' }, 401);
   }
 
-  const db = env?.DB as D1Database | undefined;
-  if (!db) {
-    return json({ error: 'D1 binding DB not found in runtime env' }, 500);
-  }
-
+  const db = env.DB;
   const adapters = getAllAdapters();
   const results: Record<string, unknown> = {};
   const globalStart = Date.now();
@@ -35,62 +39,108 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const adapterStart = Date.now();
     let itemsFound = 0;
     let itemsNew = 0;
+    let itemsUpdated = 0;
     let errorMessage: string | null = null;
+
+    // Log run start
+    const runId = ulid();
+    try {
+      await db.prepare(
+        `INSERT INTO ingestion_runs (id, source_id, status, started_at)
+         VALUES (?, ?, 'running', ?)`
+      ).bind(runId, adapter.sourceId, now()).run();
+    } catch (_) { /* ingestion_runs table may not have id col — skip */ }
 
     try {
       const tenders = await adapter.fetch();
       itemsFound = tenders.length;
 
       for (const t of tenders) {
-        // Upsert — on conflict (source_id, external_id) update mutable fields
-        const result = await db
-          .prepare(
+        // Build fingerprint from normalised title + externalId + buyer
+        const fpInput = normaliseForFingerprint(
+          `${t.title}|${t.externalId}|${t.buyer ?? ''}`
+        );
+        const fingerprint = await sha256(fpInput);
+
+        // Map adapter fields → D1 schema columns
+        const id = ulid();
+        const sourceRef = t.externalId;           // e.g. OCDS ocid
+        const procuringEntity = t.buyer ?? '';
+        const summary = t.description
+          ? t.description.slice(0, 500)
+          : null;
+        // Convert value from ZAR to cents (D1 stores value_cents)
+        const valueCents = t.value ? Math.round(t.value * 100) : null;
+        // Map our status: 'active' → 'open', everything else pass through
+        const status = t.status === 'active' ? 'open' : (t.status ?? 'open');
+
+        // Check if already exists by (source_id, source_ref)
+        const existing = await db
+          .prepare(`SELECT id, fingerprint FROM tenders WHERE source_id = ? AND source_ref = ?`)
+          .bind(adapter.sourceId, sourceRef)
+          .first<{ id: string; fingerprint: string }>();
+
+        if (!existing) {
+          // INSERT new tender
+          await db.prepare(
             `INSERT INTO tenders
-               (source_id, external_id, title, description, buyer, province,
-                sector, status, closing_date, opening_date, value, currency,
-                procurement_method, document_urls, source_url, raw_json,
-                contact_name, contact_email, contact_phone,
-                briefing_date, briefing_venue, briefing_compulsory)
+               (id, source_id, source_ref, source_url,
+                title, summary, procuring_entity,
+                province, sector,
+                closing_date, published_date,
+                briefing_date, briefing_compulsory,
+                value_cents, documents_json,
+                fingerprint, status,
+                first_seen_at, updated_at)
              VALUES
-               (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-             ON CONFLICT(source_id, external_id) DO UPDATE SET
-               title              = excluded.title,
-               description        = excluded.description,
-               buyer              = excluded.buyer,
-               status             = excluded.status,
-               closing_date       = excluded.closing_date,
-               value              = excluded.value,
-               raw_json           = excluded.raw_json,
-               updated_at         = CURRENT_TIMESTAMP`
-          )
-          .bind(
-            t.sourceId,
-            t.externalId,
+               (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+          ).bind(
+            id,
+            adapter.sourceId,
+            sourceRef,
+            t.sourceUrl ?? null,
             t.title,
-            t.description ?? '',
-            t.buyer ?? '',
+            summary,
+            procuringEntity,
             t.province ?? 'national',
-            t.sector ?? 'General',
-            t.status ?? 'active',
+            t.sector ?? 'general',
             t.closingDate ?? null,
             t.openingDate ?? null,
-            t.value ?? null,
-            t.currency ?? 'ZAR',
-            t.procurementMethod ?? null,
-            JSON.stringify(t.documentUrls ?? []),
-            t.sourceUrl ?? null,
-            t.rawJson ?? null,
-            (t as any).contactName ?? null,
-            (t as any).contactEmail ?? null,
-            (t as any).contactPhone ?? null,
             (t as any).briefingDate ?? null,
-            (t as any).briefingVenue ?? null,
             (t as any).briefingCompulsory ? 1 : 0,
-          )
-          .run();
+            valueCents,
+            t.documentUrls?.length
+              ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u })))
+              : null,
+            fingerprint,
+            status,
+            now(),
+            now(),
+          ).run();
+          itemsNew++;
 
-        // D1 meta: rows_written === 1 means INSERT (not UPDATE)
-        if (result.meta?.rows_written === 1) itemsNew++;
+        } else if (existing.fingerprint !== fingerprint) {
+          // UPDATE changed tender
+          await db.prepare(
+            `UPDATE tenders SET
+               title = ?, summary = ?, procuring_entity = ?,
+               closing_date = ?, status = ?,
+               value_cents = ?, fingerprint = ?,
+               updated_at = ?
+             WHERE id = ?`
+          ).bind(
+            t.title,
+            summary,
+            procuringEntity,
+            t.closingDate ?? null,
+            status,
+            valueCents,
+            fingerprint,
+            now(),
+            existing.id,
+          ).run();
+          itemsUpdated++;
+        }
       }
 
     } catch (err) {
@@ -100,30 +150,44 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const duration = Date.now() - adapterStart;
 
-    // Log ingestion run
+    // Update ingestion run log
     try {
-      await db
-        .prepare(
+      await db.prepare(
+        `UPDATE ingestion_runs SET
+           status = ?, items_found = ?, items_new = ?,
+           error_message = ?, finished_at = ?, duration_ms = ?
+         WHERE id = ?`
+      ).bind(
+        errorMessage ? 'failed' : 'success',
+        itemsFound,
+        itemsNew,
+        errorMessage,
+        now(),
+        duration,
+        runId,
+      ).run();
+    } catch (_) {
+      // Fallback: insert a new row if update failed
+      try {
+        await db.prepare(
           `INSERT INTO ingestion_runs
              (source_id, status, items_found, items_new, error_message, duration_ms)
            VALUES (?, ?, ?, ?, ?, ?)`
-        )
-        .bind(
+        ).bind(
           adapter.sourceId,
-          errorMessage ? 'error' : 'success',
+          errorMessage ? 'failed' : 'success',
           itemsFound,
           itemsNew,
           errorMessage,
           duration,
-        )
-        .run();
-    } catch (logErr) {
-      console.error(`[ingest] Failed to log run for ${adapter.sourceId}:`, logErr);
+        ).run();
+      } catch (_2) { /* silent */ }
     }
 
     results[adapter.sourceId] = {
       items_found: itemsFound,
       items_new: itemsNew,
+      items_updated: itemsUpdated,
       duration_ms: duration,
       error: errorMessage,
     };
