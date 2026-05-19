@@ -1,6 +1,6 @@
 /**
  * src/pages/api/cron/audit.ts
- * Uses getEnv() from lib/db.ts (consistent with all other API routes).
+ * SCHEMA-CORRECT: uses first_seen_at, last_seen_at correctly.
  */
 import type { APIRoute } from 'astro';
 import { getEnv, now } from '../../../lib/db.js';
@@ -21,8 +21,8 @@ export const POST: APIRoute = async (ctx) => {
   try {
     const stats = await db.prepare(
       `SELECT
-         COUNT(*)                                                            AS total_tenders,
-         SUM(CASE WHEN status = 'open'               THEN 1 ELSE 0 END)    AS open_tenders,
+         COUNT(*)                                                              AS total_tenders,
+         SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END)                    AS open_tenders,
          SUM(CASE WHEN first_seen_at >= datetime('now','-1 day')  THEN 1 ELSE 0 END) AS new_24h,
          SUM(CASE WHEN first_seen_at >= datetime('now','-7 days') THEN 1 ELSE 0 END) AS new_7d
        FROM tenders`
@@ -43,28 +43,28 @@ export const POST: APIRoute = async (ctx) => {
     const reportDate = now().split('T')[0];
 
     const emailText = [
-      'Tenderpreneurs — Daily Audit',
-      '==============================',
-      `Date: ${reportDate}  |  Duration: ${duration}ms`,
+      'Tenderpreneurs Daily Audit',
+      '===========================',
+      `Date: ${reportDate}  Duration: ${duration}ms`,
       '',
       `Total tenders:  ${stats?.total_tenders ?? 0}`,
       `Open tenders:   ${stats?.open_tenders ?? 0}`,
       `New (24h):      ${stats?.new_24h ?? 0}`,
       `New (7d):       ${stats?.new_7d ?? 0}`,
       '',
-      'Last ingest run:',
-      `  Source:  ${lastRun?.source_id ?? 'n/a'}`,
-      `  Status:  ${lastRun?.status ?? 'n/a'}`,
-      `  Found:   ${lastRun?.items_found ?? 0}   New: ${lastRun?.items_new ?? 0}`,
-      lastRun?.error_message ? `  Error:   ${lastRun.error_message}` : null,
+      'Last ingest:',
+      `  Source: ${lastRun?.source_id ?? 'n/a'}`,
+      `  Status: ${lastRun?.status ?? 'n/a'}`,
+      `  New:    ${lastRun?.items_new ?? 0}`,
+      lastRun?.error_message ? `  Error:  ${lastRun.error_message}` : null,
       '',
       'Sources:',
       ...sourceRows.map((r: any) =>
-        `  ${String(r.name ?? r.id).padEnd(35)} ${String(r.cnt).padStart(5)}  last: ${r.last_seen ?? 'never'}`
+        `  ${String(r.name ?? r.id).padEnd(35)} ${String(r.cnt).padStart(5)} last:${r.last_seen ?? 'never'}`
       ),
     ].filter(l => l !== null).join('\n');
 
-    let emailStatus = 'skipped — RESEND_API_KEY not set';
+    let emailStatus = 'skipped (no RESEND_API_KEY)';
     if (env.RESEND_API_KEY) {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -73,9 +73,9 @@ export const POST: APIRoute = async (ctx) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: env.AUDIT_EMAIL_FROM ?? 'audit@tenderpreneurs.co.za',
+          from: env.AUDIT_EMAIL_FROM ?? 'onboarding@resend.dev',
           to: [env.AUDIT_EMAIL_TO ?? 'mogulbyte1@gmail.com'],
-          subject: `[Tenderpreneurs] Audit — ${reportDate}`,
+          subject: `[Tenderpreneurs] Audit ${reportDate}`,
           text: emailText,
         }),
       });

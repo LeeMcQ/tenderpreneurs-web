@@ -1,17 +1,15 @@
 /**
  * src/pages/api/cron/ingest.ts
  *
- * Two modes:
- *
- * MODE A — GitHub Actions pushes pre-fetched data (recommended):
- *   POST /api/cron/ingest
- *   Body: { source: "etenders", tenders: [...RawTender[]] }
- *   The Worker only does D1 writes — stays well under 30s.
- *
- * MODE B — Worker fetches internally (fallback, may timeout on slow APIs):
- *   POST /api/cron/ingest?source=etenders&fetch=1
- *
- * GitHub Actions fetch script: .github/scripts/fetch-etenders.js
+ * SCHEMA-CORRECT version — column names exactly match D1 tenders table:
+ *   id, source_id, source_ref, source_url, canonical_ref,
+ *   title, description, procuring_entity, province, sector, category,
+ *   closing_date, closing_time, published_date,
+ *   briefing_date, briefing_compulsory, briefing_location,
+ *   contact_name, contact_email, contact_phone,
+ *   cidb_grade, estimated_value (ZAR cents), raw_html, documents_json,
+ *   fingerprint, status (default 'open'),
+ *   first_seen_at, last_seen_at, llm_extracted_at, llm_classified_at
  */
 
 import type { APIRoute } from 'astro';
@@ -34,9 +32,9 @@ export const POST: APIRoute = async (ctx) => {
   const url = new URL(ctx.request.url);
   const sourceParam = url.searchParams.get('source');
   const fetchMode = url.searchParams.get('fetch') === '1';
-
-  // ── MODE A: body contains pre-fetched tenders ──────────────────────────
   const contentType = ctx.request.headers.get('content-type') ?? '';
+
+  // ── MODE A: pre-fetched data in body ────────────────────────────────────
   if (contentType.includes('application/json') && !fetchMode) {
     let body: any;
     try {
@@ -53,10 +51,11 @@ export const POST: APIRoute = async (ctx) => {
     }
 
     const result = await writeTenders(db, sourceId, rawTenders);
+    await logRun(db, sourceId, result, null, 0);
     return json({ ok: true, source: sourceId, ...result }, 200);
   }
 
-  // ── MODE B: Worker fetches internally ─────────────────────────────────
+  // ── MODE B: Worker fetches internally ───────────────────────────────────
   const adapters = sourceParam
     ? [getAdapter(sourceParam)].filter(Boolean) as any[]
     : getAllAdapters();
@@ -133,21 +132,27 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
     return ex && ex.fingerprint !== fp;
   });
 
-  // Batch INSERT
+  // ── Batch INSERT — exact schema column names ───────────────────────────
   if (toInsert.length > 0) {
     const stmts = toInsert.map(({ t, fp }) => {
       const status = (!t.status || t.status === 'active') ? 'open' : t.status;
+      const estimatedValue = t.value ? Math.round(t.value * 100) : null;
       return db.prepare(
-        `INSERT INTO tenders
-           (id,source_id,source_ref,source_url,title,summary,procuring_entity,
-            province,sector,closing_date,published_date,briefing_date,
-            briefing_compulsory,value_cents,documents_json,fingerprint,status,
-            first_seen_at,updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        `INSERT INTO tenders (
+           id, source_id, source_ref, source_url,
+           title, description, procuring_entity,
+           province, sector,
+           closing_date, published_date,
+           briefing_date, briefing_compulsory,
+           contact_name, contact_email, contact_phone,
+           estimated_value, documents_json,
+           fingerprint, status,
+           first_seen_at, last_seen_at
+         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
       ).bind(
         ulid(), sourceId, t.externalId, t.sourceUrl ?? null,
         t.title,
-        t.description ? t.description.slice(0, 500) : null,
+        t.description ? String(t.description).slice(0, 500) : null,
         t.buyer ?? '',
         t.province ?? 'national',
         t.sector ?? 'consulting',
@@ -155,8 +160,13 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
         t.openingDate ?? null,
         t.briefingDate ?? null,
         t.briefingCompulsory ? 1 : 0,
-        t.value ? Math.round(t.value * 100) : null,
-        t.documentUrls?.length ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u }))) : null,
+        t.contactName ?? null,
+        t.contactEmail ?? null,
+        t.contactPhone ?? null,
+        estimatedValue,
+        t.documentUrls?.length
+          ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u })))
+          : null,
         fp, status, now(), now(),
       );
     });
@@ -166,21 +176,26 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
     itemsNew = toInsert.length;
   }
 
-  // Batch UPDATE
+  // ── Batch UPDATE — only mutable fields ─────────────────────────────────
   if (toUpdate.length > 0) {
     const stmts = toUpdate.map(({ t, fp }) => {
       const ex = existingMap.get(t.externalId)!;
       const status = (!t.status || t.status === 'active') ? 'open' : t.status;
+      const estimatedValue = t.value ? Math.round(t.value * 100) : null;
       return db.prepare(
-        `UPDATE tenders SET title=?,summary=?,procuring_entity=?,closing_date=?,
-         status=?,value_cents=?,fingerprint=?,updated_at=? WHERE id=?`
+        `UPDATE tenders SET
+           title = ?, description = ?, procuring_entity = ?,
+           closing_date = ?, status = ?,
+           estimated_value = ?, fingerprint = ?,
+           last_seen_at = ?
+         WHERE id = ?`
       ).bind(
         t.title,
-        t.description ? t.description.slice(0, 500) : null,
+        t.description ? String(t.description).slice(0, 500) : null,
         t.buyer ?? '',
         t.closingDate ?? null,
         status,
-        t.value ? Math.round(t.value * 100) : null,
+        estimatedValue,
         fp, now(), ex.id,
       );
     });
@@ -202,7 +217,7 @@ async function logRun(
 ) {
   try {
     await db.prepare(
-      `INSERT INTO ingestion_runs (source_id,status,items_found,items_new,error_message,duration_ms)
+      `INSERT INTO ingestion_runs (source_id, status, items_found, items_new, error_message, duration_ms)
        VALUES (?,?,?,?,?,?)`
     ).bind(
       sourceId,
