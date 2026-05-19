@@ -1,0 +1,1134 @@
+diff --git a/README.md b/README.md
+index aab5a37..54bc15a 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-# Tenderpreneur — tenderpreneur.co.za
++# Tenderpreneurs — tenderpreneurs.co.za
+ 
+ AI-powered government tender intelligence for South African SMMEs.
+ 
+@@ -53,7 +53,7 @@ Uses Wrangler under the hood to simulate Cloudflare Workers locally.
+ ## Project structure
+ 
+ ```
+-tenderpreneur/
++tenderpreneurs/
+ ├── public/                  # Static assets (robots.txt, images, fonts)
+ ├── src/
+ │   ├── components/          # Reusable Astro components
+@@ -108,7 +108,7 @@ Create a new `.mdx` file in `src/content/blog/` using this frontmatter:
+ title: "Your Post Title"
+ description: "SEO meta description (150–160 characters)"
+ pubDate: 2025-03-01
+-author: "Tenderpreneur Team"
++author: "Tenderpreneurs Team"
+ category: "Compliance"   # Optional: Compliance | B-BBEE | Construction | etc.
+ ---
+ 
+@@ -127,7 +127,7 @@ title: "Topic Title"
+ description: "SEO meta description"
+ pubDate: 2025-03-01
+ category: "Legislation"
+-author: "Tenderpreneur Team"
++author: "Tenderpreneurs Team"
+ faq:
+   - q: "Question?"
+     a: "Answer."
+@@ -144,7 +144,7 @@ Create `.env` (not committed) with:
+ 
+ ```bash
+ # Public site URL (used by Astro for sitemap and canonical URLs)
+-PUBLIC_SITE_URL=https://tenderpreneur.co.za
++PUBLIC_SITE_URL=https://tenderpreneurs.co.za
+ 
+ # Resend API key (transactional email)
+ RESEND_API_KEY=re_...
+@@ -181,8 +181,8 @@ Push to `main` branch — Cloudflare Pages automatically builds and deploys.
+ ### Custom domain
+ 
+ In Cloudflare Pages → Custom Domains:
+-- Add `tenderpreneur.co.za`
+-- Add `www.tenderpreneur.co.za` (redirect to apex)
++- Add `tenderpreneurs.co.za`
++- Add `www.tenderpreneurs.co.za` (redirect to apex)
+ 
+ Update DNS at your registrar with the CNAME provided by Cloudflare.
+ 
+@@ -204,4 +204,4 @@ Update DNS at your registrar with the CNAME provided by Cloudflare.
+ 
+ ## Licence
+ 
+-Copyright © 2025 Tenderpreneur (Pty) Ltd. All rights reserved.
++Copyright © 2025 Tenderpreneurs (Pty) Ltd. All rights reserved.
+diff --git a/docs/audit.md b/docs/audit.md
+index 0d83e53..7dde130 100644
+--- a/docs/audit.md
++++ b/docs/audit.md
+@@ -1,4 +1,4 @@
+-﻿# Tenderpreneur Site Audit
++﻿# Tenderpreneurs Site Audit
+ 
+ ## Pages to test:
+ - Homepage: /
+diff --git a/package.json b/package.json
+index cbac434..4da1079 100644
+--- a/package.json
++++ b/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "tenderpreneur-co-za",
++  "name": "tenderpreneurs-co-za",
+   "type": "module",
+   "version": "1.0.0",
+   "private": true,
+diff --git a/src/components/FeatureGrid.astro b/src/components/FeatureGrid.astro
+index 5229c37..f0117c2 100644
+--- a/src/components/FeatureGrid.astro
++++ b/src/components/FeatureGrid.astro
+@@ -16,7 +16,7 @@ const features = [
+     description: 'Our AI scores your tender odds across 6 dimensions: B-BBEE, CSD, technical, experience, financial, pricing. Know before you bid.',
+     color: '#D97706',
+     lightColor: '#FEF3C7',
+-    link: 'https://app.tenderpreneur.co.za',
++    link: 'https://app.tenderpreneurs.co.za',
+     linkLabel: 'Try AI Scoring →',
+     highlights: ['6-dimension scoring', 'B-BBEE analysis', 'Bid/no-bid guidance'],
+   },
+@@ -41,7 +41,7 @@ const features = [
+         Everything you need to win government tenders
+       </h2>
+       <p class="features-subtitle">
+-        From discovering opportunities to submitting compliant bids — Tenderpreneur gives South African SMMEs the tools and intelligence to compete.
++        From discovering opportunities to submitting compliant bids — Tenderpreneurs gives South African SMMEs the tools and intelligence to compete.
+       </p>
+     </div>
+ 
+diff --git a/src/components/Footer.astro b/src/components/Footer.astro
+index 2562958..1d5bb5e 100644
+--- a/src/components/Footer.astro
++++ b/src/components/Footer.astro
+@@ -13,7 +13,7 @@ const year = new Date().getFullYear();
+     <div class="grid grid-cols-2 gap-8 sm:grid-cols-4">
+       <div class="col-span-2">
+         <a href="/" class="inline-flex items-center gap-2">
+-          <span class="text-base font-semibold text-slate-900">Tenderpreneur</span>
++          <span class="text-base font-semibold text-slate-900">Tenderpreneurs</span>
+         </a>
+         <p class="mt-3 max-w-sm text-sm text-slate-600">
+           AI-powered government tender intelligence for South African SMMEs.
+@@ -65,8 +65,8 @@ const year = new Date().getFullYear();
+     </div>
+ 
+     <div class="mt-10 flex flex-col gap-2 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+-      <p>&copy; {year} Tenderpreneur (Pty) Ltd. All rights reserved.</p>
+-      <p>Registered in South Africa. POPIA Information Officer: <a class="underline" href="mailto:privacy@tenderpreneur.co.za">privacy@tenderpreneur.co.za</a></p>
++      <p>&copy; {year} Tenderpreneurs (Pty) Ltd. All rights reserved.</p>
++      <p>Registered in South Africa. POPIA Information Officer: <a class="underline" href="mailto:privacy@tenderpreneurs.co.za">privacy@tenderpreneurs.co.za</a></p>
+     </div>
+   </div>
+ </footer>
+diff --git a/src/components/Header.astro b/src/components/Header.astro
+index d01a90f..b4fab2c 100644
+--- a/src/components/Header.astro
++++ b/src/components/Header.astro
+@@ -19,10 +19,10 @@ function isActive(href: string) {
+   <div class="container">
+     <nav class="nav" aria-label="Main navigation">
+       <!-- Logo -->
+-      <a href="/" class="logo" aria-label="Tenderpreneur — home">
++      <a href="/" class="logo" aria-label="Tenderpreneurs — home">
+         <span class="logo-mark" aria-hidden="true">TP</span>
+         <span class="logo-text">
+-          <span class="logo-main">Tenderpreneur</span>
++          <span class="logo-main">Tenderpreneurs</span>
+           <span class="logo-sub">.co.za</span>
+         </span>
+       </a>
+@@ -44,7 +44,7 @@ function isActive(href: string) {
+ 
+       <!-- CTA -->
+       <div class="nav-cta">
+-        <a href="https://app.tenderpreneur.co.za" class="btn btn-primary" rel="noopener">
++        <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary" rel="noopener">
+           Get Started Free
+           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+@@ -87,7 +87,7 @@ function isActive(href: string) {
+           </li>
+         ))}
+         <li>
+-          <a href="https://app.tenderpreneur.co.za" class="btn btn-primary w-full mt-2" rel="noopener">
++          <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary w-full mt-2" rel="noopener">
+             Get Started Free
+           </a>
+         </li>
+diff --git a/src/components/HeroProductImage.astro b/src/components/HeroProductImage.astro
+index 5dfbaaa..c352515 100644
+--- a/src/components/HeroProductImage.astro
++++ b/src/components/HeroProductImage.astro
+@@ -22,7 +22,7 @@ interface Props {
+ const {
+   src,         // e.g. "/screenshots/app-hero.webp"
+   src2x,       // e.g. "/screenshots/app-hero@2x.webp"
+-  alt = "Tenderpreneur dashboard showing a list of open South African government tenders, filtered by province with B-BBEE preference scores",
++  alt = "Tenderpreneurs dashboard showing a list of open South African government tenders, filtered by province with B-BBEE preference scores",
+   caption,
+ } = Astro.props;
+ 
+diff --git a/src/components/HeroSection.astro b/src/components/HeroSection.astro
+index 155810f..97657b6 100644
+--- a/src/components/HeroSection.astro
++++ b/src/components/HeroSection.astro
+@@ -11,9 +11,9 @@ export interface Props {
+ 
+ const {
+   headline = 'Win More Government Tenders',
+-  subheadline = 'Tenderpreneur uses AI to help South African SMMEs navigate PFMA procurement, track opportunities, and submit winning bids.',
++  subheadline = 'Tenderpreneurs uses AI to help South African SMMEs navigate PFMA procurement, track opportunities, and submit winning bids.',
+   ctaLabel = 'Get Started Free',
+-  ctaHref = 'https://app.tenderpreneur.co.za',
++  ctaHref = 'https://app.tenderpreneurs.co.za',
+   secondaryLabel = 'Explore PFMA Guide',
+   secondaryHref = '/pfma',
+   badge = '🇿🇦 Built for SA SMMEs',
+diff --git a/src/components/SEO.astro b/src/components/SEO.astro
+index eb42fb8..32921aa 100644
+--- a/src/components/SEO.astro
++++ b/src/components/SEO.astro
+@@ -17,18 +17,18 @@ const {
+   title,
+   description,
+   canonical,
+-  ogImage = 'https://tenderpreneur.co.za/og-default.jpg',
++  ogImage = 'https://tenderpreneurs.co.za/og-default.jpg',
+   ogType = 'website',
+   noIndex = false,
+   schema,
+   publishedTime,
+   modifiedTime,
+-  author = 'Tenderpreneur',
++  author = 'Tenderpreneurs',
+   section,
+ } = Astro.props;
+ 
+ const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).toString();
+-const fullTitle = title.includes('Tenderpreneur') ? title : `${title} | Tenderpreneur`;
++const fullTitle = title.includes('Tenderpreneurs') ? title : `${title} | Tenderpreneurs`;
+ 
+ const schemaArray = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
+ const schemaScript = schemaArray.length > 0 ? JSON.stringify(schemaArray.length === 1 ? schemaArray[0] : { '@context': 'https://schema.org', '@graph': schemaArray }) : null;
+@@ -42,7 +42,7 @@ const schemaScript = schemaArray.length > 0 ? JSON.stringify(schemaArray.length
+ {!noIndex && <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />}
+ 
+ <!-- Open Graph -->
+-<meta property="og:site_name" content="Tenderpreneur" />
++<meta property="og:site_name" content="Tenderpreneurs" />
+ <meta property="og:title" content={fullTitle} />
+ <meta property="og:description" content={description} />
+ <meta property="og:url" content={canonicalURL} />
+@@ -68,8 +68,8 @@ const schemaScript = schemaArray.length > 0 ? JSON.stringify(schemaArray.length
+ 
+ <!-- Twitter Card -->
+ <meta name="twitter:card" content="summary_large_image" />
+-<meta name="twitter:site" content="@tenderpreneur" />
+-<meta name="twitter:creator" content="@tenderpreneur" />
++<meta name="twitter:site" content="" />
++<meta name="twitter:creator" content="" />
+ <meta name="twitter:title" content={fullTitle} />
+ <meta name="twitter:description" content={description} />
+ <meta name="twitter:image" content={ogImage} />
+diff --git a/src/components/StructuredData.astro b/src/components/StructuredData.astro
+index 74a2f16..4aa3253 100644
+--- a/src/components/StructuredData.astro
++++ b/src/components/StructuredData.astro
+@@ -85,7 +85,7 @@ if (softwareApp) {
+   blocks.push({
+     "@context": "https://schema.org",
+     "@type": "SoftwareApplication",
+-    name: "Tenderpreneur",
++    name: "Tenderpreneurs",
+     applicationCategory: "BusinessApplication",
+     operatingSystem: "Web",
+     description:
+diff --git a/src/components/WhatsAppButton.astro b/src/components/WhatsAppButton.astro
+index 9b11762..091d54d 100644
+--- a/src/components/WhatsAppButton.astro
++++ b/src/components/WhatsAppButton.astro
+@@ -12,7 +12,7 @@
+ // ─────────────────────────────────────────────────────────────
+ 
+ const WHATSAPP_NUMBER = "27000000000"; // TODO: swap for your real WhatsApp Business number
+-const PREFILLED_MESSAGE = "Hi Tenderpreneur, I have a question about ";
++const PREFILLED_MESSAGE = "Hi Tenderpreneurs, I have a question about ";
+ 
+ // If the placeholder is still in place, render the button in "preview" mode
+ // so it shows on dev but doesn't accidentally go live with a fake number.
+diff --git a/src/components/cookies.astro b/src/components/cookies.astro
+index 494a8e5..9002062 100644
+--- a/src/components/cookies.astro
++++ b/src/components/cookies.astro
+@@ -6,8 +6,8 @@ const effectiveDate = '14 May 2026';
+ ---
+ 
+ <BaseLayout
+-  title="Cookies Policy | Tenderpreneur"
+-  description="Which cookies and similar technologies Tenderpreneur uses, what they do, and how you can control them under POPIA."
++  title="Cookies Policy | Tenderpreneurs"
++  description="Which cookies and similar technologies Tenderpreneurs uses, what they do, and how you can control them under POPIA."
+ >
+   <main class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+     <header class="mb-12 border-b border-slate-200 pb-8">
+@@ -109,7 +109,7 @@ const effectiveDate = '14 May 2026';
+       <h2 id="contact">6. Contact</h2>
+       <p>
+         Questions about cookies should go to
+-        <a href="mailto:privacy@tenderpreneur.co.za">privacy@tenderpreneur.co.za</a>.
++        <a href="mailto:privacy@tenderpreneurs.co.za">privacy@tenderpreneurs.co.za</a>.
+       </p>
+     </article>
+   </main>
+diff --git a/src/config/config.ts b/src/config/config.ts
+index b3ad333..36cc957 100644
+--- a/src/config/config.ts
++++ b/src/config/config.ts
+@@ -24,7 +24,7 @@ const blogCollection = defineCollection({
+     description: z.string().max(200),
+     publishedDate: z.coerce.date(),           // ← was z.date() — now accepts YAML date strings
+     modifiedDate: z.coerce.date().optional(), // ← same fix
+-    author: z.string().default('Tenderpreneur Editorial'),
++    author: z.string().default('Tenderpreneurs Editorial'),
+     tags: z.array(z.string()).default([]),
+     category: z.string().default('Procurement'),
+     ogImage: z.string().optional(),
+diff --git a/src/config/site.ts b/src/config/site.ts
+index cf9a4bc..67449d5 100644
+--- a/src/config/site.ts
++++ b/src/config/site.ts
+@@ -2,13 +2,13 @@
+ // Single source of truth for CTAs, app URLs, and feature status flags.
+ // Import this anywhere instead of hardcoding URLs or "Live/Beta" labels.
+ 
+-export const APP_URL = "https://app.tenderpreneur.co.za";
++export const APP_URL = "https://app.tenderpreneurs.co.za";
+ 
+ export const CTA = {
+   // Marketing → app conversion CTAs (signup funnel)
+   signup: `${APP_URL}/register`,
+   signupPro: `${APP_URL}/register?plan=pro`,
+-  signupEnterprise: "mailto:sales@tenderpreneur.co.za",
++  signupEnterprise: "mailto:sales@tenderpreneurs.co.za",
+ 
+   // Product feature deep-links (live in app)
+   scoring: `${APP_URL}/scoring`,
+diff --git a/src/content/config.ts b/src/content/config.ts
+index 1765b52..cf249aa 100644
+--- a/src/content/config.ts
++++ b/src/content/config.ts
+@@ -19,7 +19,7 @@ const blogCollection = defineCollection({
+     description: z.string().max(200),
+     publishedDate: z.coerce.date(),
+     modifiedDate: z.coerce.date().optional(),
+-    author: z.string().default('Tenderpreneur Editorial'),
++    author: z.string().default('Tenderpreneurs Editorial'),
+     tags: z.array(z.string()).default([]),
+     category: z.string().default('Procurement'),
+     ogImage: z.string().optional(),
+diff --git a/src/content/pfma/80-20-system.mdx b/src/content/pfma/80-20-system.mdx
+index dbd2fe9..adc0e05 100644
+--- a/src/content/pfma/80-20-system.mdx
++++ b/src/content/pfma/80-20-system.mdx
+@@ -3,7 +3,7 @@ title: "The 80/20 Preference System: How Points Are Calculated Under the 2022 PP
+ description: "A practical guide to the 80/20 and 90/10 preference point systems under the 2022 Preferential Procurement Regulations — how scores are calculated, B-BBEE points tables, and worked examples."
+ pubDate: 2025-01-10
+ category: "B-BBEE"
+-author: "Tenderpreneur Team"
++author: "Tenderpreneurs Team"
+ ---
+ 
+ ## What Is the Preference Points System?
+diff --git a/src/content/pfma/appeals.mdx b/src/content/pfma/appeals.mdx
+index fc3571f..d5f6818 100644
+--- a/src/content/pfma/appeals.mdx
++++ b/src/content/pfma/appeals.mdx
+@@ -3,7 +3,7 @@ title: "Tender Appeals & Objections: Your Rights as a South African Bidder"
+ description: "How to object to a government tender award, the formal appeals process, your rights under the PFMA and PAJA, timelines, and what remedies are available."
+ pubDate: 2025-01-10
+ category: "Compliance"
+-author: "Tenderpreneur Team"
++author: "Tenderpreneurs Team"
+ ---
+ 
+ ## Overview: Can You Challenge a Tender Award?
+diff --git a/src/content/pfma/b-bbee.mdx b/src/content/pfma/b-bbee.mdx
+index 68f8c8b..6408e97 100644
+--- a/src/content/pfma/b-bbee.mdx
++++ b/src/content/pfma/b-bbee.mdx
+@@ -163,4 +163,4 @@ Government evaluators are increasingly sophisticated at identifying fronting. Th
+ 
+ ---
+ 
+-*Calculate your PPPFA preference score and see how your B-BBEE level affects your win probability for specific tenders at [app.tenderpreneur.co.za](https://app.tenderpreneur.co.za).*
++*Calculate your PPPFA preference score and see how your B-BBEE level affects your win probability for specific tenders at [app.tenderpreneurs.co.za](https://app.tenderpreneurs.co.za).*
+diff --git a/src/content/pfma/cidb.mdx b/src/content/pfma/cidb.mdx
+index 08db206..8c80710 100644
+--- a/src/content/pfma/cidb.mdx
++++ b/src/content/pfma/cidb.mdx
+@@ -3,7 +3,7 @@ title: "CIDB & Construction Tenders: Grading, Registration, and PFMA Interaction
+ description: "How CIDB contractor grading works, what grades you need for government construction tenders, and how the CIDB register interacts with PFMA procurement requirements."
+ pubDate: 2025-01-10
+ category: "Construction"
+-author: "Tenderpreneur Team"
++author: "Tenderpreneurs Team"
+ ---
+ 
+ ## What Is the CIDB?
+diff --git a/src/content/pfma/csd.mdx b/src/content/pfma/csd.mdx
+index a17abb3..3cf8b66 100644
+--- a/src/content/pfma/csd.mdx
++++ b/src/content/pfma/csd.mdx
+@@ -3,7 +3,7 @@ title: "Central Supplier Database (CSD): The Complete Bidder's Guide"
+ description: "Everything you need to know about registering on the CSD, mandatory fields, tax compliance, and how government organs verify supplier status before awarding tenders."
+ pubDate: 2025-01-10
+ category: "Compliance"
+-author: "Tenderpreneur Team"
++author: "Tenderpreneurs Team"
+ ---
+ 
+ ## What Is the Central Supplier Database?
+diff --git a/src/content/pfma/irregular-expenditure.mdx b/src/content/pfma/irregular-expenditure.mdx
+index 6cbdd70..9b471b7 100644
+--- a/src/content/pfma/irregular-expenditure.mdx
++++ b/src/content/pfma/irregular-expenditure.mdx
+@@ -139,4 +139,4 @@ Condonation is not automatic. The accounting officer must apply for condonation
+ 
+ ---
+ 
+-*For specific questions about procurement compliance, use the [PFMA Assistant](https://app.tenderpreneur.co.za) for instant answers with legislative citations.*
++*For specific questions about procurement compliance, use the [PFMA Assistant](https://app.tenderpreneurs.co.za) for instant answers with legislative citations.*
+diff --git a/src/content/pfma/mfma.mdx b/src/content/pfma/mfma.mdx
+index 0c09428..3fbf6ff 100644
+--- a/src/content/pfma/mfma.mdx
++++ b/src/content/pfma/mfma.mdx
+@@ -3,7 +3,7 @@ title: "MFMA & Municipal Tenders: How to Bid for Local Government Work"
+ description: "How the Municipal Finance Management Act differs from PFMA for supplier bidding, municipal SCM regulations, thresholds, and what you need to know to win municipal contracts."
+ pubDate: 2025-01-10
+ category: "Legislation"
+-author: "Tenderpreneur Team"
++author: "Tenderpreneurs Team"
+ ---
+ 
+ ## What Is the MFMA?
+@@ -138,7 +138,7 @@ Municipal tenders are advertised through:
+ 3. **Provincial Government Gazettes** — larger contracts are gazetted
+ 4. **Municipal newspapers** — local community newspapers still carry tender notices for compliance
+ 
+-The lack of a single portal for all 257 municipalities is one of the most significant information challenges for suppliers. Tenderpreneur aggregates municipal tenders to address this gap.
++The lack of a single portal for all 257 municipalities is one of the most significant information challenges for suppliers. Tenderpreneurs aggregates municipal tenders to address this gap.
+ 
+ ---
+ 
+diff --git a/src/content/pfma/pfma-overview.mdx b/src/content/pfma/pfma-overview.mdx
+index 5d4e249..5463bfd 100644
+--- a/src/content/pfma/pfma-overview.mdx
++++ b/src/content/pfma/pfma-overview.mdx
+@@ -156,4 +156,4 @@ Expenditure made in vain and would have been avoided had reasonable care been ex
+ 
+ ---
+ 
+-*Explore related PFMA topics or ask a specific question to our [AI PFMA Assistant](https://app.tenderpreneur.co.za).*
++*Explore related PFMA topics or ask a specific question to our [AI PFMA Assistant](https://app.tenderpreneurs.co.za).*
+diff --git a/src/content/pfma/sbd-forms.mdx b/src/content/pfma/sbd-forms.mdx
+index b498288..d38d492 100644
+--- a/src/content/pfma/sbd-forms.mdx
++++ b/src/content/pfma/sbd-forms.mdx
+@@ -3,7 +3,7 @@ title: "SBD Forms Explained: SBD 1 through SBD 9 Complete Guide"
+ description: "A plain-language explanation of every Standard Bidding Document (SBD) form used in South African government tenders — what each is, when it's required, and how to complete it."
+ pubDate: 2025-01-10
+ category: "Compliance"
+-author: "Tenderpreneur Team"
++author: "Tenderpreneurs Team"
+ ---
+ 
+ ## What Are SBD Forms?
+diff --git a/src/content/pfma/scm-regulations.mdx b/src/content/pfma/scm-regulations.mdx
+index f8b79c6..64ab743 100644
+--- a/src/content/pfma/scm-regulations.mdx
++++ b/src/content/pfma/scm-regulations.mdx
+@@ -164,4 +164,4 @@ The risk: this low-value threshold is frequently abused through **quote splittin
+ 
+ ---
+ 
+-*For specific SCM compliance questions, ask the [Tenderpreneur PFMA Assistant](https://app.tenderpreneur.co.za) for instant answers with regulatory citations.*
++*For specific SCM compliance questions, ask the [Tenderpreneurs PFMA Assistant](https://app.tenderpreneurs.co.za) for instant answers with regulatory citations.*
+diff --git a/src/content/pfma/thresholds.mdx b/src/content/pfma/thresholds.mdx
+index 4e41c3b..3936971 100644
+--- a/src/content/pfma/thresholds.mdx
++++ b/src/content/pfma/thresholds.mdx
+@@ -189,4 +189,4 @@ Updated guidance on supplier payment terms and the 30-day payment obligation.
+ 
+ ---
+ 
+-*Use the [Tenderpreneur PFMA Assistant](https://app.tenderpreneur.co.za) to look up specific threshold rules and get answers to procurement compliance questions with legislative citations.*
++*Use the [Tenderpreneurs PFMA Assistant](https://app.tenderpreneurs.co.za) to look up specific threshold rules and get answers to procurement compliance questions with legislative citations.*
+diff --git a/src/data/organisation.ts b/src/data/organisation.ts
+index a13308b..8968bd9 100644
+--- a/src/data/organisation.ts
++++ b/src/data/organisation.ts
+@@ -4,27 +4,27 @@
+ // registration and your PAIA Manual.
+ 
+ export const ORGANISATION = {
+-  name: "Tenderpreneur",
+-  legalName: "Tenderpreneur (Pty) Ltd",
+-  url: "https://tenderpreneur.co.za",
+-  logo: "https://tenderpreneur.co.za/logo.png",
+-  email: "hello@tenderpreneur.co.za",
+-  salesEmail: "sales@tenderpreneur.co.za",
+-  privacyEmail: "privacy@tenderpreneur.co.za",
++  name: "Tenderpreneurs",
++  legalName: "Tenderpreneurs (Pty) Ltd",
++  url: "https://tenderpreneurs.co.za",
++  logo: "https://tenderpreneurs.co.za/logo.png",
++  email: "hello@tenderpreneurs.co.za",
++  salesEmail: "sales@tenderpreneurs.co.za",
++  privacyEmail: "privacy@tenderpreneurs.co.za",
+   // Update these once you have them:
+   vatNumber: "",        // e.g. "4123456789"
+   registrationNumber: "", // e.g. "2024/123456/07"
+   sameAs: [
+     // Add only profiles that genuinely exist:
+-    // "https://www.linkedin.com/company/tenderpreneur",
+-    // "https://twitter.com/tenderpreneur",
++    // "https://www.linkedin.com/company/tenderpreneurs",
++    // "https://twitter.com/tenderpreneurs",
+   ],
+   foundingDate: "2024",
+   areaServed: "ZA",
+   // Google requires either contactType "customer service" or "sales"
+   contactPoint: {
+     contactType: "customer service",
+-    email: "hello@tenderpreneur.co.za",
++    email: "hello@tenderpreneurs.co.za",
+     areaServed: "ZA",
+     availableLanguage: ["English", "Afrikaans"],
+   },
+diff --git a/src/layouts/BaseLayout.astro b/src/layouts/BaseLayout.astro
+index 3f69586..14d9939 100644
+--- a/src/layouts/BaseLayout.astro
++++ b/src/layouts/BaseLayout.astro
+@@ -23,7 +23,7 @@ export interface Props {
+ }
+ 
+ const {
+-  title = 'Tenderpreneur – South African Government Tender Intelligence',
++  title = 'Tenderpreneurs – South African Government Tender Intelligence',
+   description = 'Browse live SA government tenders, score win-probability with AI, and get instant PFMA, PPPFA and B-BBEE answers. Built for South African SMMEs.',
+   canonical,
+   ogImage = 'https://tenderpreneurs.co.za/og-default.png',
+diff --git a/src/layouts/BlogLayout.astro b/src/layouts/BlogLayout.astro
+index e93eb1b..cf51ca2 100644
+--- a/src/layouts/BlogLayout.astro
++++ b/src/layouts/BlogLayout.astro
+@@ -21,7 +21,7 @@ const {
+   description,
+   publishedDate,
+   modifiedDate,
+-  author = 'Tenderpreneur Editorial',
++  author = 'Tenderpreneurs Editorial',
+   tags = [],
+   category = 'Procurement',
+   slug,
+@@ -30,7 +30,7 @@ const {
+   relatedSlugs = [],
+ } = Astro.props;
+ 
+-const canonicalUrl = `https://tenderpreneur.co.za/blog/${slug}`;
++const canonicalUrl = `https://tenderpreneurs.co.za/blog/${slug}`;
+ const formattedDate = publishedDate.toLocaleDateString('en-ZA', {
+   year: 'numeric',
+   month: 'long',
+@@ -66,18 +66,18 @@ const blogPostingSchema = {
+   author: {
+     '@type': 'Organization',
+     name: author,
+-    url: 'https://tenderpreneur.co.za',
++    url: 'https://tenderpreneurs.co.za',
+   },
+   publisher: {
+     '@type': 'Organization',
+-    name: 'Tenderpreneur',
+-    url: 'https://tenderpreneur.co.za',
++    name: 'Tenderpreneurs',
++    url: 'https://tenderpreneurs.co.za',
+     logo: {
+       '@type': 'ImageObject',
+-      url: 'https://tenderpreneur.co.za/logo.png',
++      url: 'https://tenderpreneurs.co.za/logo.png',
+     },
+   },
+-  image: ogImage ?? 'https://tenderpreneur.co.za/og-default.jpg',
++  image: ogImage ?? 'https://tenderpreneurs.co.za/og-default.jpg',
+   articleSection: category,
+   keywords: tags.join(', '),
+   inLanguage: 'en-ZA',
+@@ -87,8 +87,8 @@ const breadcrumbSchema = {
+   '@context': 'https://schema.org',
+   '@type': 'BreadcrumbList',
+   itemListElement: [
+-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneur.co.za' },
+-    { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://tenderpreneur.co.za/blog' },
++    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneurs.co.za' },
++    { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://tenderpreneurs.co.za/blog' },
+     { '@type': 'ListItem', position: 3, name: title, item: canonicalUrl },
+   ],
+ };
+@@ -166,7 +166,7 @@ const breadcrumbSchema = {
+                 <p class="blog-cta-text">Stay ahead of closing dates. Free for South African SMMEs.</p>
+               </div>
+             </div>
+-            <form class="blog-cta-form" action="https://app.tenderpreneur.co.za/signup" method="GET" novalidate>
++            <form class="blog-cta-form" action="https://app.tenderpreneurs.co.za/signup" method="GET" novalidate>
+               <label for="email-cta" class="sr-only">Email address</label>
+               <input
+                 id="email-cta"
+diff --git a/src/layouts/PfmaLayout.astro b/src/layouts/PfmaLayout.astro
+index 5963d2f..3cb29fa 100644
+--- a/src/layouts/PfmaLayout.astro
++++ b/src/layouts/PfmaLayout.astro
+@@ -22,7 +22,7 @@ const {
+   relatedTopics = [],
+ } = Astro.props;
+ 
+-const canonicalUrl = `https://tenderpreneur.co.za/pfma/${slug}`;
++const canonicalUrl = `https://tenderpreneurs.co.za/pfma/${slug}`;
+ const isoDate = publishedDate.toISOString();
+ const isoModified = (modifiedDate ?? publishedDate).toISOString();
+ 
+@@ -48,16 +48,16 @@ const articleSchema = {
+   dateModified: isoModified,
+   author: {
+     '@type': 'Organization',
+-    name: 'Tenderpreneur',
+-    url: 'https://tenderpreneur.co.za',
++    name: 'Tenderpreneurs',
++    url: 'https://tenderpreneurs.co.za',
+   },
+   publisher: {
+     '@type': 'Organization',
+-    name: 'Tenderpreneur',
+-    url: 'https://tenderpreneur.co.za',
++    name: 'Tenderpreneurs',
++    url: 'https://tenderpreneurs.co.za',
+     logo: {
+       '@type': 'ImageObject',
+-      url: 'https://tenderpreneur.co.za/logo.png',
++      url: 'https://tenderpreneurs.co.za/logo.png',
+     },
+   },
+   about: {
+@@ -85,8 +85,8 @@ const breadcrumbSchema = {
+   '@context': 'https://schema.org',
+   '@type': 'BreadcrumbList',
+   itemListElement: [
+-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneur.co.za' },
+-    { '@type': 'ListItem', position: 2, name: 'PFMA Guide', item: 'https://tenderpreneur.co.za/pfma' },
++    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneurs.co.za' },
++    { '@type': 'ListItem', position: 2, name: 'PFMA Guide', item: 'https://tenderpreneurs.co.za/pfma' },
+     { '@type': 'ListItem', position: 3, name: title, item: canonicalUrl },
+   ],
+ };
+@@ -149,7 +149,7 @@ const allTopicLinks = [
+ 
+             <div class="sidebar-cta-box">
+               <p class="sidebar-cta-text">Have a question about procurement?</p>
+-              <a href="https://app.tenderpreneur.co.za" class="btn btn-primary text-sm">
++              <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary text-sm">
+                 Ask the AI Assistant
+               </a>
+             </div>
+@@ -200,7 +200,7 @@ const allTopicLinks = [
+             <div class="pfma-cta-body">
+               <h3>Still have questions about {title}?</h3>
+               <p>Ask our AI-powered PFMA Assistant. Free answers with legislative citations, available 24/7.</p>
+-              <a href="https://app.tenderpreneur.co.za" class="btn btn-primary mt-4" rel="noopener">
++              <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary mt-4" rel="noopener">
+                 Ask the PFMA Assistant →
+               </a>
+             </div>
+diff --git a/src/pages/404.astro b/src/pages/404.astro
+index 0f1e328..7736340 100644
+--- a/src/pages/404.astro
++++ b/src/pages/404.astro
+@@ -5,9 +5,9 @@
+ import BaseLayout from "../layouts/BaseLayout.astro";
+ import StructuredData from "../components/StructuredData.astro";
+ 
+-const title = "Page not found — Tenderpreneur";
++const title = "Page not found — Tenderpreneurs";
+ const description =
+-  "The page you're looking for doesn't exist. Here are the most useful pages on Tenderpreneur.";
++  "The page you're looking for doesn't exist. Here are the most useful pages on Tenderpreneurs.";
+ ---
+ 
+ <BaseLayout title={title} description={description}>
+@@ -28,7 +28,7 @@ const description =
+       <li>
+         <a href="/">
+           <span class="nf-link-title">Home</span>
+-          <span class="nf-link-sub">Overview of Tenderpreneur</span>
++          <span class="nf-link-sub">Overview of Tenderpreneurs</span>
+         </a>
+       </li>
+       <li>
+@@ -65,7 +65,7 @@ const description =
+ 
+     <p class="nf-help">
+       Still stuck? Email
+-      <a href="mailto:hello@tenderpreneur.co.za">hello@tenderpreneur.co.za</a>
++      <a href="mailto:hello@tenderpreneurs.co.za">hello@tenderpreneurs.co.za</a>
+       and tell us which link sent you here — we'll fix it.
+     </p>
+   </main>
+diff --git a/src/pages/about.astro b/src/pages/about.astro
+index 5405b5e..431b643 100644
+--- a/src/pages/about.astro
++++ b/src/pages/about.astro
+@@ -3,11 +3,11 @@ import BaseLayout from '@layouts/BaseLayout.astro';
+ import SEO from '@components/SEO.astro';
+ 
+ const seoData = {
+-  title: 'About Tenderpreneur — Built for South African SMMEs',
++  title: 'About Tenderpreneurs — Built for South African SMMEs',
+   description:
+-    'Tenderpreneur was built by developers who understand government procurement. Learn who we are and why we built SA\'s leading tender intelligence platform.',
+-  canonical: 'https://tenderpreneur.co.za/about',
+-  ogImage: 'https://tenderpreneur.co.za/og-about.png',
++    'Tenderpreneurs was built by developers who understand government procurement. Learn who we are and why we built SA\'s leading tender intelligence platform.',
++  canonical: 'https://tenderpreneurs.co.za/about',
++  ogImage: 'https://tenderpreneurs.co.za/og-about.png',
+ };
+ 
+ const values = [
+@@ -48,7 +48,7 @@ const values = [
+         </ol>
+       </nav>
+       <h1 class="font-display text-4xl font-bold text-white sm:text-5xl">
+-        About Tenderpreneur
++        About Tenderpreneurs
+       </h1>
+       <p class="mt-4 max-w-2xl text-lg text-sky-200">
+         Built for SA SMMEs by developers who understand government procurement.
+@@ -60,20 +60,20 @@ const values = [
+   <section class="bg-white py-16 dark:bg-navy-950">
+     <div class="mx-auto max-w-4xl px-4 sm:px-6">
+       <div class="prose prose-tp mx-auto">
+-        <h2>Why we built Tenderpreneur</h2>
++        <h2>Why we built Tenderpreneurs</h2>
+         <p>
+           Government procurement in South Africa is worth more than R800 billion a year. Yet most of
+           that money flows to a small number of established suppliers, not because small businesses
+           lack the capability to deliver, but because they lack the information and tools to compete.
+         </p>
+         <p>
+-          We built Tenderpreneur to change that. Our team has spent years working with SMMEs across
++          We built Tenderpreneurs to change that. Our team has spent years working with SMMEs across
+           South Africa — watching capable suppliers miss deadlines because they didn't know a tender
+           existed, get disqualified because their CSD profile had a single expired document, or walk
+           away from opportunities because the PFMA compliance requirements felt impenetrable.
+         </p>
+         <p>
+-          Tenderpreneur is our answer to that problem. It aggregates tender opportunities from
++          Tenderpreneurs is our answer to that problem. It aggregates tender opportunities from
+           eTenders, provincial portals, and municipality websites into a single searchable feed.
+           It pairs that with a plain-language PFMA knowledge base — every regulation explained,
+           every SBD form documented, every threshold table up to date. And it layers AI on top to
+@@ -83,10 +83,10 @@ const values = [
+ 
+         <h2>Who we're for</h2>
+         <p>
+-          We built Tenderpreneur for South African SMMEs — the construction company with five
++          We built Tenderpreneurs for South African SMMEs — the construction company with five
+           employees in Limpopo, the IT consultancy in Durban trying to break into the public sector,
+           the catering business in the Northern Cape that wants to supply school nutrition. If
+-          you're registered on the CSD and you want to win government work, Tenderpreneur is for you.
++          you're registered on the CSD and you want to win government work, Tenderpreneurs is for you.
+         </p>
+         <p>
+           We also built it for the procurement professionals on the other side — tender evaluators,
+@@ -132,7 +132,7 @@ const values = [
+           Create your free account and access the PFMA knowledge base instantly.
+         </p>
+         <div class="mt-6 flex flex-wrap justify-center gap-4">
+-          <a href="https://app.tenderpreneur.co.za/register" class="btn-primary">
++          <a href="https://app.tenderpreneurs.co.za/register" class="btn-primary">
+             Get started free
+           </a>
+           <a href="/pricing" class="btn-secondary">See pricing</a>
+diff --git a/src/pages/cookies.astro b/src/pages/cookies.astro
+index 494a8e5..9002062 100644
+--- a/src/pages/cookies.astro
++++ b/src/pages/cookies.astro
+@@ -6,8 +6,8 @@ const effectiveDate = '14 May 2026';
+ ---
+ 
+ <BaseLayout
+-  title="Cookies Policy | Tenderpreneur"
+-  description="Which cookies and similar technologies Tenderpreneur uses, what they do, and how you can control them under POPIA."
++  title="Cookies Policy | Tenderpreneurs"
++  description="Which cookies and similar technologies Tenderpreneurs uses, what they do, and how you can control them under POPIA."
+ >
+   <main class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+     <header class="mb-12 border-b border-slate-200 pb-8">
+@@ -109,7 +109,7 @@ const effectiveDate = '14 May 2026';
+       <h2 id="contact">6. Contact</h2>
+       <p>
+         Questions about cookies should go to
+-        <a href="mailto:privacy@tenderpreneur.co.za">privacy@tenderpreneur.co.za</a>.
++        <a href="mailto:privacy@tenderpreneurs.co.za">privacy@tenderpreneurs.co.za</a>.
+       </p>
+     </article>
+   </main>
+diff --git a/src/pages/features.astro b/src/pages/features.astro
+index efa77ef..55b61a9 100644
+--- a/src/pages/features.astro
++++ b/src/pages/features.astro
+@@ -7,9 +7,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
+ import StatusBadge from "../components/StatusBadge.astro";
+ import { CTA, FEATURES } from "../config/site";
+ 
+-const title = "Features — Tenderpreneur";
++const title = "Features — Tenderpreneurs";
+ const description =
+-  "Everything Tenderpreneur offers: PFMA knowledge base, AI Assistant, live tender feed, win-probability scoring, and B-BBEE tools. Honest status labels on every feature.";
++  "Everything Tenderpreneurs offers: PFMA knowledge base, AI Assistant, live tender feed, win-probability scoring, and B-BBEE tools. Honest status labels on every feature.";
+ ---
+ 
+ <BaseLayout title={title} description={description}>
+@@ -24,7 +24,7 @@ const description =
+ 
+     <header class="features-hero">
+       <p class="eyebrow">Platform features</p>
+-      <h1>Everything Tenderpreneur offers</h1>
++      <h1>Everything Tenderpreneurs offers</h1>
+       <p class="lede">
+         Honest labels on every capability — Live, Beta, or Coming Soon. We never charge
+         you for a feature that isn't shipped.
+@@ -33,7 +33,7 @@ const description =
+ 
+     <section class="feature-group" aria-labelledby="research-h">
+       <h2 id="research-h">PFMA research &amp; compliance</h2>
+-      <p class="group-intro">Free, forever. The foundation of Tenderpreneur.</p>
++      <p class="group-intro">Free, forever. The foundation of Tenderpreneurs.</p>
+       <ul class="feature-list">
+         <li>
+           <div class="feature-row">
+diff --git a/src/pages/index.astro b/src/pages/index.astro
+index 7a19876..0741894 100644
+--- a/src/pages/index.astro
++++ b/src/pages/index.astro
+@@ -59,7 +59,7 @@ const featuredPosts = [
+ const faqs = [
+   {
+     q: 'How do I find government tenders in South Africa?',
+-    a: 'Government tenders are published on the eTender Publication Portal, departmental websites, and various tender notice boards. You can also use aggregated platforms like Tenderpreneur to monitor opportunities across all provinces and sectors.',
++    a: 'Government tenders are published on the eTender Publication Portal, departmental websites, and various tender notice boards. You can also use aggregated platforms like Tenderpreneurs to monitor opportunities across all provinces and sectors.',
+   },
+   {
+     q: 'What is eTenders and how does it work?',
+@@ -91,7 +91,7 @@ const faqSchema = {
+ ---
+ 
+ <BaseLayout
+-  title="Tenderpreneur — Win More South African Government Tenders"
++  title="Tenderpreneurs — Win More South African Government Tenders"
+   description="Browse 7,841+ live SA government tenders, score your win probability with AI, and get instant PFMA, PPPFA and B-BBEE answers. Built for South African SMMEs."
+   schema={faqSchema}
+ >
+diff --git a/src/pages/pfma/index.astro b/src/pages/pfma/index.astro
+index daae672..b5dbae5 100644
+--- a/src/pages/pfma/index.astro
++++ b/src/pages/pfma/index.astro
+@@ -3,11 +3,11 @@ import BaseLayout from '@layouts/BaseLayout.astro';
+ import SEO from '@components/SEO.astro';
+ 
+ const seoData = {
+-  title: 'PFMA Knowledge Base — Master South African Government Procurement | Tenderpreneur',
++  title: 'PFMA Knowledge Base — Master South African Government Procurement | Tenderpreneurs',
+   description:
+     'Free, comprehensive guide to the Public Finance Management Act, PPPFA, B-BBEE, SCM regulations, thresholds, and SBD forms. Plain language with legislative citations.',
+-  canonical: 'https://tenderpreneur.co.za/pfma',
+-  ogImage: 'https://tenderpreneur.co.za/og-pfma.png',
++  canonical: 'https://tenderpreneurs.co.za/pfma',
++  ogImage: 'https://tenderpreneurs.co.za/og-pfma.png',
+ };
+ 
+ const topics = [
+@@ -153,11 +153,11 @@ const topics = [
+         Still have questions?
+       </h2>
+       <p class="mx-auto mt-4 max-w-xl text-gray-600 dark:text-gray-300">
+-        The Tenderpreneur PFMA Assistant answers your procurement questions instantly — with
++        The Tenderpreneurs PFMA Assistant answers your procurement questions instantly — with
+         citations to the actual legislation. Free for all users.
+       </p>
+       <a
+-        href="https://app.tenderpreneur.co.za/assistant"
++        href="https://app.tenderpreneurs.co.za/assistant"
+         class="btn-primary mt-6 inline-flex"
+       >
+         Ask the PFMA Assistant
+diff --git a/src/pages/pricing.astro b/src/pages/pricing.astro
+index 33daf39..16b6b64 100644
+--- a/src/pages/pricing.astro
++++ b/src/pages/pricing.astro
+@@ -7,7 +7,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
+ import StatusBadge from "../components/StatusBadge.astro";
+ import { CTA, FEATURES } from "../config/site";
+ 
+-const title = "Pricing — Tenderpreneur | Free PFMA Tools + Professional Tender Tracking";
++const title = "Pricing — Tenderpreneurs | Free PFMA Tools + Professional Tender Tracking";
+ const description =
+   "Free forever for PFMA research and compliance guidance. Upgrade to Professional (R299/mo + VAT) once the live tender feed and AI scoring go live.";
+ 
+@@ -179,7 +179,7 @@ const enterprisePlan = [
+         <summary>Do you offer discounts for non-profits or co-operatives?</summary>
+         <p>
+           Yes — registered NPOs and agricultural co-operatives can apply for a 50%
+-          discount. Email <a href="mailto:hello@tenderpreneur.co.za">hello@tenderpreneur.co.za</a>
++          discount. Email <a href="mailto:hello@tenderpreneurs.co.za">hello@tenderpreneurs.co.za</a>
+           with your NPO registration number.
+         </p>
+       </details>
+@@ -205,7 +205,7 @@ const enterprisePlan = [
+         <summary>Does Professional cover multiple users?</summary>
+         <p>
+           Professional covers a single user. For team access, the Enterprise plan supports
+-          unlimited seats. Contact <a href="mailto:sales@tenderpreneur.co.za">sales@tenderpreneur.co.za</a>
++          unlimited seats. Contact <a href="mailto:sales@tenderpreneurs.co.za">sales@tenderpreneurs.co.za</a>
+           for a quote.
+         </p>
+       </details>
+diff --git a/src/pages/privacy.astro b/src/pages/privacy.astro
+index 04cfeee..796eafe 100644
+--- a/src/pages/privacy.astro
++++ b/src/pages/privacy.astro
+@@ -6,8 +6,8 @@ const effectiveDate = '14 May 2026';
+ ---
+ 
+ <BaseLayout
+-  title="Privacy Policy | Tenderpreneur"
+-  description="How Tenderpreneur collects, uses, stores, and protects your personal information in line with the Protection of Personal Information Act (POPIA, Act 4 of 2013)."
++  title="Privacy Policy | Tenderpreneurs"
++  description="How Tenderpreneurs collects, uses, stores, and protects your personal information in line with the Protection of Personal Information Act (POPIA, Act 4 of 2013)."
+ >
+   <main class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+     <header class="mb-12 border-b border-slate-200 pb-8">
+@@ -21,7 +21,7 @@ const effectiveDate = '14 May 2026';
+ 
+     <article class="prose prose-slate max-w-none prose-headings:scroll-mt-24 prose-h2:mt-12 prose-h2:text-2xl prose-h2:font-semibold prose-h3:text-lg prose-a:text-slate-900 prose-a:underline prose-a:decoration-slate-400 prose-a:underline-offset-2">
+       <p class="lead">
+-        Tenderpreneur (Pty) Ltd ("<strong>Tenderpreneur</strong>", "we", "us",
++        Tenderpreneurs (Pty) Ltd ("<strong>Tenderpreneurs</strong>", "we", "us",
+         "our") respects your privacy. This policy explains what personal
+         information we process, why we process it, how long we keep it, and
+         what rights you have. It is written to comply with the
+@@ -31,11 +31,11 @@ const effectiveDate = '14 May 2026';
+ 
+       <h2 id="responsible-party">1. Who is the responsible party?</h2>
+       <p>
+-        Tenderpreneur (Pty) Ltd is the responsible party for the personal
++        Tenderpreneurs (Pty) Ltd is the responsible party for the personal
+         information described in this policy.
+       </p>
+       <ul>
+-        <li><strong>Information Officer:</strong> <a href="mailto:privacy@tenderpreneur.co.za">privacy@tenderpreneur.co.za</a></li>
++        <li><strong>Information Officer:</strong> <a href="mailto:privacy@tenderpreneurs.co.za">privacy@tenderpreneurs.co.za</a></li>
+         <li><strong>Postal address:</strong> Western Cape, South Africa (full address available on request)</li>
+       </ul>
+ 
+@@ -65,7 +65,7 @@ const effectiveDate = '14 May 2026';
+           <tr><th>Purpose</th><th>Lawful basis (POPIA s.11)</th></tr>
+         </thead>
+         <tbody>
+-          <tr><td>Providing your account and the Tenderpreneur service</td><td>Performance of a contract — s.11(1)(b)</td></tr>
++          <tr><td>Providing your account and the Tenderpreneurs service</td><td>Performance of a contract — s.11(1)(b)</td></tr>
+           <tr><td>Processing payment and issuing tax invoices</td><td>Compliance with a legal obligation — s.11(1)(c)</td></tr>
+           <tr><td>Sending service notifications (security alerts, billing receipts)</td><td>Legitimate interest — s.11(1)(f)</td></tr>
+           <tr><td>Marketing emails and analytics beyond core functionality</td><td>Your consent — s.11(1)(a). You can withdraw at any time.</td></tr>
+@@ -136,7 +136,7 @@ const effectiveDate = '14 May 2026';
+       </ul>
+       <p>
+         To exercise any of these rights, email the Information Officer at
+-        <a href="mailto:privacy@tenderpreneur.co.za">privacy@tenderpreneur.co.za</a>.
++        <a href="mailto:privacy@tenderpreneurs.co.za">privacy@tenderpreneurs.co.za</a>.
+         We respond within 30 days. For access requests we may ask you to use the
+         prescribed PAIA Form 2.
+       </p>
+@@ -162,7 +162,7 @@ const effectiveDate = '14 May 2026';
+       <h2 id="contact">12. Contact us</h2>
+       <p>
+         Any questions about this policy or your personal information should go
+-        to <a href="mailto:privacy@tenderpreneur.co.za">privacy@tenderpreneur.co.za</a>.
++        to <a href="mailto:privacy@tenderpreneurs.co.za">privacy@tenderpreneurs.co.za</a>.
+       </p>
+     </article>
+   </main>
+diff --git a/src/pages/tenders/api/waitlist.ts b/src/pages/tenders/api/waitlist.ts
+index 7cc2469..618cd8a 100644
+--- a/src/pages/tenders/api/waitlist.ts
++++ b/src/pages/tenders/api/waitlist.ts
+@@ -6,7 +6,7 @@
+ //   Variable name: WAITLIST   →  bind to a KV namespace you create
+ // Cloudflare Pages → Settings → Environment variables:
+ //   RESEND_API_KEY = re_xxx
+-//   WAITLIST_FROM_EMAIL = "Tenderpreneur <hello@tenderpreneur.co.za>"
++//   WAITLIST_FROM_EMAIL = "Tenderpreneurs <hello@tenderpreneurs.co.za>"
+ 
+ import type { APIRoute } from "astro";
+ 
+@@ -74,7 +74,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
+     // @ts-expect-error
+     const fromEmail =
+       (locals?.runtime?.env?.WAITLIST_FROM_EMAIL as string | undefined) ??
+-      "Tenderpreneur <hello@tenderpreneur.co.za>";
++      "Tenderpreneurs <hello@tenderpreneurs.co.za>";
+ 
+     if (apiKey) {
+       await fetch("https://api.resend.com/emails", {
+@@ -86,7 +86,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
+         body: JSON.stringify({
+           from: fromEmail,
+           to: [email],
+-          subject: "You're on the Tenderpreneur waitlist 🇿🇦",
++          subject: "You're on the Tenderpreneurs waitlist 🇿🇦",
+           html: confirmationHtml(),
+         }),
+       });
+@@ -117,13 +117,13 @@ function confirmationHtml(): string {
+   return `<!doctype html>
+ <html><body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.6;color:#0C1B33;max-width:560px;margin:0 auto;padding:24px;">
+   <h1 style="color:#0C1B33;font-size:24px;margin-bottom:16px;">You're on the list ✓</h1>
+-  <p>Thanks for signing up to the Tenderpreneur waitlist. We'll notify you the moment the live tender feed goes live — covering all 9 provinces and 257 municipalities.</p>
++  <p>Thanks for signing up to the Tenderpreneurs waitlist. We'll notify you the moment the live tender feed goes live — covering all 9 provinces and 257 municipalities.</p>
+   <p>While you wait, you can already use:</p>
+   <ul>
+-    <li><a href="https://tenderpreneur.co.za/pfma" style="color:#0C1B33;">The free PFMA Knowledge Base</a> — 11 topics, every claim cited to the actual legislation.</li>
+-    <li><a href="https://tenderpreneur.co.za/blog" style="color:#0C1B33;">The Tenderpreneur blog</a> — CSD registration, B-BBEE, and bid-writing guides.</li>
++    <li><a href="https://tenderpreneurs.co.za/pfma" style="color:#0C1B33;">The free PFMA Knowledge Base</a> — 11 topics, every claim cited to the actual legislation.</li>
++    <li><a href="https://tenderpreneurs.co.za/blog" style="color:#0C1B33;">The Tenderpreneurs blog</a> — CSD registration, B-BBEE, and bid-writing guides.</li>
+   </ul>
+   <p style="color:#666;font-size:13px;margin-top:32px;">POPIA: we keep only your email address and signup source. Reply with "remove" to be deleted from the list.</p>
+-  <p style="color:#666;font-size:13px;">— Tenderpreneur (Pty) Ltd · tenderpreneur.co.za</p>
++  <p style="color:#666;font-size:13px;">— Tenderpreneurs (Pty) Ltd · tenderpreneurs.co.za</p>
+ </body></html>`;
+ }
+diff --git a/src/pages/tenders/index.astro b/src/pages/tenders/index.astro
+index 0e8387a..e6d5cea 100644
+--- a/src/pages/tenders/index.astro
++++ b/src/pages/tenders/index.astro
+@@ -10,7 +10,7 @@
+ import BaseLayout from "../../layouts/BaseLayout.astro";
+ import { TENDER_STATS, FEATURES, CTA } from "../../config/site";
+ 
+-const title = "Browse Government Tenders | Tenderpreneur";
++const title = "Browse Government Tenders | Tenderpreneurs";
+ const description = `Browse South African government tenders from eTenders, filtered by province, sector, and closing date.`;
+ ---
+ 
+diff --git a/src/pages/terms.astro b/src/pages/terms.astro
+index 414be38..840e5f9 100644
+--- a/src/pages/terms.astro
++++ b/src/pages/terms.astro
+@@ -6,8 +6,8 @@ const effectiveDate = '14 May 2026';
+ ---
+ 
+ <BaseLayout
+-  title="Terms of Service | Tenderpreneur"
+-  description="The terms that govern your use of the Tenderpreneur service, including subscriptions, acceptable use, intellectual property, liability, and South African governing law."
++  title="Terms of Service | Tenderpreneurs"
++  description="The terms that govern your use of the Tenderpreneurs service, including subscriptions, acceptable use, intellectual property, liability, and South African governing law."
+ >
+   <main class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+     <header class="mb-12 border-b border-slate-200 pb-8">
+@@ -22,20 +22,20 @@ const effectiveDate = '14 May 2026';
+     <article class="prose prose-slate max-w-none prose-h2:mt-12 prose-h2:text-2xl prose-h2:font-semibold prose-a:text-slate-900 prose-a:underline prose-a:decoration-slate-400 prose-a:underline-offset-2">
+       <p class="lead">
+         These Terms of Service ("<strong>Terms</strong>") form a binding
+-        agreement between you and Tenderpreneur (Pty) Ltd
+-        ("<strong>Tenderpreneur</strong>", "we", "us") and govern your access
+-        to and use of the Tenderpreneur website, mobile application, and
++        agreement between you and Tenderpreneurs (Pty) Ltd
++        ("<strong>Tenderpreneurs</strong>", "we", "us") and govern your access
++        to and use of the Tenderpreneurs website, mobile application, and
+         related services (the "<strong>Service</strong>"). By creating an
+         account or using the Service you agree to these Terms.
+       </p>
+ 
+       <h2 id="ect-notice">1. Information required by section 43 of the ECT Act</h2>
+       <ul>
+-        <li><strong>Full name:</strong> Tenderpreneur (Pty) Ltd</li>
++        <li><strong>Full name:</strong> Tenderpreneurs (Pty) Ltd</li>
+         <li><strong>Place of registration:</strong> Republic of South Africa</li>
+         <li><strong>Physical address:</strong> Western Cape, South Africa (available on written request)</li>
+-        <li><strong>Email:</strong> <a href="mailto:hello@tenderpreneur.co.za">hello@tenderpreneur.co.za</a></li>
+-        <li><strong>Website:</strong> <a href="https://tenderpreneur.co.za">https://tenderpreneur.co.za</a></li>
++        <li><strong>Email:</strong> <a href="mailto:hello@tenderpreneurs.co.za">hello@tenderpreneurs.co.za</a></li>
++        <li><strong>Website:</strong> <a href="https://tenderpreneurs.co.za">https://tenderpreneurs.co.za</a></li>
+       </ul>
+ 
+       <h2 id="eligibility">2. Eligibility</h2>
+@@ -50,7 +50,7 @@ const effectiveDate = '14 May 2026';
+       <p>
+         You are responsible for keeping your login credentials confidential and
+         for all activity under your account. Notify us immediately at
+-        <a href="mailto:security@tenderpreneur.co.za">security@tenderpreneur.co.za</a>
++        <a href="mailto:security@tenderpreneurs.co.za">security@tenderpreneurs.co.za</a>
+         if you suspect unauthorised use.
+       </p>
+ 
+@@ -89,7 +89,7 @@ const effectiveDate = '14 May 2026';
+       <h2 id="ip">7. Intellectual property</h2>
+       <p>
+         The Service, including all software, content, design, trade marks,
+-        and aggregated datasets, is owned by Tenderpreneur or its licensors and
++        and aggregated datasets, is owned by Tenderpreneurs or its licensors and
+         is protected by South African and international intellectual property
+         law. We grant you a non-exclusive, non-transferable, revocable licence
+         to use the Service for its intended purpose during your subscription.
+@@ -103,7 +103,7 @@ const effectiveDate = '14 May 2026';
+ 
+       <h2 id="disclaimer">8. No warranty of outcomes</h2>
+       <p>
+-        <strong>Important:</strong> Tenderpreneur is an information and
++        <strong>Important:</strong> Tenderpreneurs is an information and
+         analytics service. We do not guarantee that you will be awarded any
+         tender, that any tender we list will remain open or correctly
+         described, or that any information sourced from third parties (such as
+@@ -132,7 +132,7 @@ const effectiveDate = '14 May 2026';
+ 
+       <h2 id="indemnity">10. Indemnity</h2>
+       <p>
+-        You indemnify Tenderpreneur against any third-party claim arising from
++        You indemnify Tenderpreneurs against any third-party claim arising from
+         your breach of these Terms or your use of the Service in violation of
+         the law.
+       </p>
+@@ -166,7 +166,7 @@ const effectiveDate = '14 May 2026';
+         is not resolved, you may approach an accredited consumer ombud, the
+         National Consumer Commission, or a consumer court. Otherwise, the
+         parties consent to the non-exclusive jurisdiction of the Magistrates'
+-        Court having jurisdiction over Tenderpreneur, even if the claim would
++        Court having jurisdiction over Tenderpreneurs, even if the claim would
+         ordinarily exceed that court's jurisdiction.
+       </p>
+ 
+@@ -175,7 +175,7 @@ const effectiveDate = '14 May 2026';
+         <li><strong>Entire agreement:</strong> these Terms, the Privacy Policy, and the Cookies Policy form the entire agreement between us.</li>
+         <li><strong>Severability:</strong> if any clause is found unenforceable, the rest remain in force.</li>
+         <li><strong>Assignment:</strong> you may not assign these Terms without our written consent; we may assign on notice to you.</li>
+-        <li><strong>Notices:</strong> we may send notices to your account email; you may reach us at <a href="mailto:hello@tenderpreneur.co.za">hello@tenderpreneur.co.za</a>.</li>
++        <li><strong>Notices:</strong> we may send notices to your account email; you may reach us at <a href="mailto:hello@tenderpreneurs.co.za">hello@tenderpreneurs.co.za</a>.</li>
+       </ul>
+     </article>
+   </main>

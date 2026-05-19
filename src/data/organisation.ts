@@ -4,27 +4,27 @@
 // registration and your PAIA Manual.
 
 export const ORGANISATION = {
-  name: "Tenderpreneur",
-  legalName: "Tenderpreneur (Pty) Ltd",
-  url: "https://tenderpreneur.co.za",
-  logo: "https://tenderpreneur.co.za/logo.png",
-  email: "hello@tenderpreneur.co.za",
-  salesEmail: "sales@tenderpreneur.co.za",
-  privacyEmail: "privacy@tenderpreneur.co.za",
+  name: "Tenderpreneurs",
+  legalName: "Tenderpreneurs (Pty) Ltd",
+  url: "https://tenderpreneurs.co.za",
+  logo: "https://tenderpreneurs.co.za/logo.png",
+  email: "hello@tenderpreneurs.co.za",
+  salesEmail: "sales@tenderpreneurs.co.za",
+  privacyEmail: "privacy@tenderpreneurs.co.za",
   // Update these once you have them:
   vatNumber: "",        // e.g. "4123456789"
   registrationNumber: "", // e.g. "2024/123456/07"
   sameAs: [
     // Add only profiles that genuinely exist:
-    // "https://www.linkedin.com/company/tenderpreneur",
-    // "https://twitter.com/tenderpreneur",
+    // "https://www.linkedin.com/company/tenderpreneurs",
+    // "https://twitter.com/tenderpreneurs",
   ],
   foundingDate: "2024",
   areaServed: "ZA",
   // Google requires either contactType "customer service" or "sales"
   contactPoint: {
     contactType: "customer service",
-    email: "hello@tenderpreneur.co.za",
+    email: "hello@tenderpreneurs.co.za",
     areaServed: "ZA",
     availableLanguage: ["English", "Afrikaans"],
   },

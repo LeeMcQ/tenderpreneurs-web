@@ -6,7 +6,7 @@
 //   Variable name: WAITLIST   →  bind to a KV namespace you create
 // Cloudflare Pages → Settings → Environment variables:
 //   RESEND_API_KEY = re_xxx
-//   WAITLIST_FROM_EMAIL = "Tenderpreneur <hello@tenderpreneur.co.za>"
+//   WAITLIST_FROM_EMAIL = "Tenderpreneurs <hello@tenderpreneurs.co.za>"
 
 import type { APIRoute } from "astro";
 
@@ -74,7 +74,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // @ts-expect-error
     const fromEmail =
       (locals?.runtime?.env?.WAITLIST_FROM_EMAIL as string | undefined) ??
-      "Tenderpreneur <hello@tenderpreneur.co.za>";
+      "Tenderpreneurs <hello@tenderpreneurs.co.za>";
 
     if (apiKey) {
       await fetch("https://api.resend.com/emails", {
@@ -86,7 +86,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         body: JSON.stringify({
           from: fromEmail,
           to: [email],
-          subject: "You're on the Tenderpreneur waitlist 🇿🇦",
+          subject: "You're on the Tenderpreneurs waitlist 🇿🇦",
           html: confirmationHtml(),
         }),
       });
@@ -117,13 +117,13 @@ function confirmationHtml(): string {
   return `<!doctype html>
 <html><body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.6;color:#0C1B33;max-width:560px;margin:0 auto;padding:24px;">
   <h1 style="color:#0C1B33;font-size:24px;margin-bottom:16px;">You're on the list ✓</h1>
-  <p>Thanks for signing up to the Tenderpreneur waitlist. We'll notify you the moment the live tender feed goes live — covering all 9 provinces and 257 municipalities.</p>
+  <p>Thanks for signing up to the Tenderpreneurs waitlist. We'll notify you the moment the live tender feed goes live — covering all 9 provinces and 257 municipalities.</p>
   <p>While you wait, you can already use:</p>
   <ul>
-    <li><a href="https://tenderpreneur.co.za/pfma" style="color:#0C1B33;">The free PFMA Knowledge Base</a> — 11 topics, every claim cited to the actual legislation.</li>
-    <li><a href="https://tenderpreneur.co.za/blog" style="color:#0C1B33;">The Tenderpreneur blog</a> — CSD registration, B-BBEE, and bid-writing guides.</li>
+    <li><a href="https://tenderpreneurs.co.za/pfma" style="color:#0C1B33;">The free PFMA Knowledge Base</a> — 11 topics, every claim cited to the actual legislation.</li>
+    <li><a href="https://tenderpreneurs.co.za/blog" style="color:#0C1B33;">The Tenderpreneurs blog</a> — CSD registration, B-BBEE, and bid-writing guides.</li>
   </ul>
   <p style="color:#666;font-size:13px;margin-top:32px;">POPIA: we keep only your email address and signup source. Reply with "remove" to be deleted from the list.</p>
-  <p style="color:#666;font-size:13px;">— Tenderpreneur (Pty) Ltd · tenderpreneur.co.za</p>
+  <p style="color:#666;font-size:13px;">— Tenderpreneurs (Pty) Ltd · tenderpreneurs.co.za</p>
 </body></html>`;
 }

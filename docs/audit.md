@@ -1,4 +1,4 @@
-﻿# Tenderpreneur Site Audit
+﻿# Tenderpreneurs Site Audit
 
 ## Pages to test:
 - Homepage: /

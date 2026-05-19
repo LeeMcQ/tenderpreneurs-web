@@ -2,13 +2,13 @@
 // Single source of truth for CTAs, app URLs, and feature status flags.
 // Import this anywhere instead of hardcoding URLs or "Live/Beta" labels.
 
-export const APP_URL = "https://app.tenderpreneur.co.za";
+export const APP_URL = "https://app.tenderpreneurs.co.za";
 
 export const CTA = {
   // Marketing → app conversion CTAs (signup funnel)
   signup: `${APP_URL}/register`,
   signupPro: `${APP_URL}/register?plan=pro`,
-  signupEnterprise: "mailto:sales@tenderpreneur.co.za",
+  signupEnterprise: "mailto:sales@tenderpreneurs.co.za",
 
   // Product feature deep-links (live in app)
   scoring: `${APP_URL}/scoring`,

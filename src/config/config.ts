@@ -24,7 +24,7 @@ const blogCollection = defineCollection({
     description: z.string().max(200),
     publishedDate: z.coerce.date(),           // ← was z.date() — now accepts YAML date strings
     modifiedDate: z.coerce.date().optional(), // ← same fix
-    author: z.string().default('Tenderpreneur Editorial'),
+    author: z.string().default('Tenderpreneurs Editorial'),
     tags: z.array(z.string()).default([]),
     category: z.string().default('Procurement'),
     ogImage: z.string().optional(),

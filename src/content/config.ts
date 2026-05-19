@@ -19,7 +19,7 @@ const blogCollection = defineCollection({
     description: z.string().max(200),
     publishedDate: z.coerce.date(),
     modifiedDate: z.coerce.date().optional(),
-    author: z.string().default('Tenderpreneur Editorial'),
+    author: z.string().default('Tenderpreneurs Editorial'),
     tags: z.array(z.string()).default([]),
     category: z.string().default('Procurement'),
     ogImage: z.string().optional(),

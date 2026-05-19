@@ -1,4 +1,4 @@
-# Tenderpreneur — tenderpreneur.co.za
+# Tenderpreneurs — tenderpreneurs.co.za
 
 AI-powered government tender intelligence for South African SMMEs.
 
@@ -53,7 +53,7 @@ Uses Wrangler under the hood to simulate Cloudflare Workers locally.
 ## Project structure
 
 ```
-tenderpreneur/
+tenderpreneurs/
 ├── public/                  # Static assets (robots.txt, images, fonts)
 ├── src/
 │   ├── components/          # Reusable Astro components
@@ -108,7 +108,7 @@ Create a new `.mdx` file in `src/content/blog/` using this frontmatter:
 title: "Your Post Title"
 description: "SEO meta description (150–160 characters)"
 pubDate: 2025-03-01
-author: "Tenderpreneur Team"
+author: "Tenderpreneurs Team"
 category: "Compliance"   # Optional: Compliance | B-BBEE | Construction | etc.
 ---
 
@@ -127,7 +127,7 @@ title: "Topic Title"
 description: "SEO meta description"
 pubDate: 2025-03-01
 category: "Legislation"
-author: "Tenderpreneur Team"
+author: "Tenderpreneurs Team"
 faq:
   - q: "Question?"
     a: "Answer."
@@ -144,7 +144,7 @@ Create `.env` (not committed) with:
 
 ```bash
 # Public site URL (used by Astro for sitemap and canonical URLs)
-PUBLIC_SITE_URL=https://tenderpreneur.co.za
+PUBLIC_SITE_URL=https://tenderpreneurs.co.za
 
 # Resend API key (transactional email)
 RESEND_API_KEY=re_...
@@ -181,8 +181,8 @@ Push to `main` branch — Cloudflare Pages automatically builds and deploys.
 ### Custom domain
 
 In Cloudflare Pages → Custom Domains:
-- Add `tenderpreneur.co.za`
-- Add `www.tenderpreneur.co.za` (redirect to apex)
+- Add `tenderpreneurs.co.za`
+- Add `www.tenderpreneurs.co.za` (redirect to apex)
 
 Update DNS at your registrar with the CNAME provided by Cloudflare.
 
@@ -204,4 +204,4 @@ Update DNS at your registrar with the CNAME provided by Cloudflare.
 
 ## Licence
 
-Copyright © 2025 Tenderpreneur (Pty) Ltd. All rights reserved.
+Copyright © 2025 Tenderpreneurs (Pty) Ltd. All rights reserved.

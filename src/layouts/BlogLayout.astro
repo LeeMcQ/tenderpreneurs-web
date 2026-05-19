@@ -21,7 +21,7 @@ const {
   description,
   publishedDate,
   modifiedDate,
-  author = 'Tenderpreneur Editorial',
+  author = 'Tenderpreneurs Editorial',
   tags = [],
   category = 'Procurement',
   slug,
@@ -30,7 +30,7 @@ const {
   relatedSlugs = [],
 } = Astro.props;
 
-const canonicalUrl = `https://tenderpreneur.co.za/blog/${slug}`;
+const canonicalUrl = `https://tenderpreneurs.co.za/blog/${slug}`;
 const formattedDate = publishedDate.toLocaleDateString('en-ZA', {
   year: 'numeric',
   month: 'long',
@@ -66,18 +66,18 @@ const blogPostingSchema = {
   author: {
     '@type': 'Organization',
     name: author,
-    url: 'https://tenderpreneur.co.za',
+    url: 'https://tenderpreneurs.co.za',
   },
   publisher: {
     '@type': 'Organization',
-    name: 'Tenderpreneur',
-    url: 'https://tenderpreneur.co.za',
+    name: 'Tenderpreneurs',
+    url: 'https://tenderpreneurs.co.za',
     logo: {
       '@type': 'ImageObject',
-      url: 'https://tenderpreneur.co.za/logo.png',
+      url: 'https://tenderpreneurs.co.za/logo.png',
     },
   },
-  image: ogImage ?? 'https://tenderpreneur.co.za/og-default.jpg',
+  image: ogImage ?? 'https://tenderpreneurs.co.za/og-default.jpg',
   articleSection: category,
   keywords: tags.join(', '),
   inLanguage: 'en-ZA',
@@ -87,8 +87,8 @@ const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneur.co.za' },
-    { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://tenderpreneur.co.za/blog' },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneurs.co.za' },
+    { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://tenderpreneurs.co.za/blog' },
     { '@type': 'ListItem', position: 3, name: title, item: canonicalUrl },
   ],
 };
@@ -166,7 +166,7 @@ const breadcrumbSchema = {
                 <p class="blog-cta-text">Stay ahead of closing dates. Free for South African SMMEs.</p>
               </div>
             </div>
-            <form class="blog-cta-form" action="https://app.tenderpreneur.co.za/signup" method="GET" novalidate>
+            <form class="blog-cta-form" action="https://app.tenderpreneurs.co.za/signup" method="GET" novalidate>
               <label for="email-cta" class="sr-only">Email address</label>
               <input
                 id="email-cta"

@@ -17,18 +17,18 @@ const {
   title,
   description,
   canonical,
-  ogImage = 'https://tenderpreneur.co.za/og-default.jpg',
+  ogImage = 'https://tenderpreneurs.co.za/og-default.jpg',
   ogType = 'website',
   noIndex = false,
   schema,
   publishedTime,
   modifiedTime,
-  author = 'Tenderpreneur',
+  author = 'Tenderpreneurs',
   section,
 } = Astro.props;
 
 const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).toString();
-const fullTitle = title.includes('Tenderpreneur') ? title : `${title} | Tenderpreneur`;
+const fullTitle = title.includes('Tenderpreneurs') ? title : `${title} | Tenderpreneurs`;
 
 const schemaArray = schema ? (Array.isArray(schema) ? schema : [schema]) : [];
 const schemaScript = schemaArray.length > 0 ? JSON.stringify(schemaArray.length === 1 ? schemaArray[0] : { '@context': 'https://schema.org', '@graph': schemaArray }) : null;
@@ -42,7 +42,7 @@ const schemaScript = schemaArray.length > 0 ? JSON.stringify(schemaArray.length 
 {!noIndex && <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />}
 
 <!-- Open Graph -->
-<meta property="og:site_name" content="Tenderpreneur" />
+<meta property="og:site_name" content="Tenderpreneurs" />
 <meta property="og:title" content={fullTitle} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonicalURL} />
@@ -68,8 +68,8 @@ const schemaScript = schemaArray.length > 0 ? JSON.stringify(schemaArray.length 
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:site" content="@tenderpreneur" />
-<meta name="twitter:creator" content="@tenderpreneur" />
+<meta name="twitter:site" content="" />
+<meta name="twitter:creator" content="" />
 <meta name="twitter:title" content={fullTitle} />
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={ogImage} />

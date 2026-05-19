@@ -22,7 +22,7 @@ const {
   relatedTopics = [],
 } = Astro.props;
 
-const canonicalUrl = `https://tenderpreneur.co.za/pfma/${slug}`;
+const canonicalUrl = `https://tenderpreneurs.co.za/pfma/${slug}`;
 const isoDate = publishedDate.toISOString();
 const isoModified = (modifiedDate ?? publishedDate).toISOString();
 
@@ -48,16 +48,16 @@ const articleSchema = {
   dateModified: isoModified,
   author: {
     '@type': 'Organization',
-    name: 'Tenderpreneur',
-    url: 'https://tenderpreneur.co.za',
+    name: 'Tenderpreneurs',
+    url: 'https://tenderpreneurs.co.za',
   },
   publisher: {
     '@type': 'Organization',
-    name: 'Tenderpreneur',
-    url: 'https://tenderpreneur.co.za',
+    name: 'Tenderpreneurs',
+    url: 'https://tenderpreneurs.co.za',
     logo: {
       '@type': 'ImageObject',
-      url: 'https://tenderpreneur.co.za/logo.png',
+      url: 'https://tenderpreneurs.co.za/logo.png',
     },
   },
   about: {
@@ -85,8 +85,8 @@ const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneur.co.za' },
-    { '@type': 'ListItem', position: 2, name: 'PFMA Guide', item: 'https://tenderpreneur.co.za/pfma' },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneurs.co.za' },
+    { '@type': 'ListItem', position: 2, name: 'PFMA Guide', item: 'https://tenderpreneurs.co.za/pfma' },
     { '@type': 'ListItem', position: 3, name: title, item: canonicalUrl },
   ],
 };
@@ -149,7 +149,7 @@ const allTopicLinks = [
 
             <div class="sidebar-cta-box">
               <p class="sidebar-cta-text">Have a question about procurement?</p>
-              <a href="https://app.tenderpreneur.co.za" class="btn btn-primary text-sm">
+              <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary text-sm">
                 Ask the AI Assistant
               </a>
             </div>
@@ -200,7 +200,7 @@ const allTopicLinks = [
             <div class="pfma-cta-body">
               <h3>Still have questions about {title}?</h3>
               <p>Ask our AI-powered PFMA Assistant. Free answers with legislative citations, available 24/7.</p>
-              <a href="https://app.tenderpreneur.co.za" class="btn btn-primary mt-4" rel="noopener">
+              <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary mt-4" rel="noopener">
                 Ask the PFMA Assistant →
               </a>
             </div>
