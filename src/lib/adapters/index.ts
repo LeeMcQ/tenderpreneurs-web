@@ -1,23 +1,46 @@
-// Adapter registry. To add a new source:
-//   1. Create src/lib/adapters/<source>.ts extending BaseAdapter
-//   2. Add it to seed-sources.sql
-//   3. Register it here
-//
-// Adapters not in this registry are silently skipped during ingest,
-// even if they're seeded in the `sources` table. This is deliberate —
-// we want explicit registration, not magic.
+/**
+ * Adapter registry
+ *
+ * Maps source IDs (as stored in the `sources` table) to their adapter implementations.
+ * Every adapter must implement the BaseAdapter interface.
+ *
+ * IMPORTANT: The sourceId property on each adapter MUST match the `id` column
+ * in the `sources` table, otherwise ingestion_runs won't be linked correctly.
+ */
 
-import { BaseAdapter } from "./base";
-import { ETendersAdapter } from "./etenders";
-import { TreasuryBulletinAdapter } from "./treasury-bulletin";
+import type { BaseAdapter } from './base.js';
+import { ETendersAdapter } from './etenders.js';
+import { TreasuryBulletinAdapter } from './treasury-bulletin.js';
 
-export const ADAPTERS: BaseAdapter[] = [
+// ---------------------------------------------------------------------------
+// Registry
+// ---------------------------------------------------------------------------
+
+const ADAPTERS: BaseAdapter[] = [
   new ETendersAdapter(),
   new TreasuryBulletinAdapter(),
-  // TODO: add metro adapters (coj, cct, ethekwini), provincial treasuries, SOEs
-  // Each is ~80-150 lines, modeled on etenders.ts. See OPERATIONS.md.
+  // Add additional adapters here as they are implemented:
+  // new EThekwiniAdapter(),
+  // new JohannesburgAdapter(),
+  // etc.
 ];
 
-export function getAdapter(sourceId: string): BaseAdapter | undefined {
-  return ADAPTERS.find((a) => a.sourceId === sourceId);
+const ADAPTER_MAP = new Map<string, BaseAdapter>(
+  ADAPTERS.map((a) => [a.sourceId, a])
+);
+
+/**
+ * Returns the adapter for a given source ID, or null if none is registered.
+ *
+ * @param sourceId - The `id` value from the `sources` table row
+ */
+export function getAdapter(sourceId: string): BaseAdapter | null {
+  return ADAPTER_MAP.get(sourceId) ?? null;
+}
+
+/**
+ * Returns all registered adapters (used by the ingest cron to run all sources).
+ */
+export function getAllAdapters(): BaseAdapter[] {
+  return ADAPTERS;
 }

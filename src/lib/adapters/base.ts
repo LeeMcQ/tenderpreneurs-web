@@ -6,27 +6,29 @@ import type { Env } from "../db";
 
 /** Raw tender extracted from a source — partially structured. */
 export interface RawTender {
-  source_id: string;
-  source_ref: string;            // the procuring entity's reference number
-  source_url: string;            // canonical URL for the listing
+   sourceId: string;
+  externalId: string;
   title: string;
-  description?: string;
-  procuring_entity?: string;
-  province?: string;             // slug if the adapter knows it
-  category?: "goods" | "services" | "construction" | "other";
-  closing_date?: string;         // ISO date
-  closing_time?: string;         // HH:MM
-  published_date?: string;       // ISO date
-  briefing_date?: string;
-  briefing_compulsory?: boolean;
-  briefing_location?: string;
-  contact_name?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  cidb_grade?: string;
-  estimated_value?: number;      // ZAR cents
-  documents?: { filename: string; url: string }[];
-  raw_html?: string;             // optional snippet for the audit trail
+  description: string;
+  buyer: string;
+  province: string;
+  sector: string;
+  status: string;
+  closingDate: string | null;
+  openingDate: string | null;
+  value: number | null;
+  currency: string;
+  procurementMethod: string | null;
+  documentUrls: string[];
+  sourceUrl: string;
+  rawJson: string;
+  // Optional contact/briefing fields (etenders provides these)
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  briefingDate?: string | null;
+  briefingVenue?: string | null;
+  briefingCompulsory?: boolean;          // optional snippet for the audit trail
 }
 
 /** Outcome of one scrape run, used by the orchestrator. */

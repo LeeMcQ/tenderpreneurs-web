@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import AstroPWA from '@vite-pwa/astro';
 import cloudflare from '@astrojs/cloudflare';
 import tailwind from '@astrojs/tailwind';
+import mdx from '@astrojs/mdx';
 //import sitemap from '@astrojs/sitemap';
 
 // NOTE: previously this file declared `integrations:` TWICE in the same
@@ -15,6 +16,9 @@ export default defineConfig({
 
   output: 'hybrid',
   adapter: cloudflare(),
+  integrations: [mdx()],           // ← must be in integrations array
+  adapter: cloudflare({ mode: 'directory' }),
+  output: 'server',
 
   // Astro picks up tsconfig paths automatically, so the `@/...` aliases
   // declared in tsconfig.json work without extra Vite config here.

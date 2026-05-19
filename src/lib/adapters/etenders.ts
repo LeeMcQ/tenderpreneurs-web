@@ -1,210 +1,197 @@
-// eTenders OCDS API adapter.
-//
-// Uses the official National Treasury OCDS REST API at:
-//   https://ocds-api.etenders.gov.za
-//
-// This replaces the old HTML scraper that hit memory limits on Workers.
-// The OCDS API returns structured JSON — no HTML parsing, no LLM needed
-// for basic field extraction.
-//
-// The API serves data in Open Contracting Data Standard format.
-// Docs: https://ocds-api.etenders.gov.za/swagger/
-// License: Creative Commons BY 4.0
-//
-// Endpoint patterns (standard OCDS 1.1):
-//   GET /api/ocds/releases?page=1&pageSize=50  — paginated releases
-//   GET /api/ocds/release/{ocid}                — single release
-//
-// If the API structure differs from standard OCDS, the adapter will try
-// multiple known endpoint patterns and fall back gracefully.
+/**
+ * eTenders OCDS API Adapter
+ *
+ * Uses the official National Treasury OCDS API at https://ocds-api.etenders.gov.za
+ * instead of scraping HTML (which caused 128MB memory limit exceeded errors).
+ *
+ * Endpoint: GET /api/OCDSReleases?PageNumber=N&PageSize=50&dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD
+ *
+ * Key safety rules:
+ *  1. Always check Content-Type BEFORE reading body — an HTML error page will OOM the worker
+ *  2. Never use response.text() on an unknown response — always check headers first
+ *  3. Use streaming-safe fetch (response.json() only after Content-Type verified as JSON)
+ */
 
-import { BaseAdapter, type RawTender } from "./base";
-import type { Env } from "../db";
+import type { BaseAdapter, RawTender } from './base.js';
 
-const API_BASE = "https://ocds-api.etenders.gov.za";
+const OCDS_BASE = 'https://ocds-api.etenders.gov.za';
+const SOURCE_ID = 'etenders';
+const PAGE_SIZE = 50;
+/** How many days back to look on each ingestion run */
+const LOOKBACK_DAYS = 90;
+/** Safety cap — never fetch more than this many pages per run (avoids runaway loops) */
+const MAX_PAGES = 20;
 
-// Known endpoint patterns to try (different OCDS implementations vary)
-const RELEASE_ENDPOINTS = [
-  "/api/ocds/releases",
-  "/api/Releases",
-  "/api/releases",
-  "/api/v1/releases",
-  "/releases",
-];
-
+/** Map eTenders province strings to our canonical province keys */
 const PROVINCE_MAP: Record<string, string> = {
-  "eastern cape": "eastern-cape",
-  "free state": "free-state",
-  "gauteng": "gauteng",
-  "kwazulu-natal": "kwazulu-natal",
-  "kwazulu natal": "kwazulu-natal",
-  "kwa-zulu natal": "kwazulu-natal",
-  "limpopo": "limpopo",
-  "mpumalanga": "mpumalanga",
-  "northern cape": "northern-cape",
-  "north west": "north-west",
-  "western cape": "western-cape",
-  "national": "national",
+  'Eastern Cape': 'eastern-cape',
+  'Free State': 'free-state',
+  Gauteng: 'gauteng',
+  'KwaZulu-Natal': 'kwazulu-natal',
+  Limpopo: 'limpopo',
+  Mpumalanga: 'mpumalanga',
+  'North West': 'north-west',
+  'Northern Cape': 'northern-cape',
+  'Western Cape': 'western-cape',
+  National: 'national',
 };
 
-function guessProvince(buyerName: string | undefined): string | undefined {
-  if (!buyerName) return undefined;
-  const lower = buyerName.toLowerCase();
-  for (const [key, slug] of Object.entries(PROVINCE_MAP)) {
-    if (lower.includes(key)) return slug;
-  }
-  // National departments and SOEs
-  if (lower.includes("national") || lower.includes("treasury") ||
-      lower.includes("sars") || lower.includes("eskom") ||
-      lower.includes("transnet") || lower.includes("sanral")) {
-    return "national";
-  }
-  return undefined;
+function toDateString(d: Date): string {
+  return d.toISOString().split('T')[0]; // YYYY-MM-DD
 }
 
-function guessCategory(categories: string[] | undefined): "goods" | "services" | "construction" | "other" {
-  if (!categories || categories.length === 0) return "other";
-  const joined = categories.join(" ").toLowerCase();
-  if (joined.includes("construct") || joined.includes("civil") || joined.includes("building")) return "construction";
-  if (joined.includes("supply") || joined.includes("goods") || joined.includes("equipment")) return "goods";
-  if (joined.includes("service") || joined.includes("consult")) return "services";
-  return "other";
+function daysAgo(n: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d;
 }
 
-function extractDate(isoString: string | undefined | null): string | undefined {
-  if (!isoString) return undefined;
-  const match = isoString.match(/(\d{4}-\d{2}-\d{2})/);
-  return match ? match[1] : undefined;
-}
+/**
+ * Fetch JSON from the OCDS API with safety checks.
+ * Returns null if the response is not JSON (e.g. an HTML error page) — never throws on bad Content-Type.
+ */
+async function fetchOcdsJson(url: string): Promise<unknown | null> {
+  const res = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'Tenderpreneurs/1.0 (+https://tenderpreneurs.co.za)',
+    },
+    // Cloudflare Workers don't support AbortSignal timeout on outbound fetches,
+    // but we keep the option available for local development.
+  });
 
-export class ETendersAdapter extends BaseAdapter {
-  readonly sourceId = "etenders";
-  readonly displayName = "eTenders OCDS API";
-  readonly type = "national" as const;
-
-  private async findWorkingEndpoint(env: Env): Promise<{ url: string; data: any } | null> {
-    for (const path of RELEASE_ENDPOINTS) {
-      const url = `${API_BASE}${path}?page=1&pageSize=20`;
-      try {
-        const res = await this.safeFetch(url);
-        const text = await res.text();
-        // Try to parse as JSON
-        const data = JSON.parse(text);
-        if (data && (Array.isArray(data) || data.releases || data.data || data.results || data.items)) {
-          return { url: `${API_BASE}${path}`, data };
-        }
-      } catch {
-        // Try next endpoint
-        continue;
-      }
-    }
+  if (!res.ok) {
+    console.error(`[etenders] HTTP ${res.status} from ${url}`);
     return null;
   }
 
-  private extractReleasesFromResponse(data: any): any[] {
-    // Different OCDS APIs structure the response differently
-    if (Array.isArray(data)) return data;
-    if (data.releases && Array.isArray(data.releases)) return data.releases;
-    if (data.data && Array.isArray(data.data)) return data.data;
-    if (data.results && Array.isArray(data.results)) return data.results;
-    if (data.items && Array.isArray(data.items)) return data.items;
-    return [];
+  const ct = res.headers.get('content-type') ?? '';
+  if (!ct.includes('application/json')) {
+    console.error(`[etenders] Non-JSON Content-Type "${ct}" from ${url} — skipping body read`);
+    // Consume the body so the connection is released, but DON'T parse it
+    await res.body?.cancel();
+    return null;
   }
 
-  async fetchListings(env: Env): Promise<RawTender[]> {
-    // Phase 1: Find the working endpoint
-    const found = await this.findWorkingEndpoint(env);
+  return res.json();
+}
 
-    if (!found) {
-      // Fallback: try the data portal CSV/JSON download pages
-      throw new Error(
-        "Could not find a working OCDS API endpoint at " + API_BASE +
-        ". Tried: " + RELEASE_ENDPOINTS.join(", ") +
-        ". The API may be temporarily down or the endpoint structure may have changed."
-      );
-    }
-
-    const releases = this.extractReleasesFromResponse(found.data);
-    const items: RawTender[] = [];
-
-    // Phase 2: Fetch additional pages (up to 5 pages = ~100 tenders per run)
-    const allReleases = [...releases];
-    for (let page = 2; page <= 5; page++) {
-      try {
-        const res = await this.safeFetch(`${found.url}?page=${page}&pageSize=20`);
-        const pageData = await res.json() as any;
-        const pageReleases = this.extractReleasesFromResponse(pageData);
-        if (pageReleases.length === 0) break;
-        allReleases.push(...pageReleases);
-      } catch {
-        break; // Stop paginating on error
-      }
-    }
-
-    // Phase 3: Convert OCDS releases to RawTender objects
-    for (const release of allReleases) {
-      try {
-        const tender = this.releaseToRawTender(release);
-        if (tender) items.push(tender);
-      } catch {
-        // Skip malformed releases
-        continue;
-      }
-    }
-
-    return items;
-  }
-
-  private releaseToRawTender(release: any): RawTender | null {
-    // OCDS release structure:
-    // release.ocid — unique contracting process ID
-    // release.tender.title, release.tender.description
-    // release.tender.tenderPeriod.endDate — closing date
-    // release.buyer.name — procuring entity
-    // release.tender.procurementMethodDetails, release.tender.mainProcurementCategory
-    // release.tender.documents[] — bid documents
-
-    const ocid = release.ocid || release.id;
-    const tenderData = release.tender || {};
-    const buyer = release.buyer || release.parties?.find((p: any) => p.roles?.includes("buyer")) || {};
-
-    const title = tenderData.title || tenderData.description?.slice(0, 200);
-    if (!ocid || !title) return null;
-
-    const ref = tenderData.id || ocid;
-    const description = tenderData.description || tenderData.title;
-    const procuringEntity = buyer.name || buyer.id;
-    const closingDate = extractDate(tenderData.tenderPeriod?.endDate);
-    const publishedDate = extractDate(release.date || tenderData.tenderPeriod?.startDate);
-    const categories = [tenderData.mainProcurementCategory, tenderData.procurementMethodDetails].filter(Boolean);
-
-    // Documents
-    const documents = (tenderData.documents || [])
-      .filter((d: any) => d.url)
-      .map((d: any) => ({
-        filename: d.title || d.description || "document",
-        url: d.url,
-      }));
-
-    // Contact info from parties
-    const buyerParty = release.parties?.find((p: any) => p.roles?.includes("buyer"));
-    const contact = buyerParty?.contactPoint || {};
-
-    return {
-      source_id: this.sourceId,
-      source_ref: String(ref),
-      source_url: `https://www.etenders.gov.za/Home/opportunities?id=1`,
-      title: title.slice(0, 500),
-      description: description?.slice(0, 2000),
-      procuring_entity: procuringEntity,
-      province: guessProvince(procuringEntity),
-      category: guessCategory(categories),
-      closing_date: closingDate,
-      published_date: publishedDate,
-      contact_name: contact.name,
-      contact_email: contact.email,
-      contact_phone: contact.telephone,
-      documents: documents.length > 0 ? documents : undefined,
+interface OcdsRelease {
+  ocid: string;
+  id: string;
+  date?: string;
+  tender?: {
+    id?: string;
+    title?: string;
+    status?: string;
+    category?: string;
+    province?: string;
+    deliveryLocation?: string;
+    description?: string;
+    mainProcurementCategory?: string;
+    value?: { amount?: number; currency?: string };
+    documents?: Array<{ id?: string; title?: string; url?: string }>;
+    tenderPeriod?: { startDate?: string; endDate?: string };
+    procuringEntity?: { id?: string; name?: string };
+    procurementMethod?: string;
+    briefingSession?: {
+      isSession?: boolean;
+      compulsory?: boolean;
+      date?: string;
+      venue?: string;
     };
+    contactPerson?: { name?: string; email?: string; telephoneNumber?: string };
+  };
+  buyer?: { id?: string; name?: string };
+}
+
+interface OcdsPage {
+  releases?: OcdsRelease[];
+  links?: { next?: string };
+}
+
+function mapRelease(release: OcdsRelease): RawTender | null {
+  const t = release.tender;
+  if (!t || !t.title) return null; // skip releases without tender data
+
+  const province = t.province ? (PROVINCE_MAP[t.province] ?? 'national') : 'national';
+  const buyer = t.procuringEntity?.name ?? release.buyer?.name ?? 'Unknown';
+  const closingDate = t.tenderPeriod?.endDate ?? null;
+  const openingDate = t.tenderPeriod?.startDate ?? release.date ?? null;
+  const value = t.value?.amount && t.value.amount > 0 ? t.value.amount : null;
+
+  return {
+    sourceId: SOURCE_ID,
+    externalId: release.ocid,           // globally unique OCDS ID
+    title: t.title,
+    description: t.description ?? '',
+    buyer,
+    province,
+    sector: t.category ?? t.mainProcurementCategory ?? 'General',
+    status: t.status ?? 'active',
+    closingDate,
+    openingDate,
+    value,
+    currency: t.value?.currency ?? 'ZAR',
+    procurementMethod: t.procurementMethod ?? null,
+    documentUrls: (t.documents ?? []).map((d) => d.url).filter(Boolean) as string[],
+    sourceUrl: `https://www.etenders.gov.za/home/TenderDetails?tenderID=${t.id}`,
+    rawJson: JSON.stringify(release),
+    // Extra metadata stored as JSON in rawJson, surfaced here for classify/extract
+    contactName: t.contactPerson?.name ?? null,
+    contactEmail: t.contactPerson?.email ?? null,
+    contactPhone: t.contactPerson?.telephoneNumber ?? null,
+    briefingDate: t.briefingSession?.isSession ? (t.briefingSession.date ?? null) : null,
+    briefingVenue: t.briefingSession?.isSession ? (t.briefingSession.venue ?? null) : null,
+    briefingCompulsory: t.briefingSession?.compulsory ?? false,
+  } as RawTender;
+}
+
+export class ETendersAdapter implements BaseAdapter {
+  sourceId = SOURCE_ID;
+
+  async fetch(): Promise<RawTender[]> {
+    const dateFrom = toDateString(daysAgo(LOOKBACK_DAYS));
+    const dateTo = toDateString(new Date());
+
+    const firstUrl =
+      `${OCDS_BASE}/api/OCDSReleases` +
+      `?PageNumber=1&PageSize=${PAGE_SIZE}&dateFrom=${dateFrom}&dateTo=${dateTo}`;
+
+    console.log(`[etenders] Fetching OCDS releases from ${dateFrom} to ${dateTo}`);
+
+    const results: RawTender[] = [];
+    let nextUrl: string | null = firstUrl;
+    let pageNum = 0;
+
+    while (nextUrl && pageNum < MAX_PAGES) {
+      pageNum++;
+      console.log(`[etenders] Page ${pageNum}: ${nextUrl}`);
+
+      const page = (await fetchOcdsJson(nextUrl)) as OcdsPage | null;
+      if (!page) {
+        console.error(`[etenders] Null response on page ${pageNum}, stopping`);
+        break;
+      }
+
+      const releases = page.releases ?? [];
+      console.log(`[etenders] Page ${pageNum}: ${releases.length} releases`);
+
+      for (const release of releases) {
+        const mapped = mapRelease(release);
+        if (mapped) results.push(mapped);
+      }
+
+      // Follow pagination — but ONLY if it's a different URL to prevent infinite loops
+      const nextLink = page.links?.next ?? null;
+      if (nextLink && nextLink !== nextUrl) {
+        nextUrl = nextLink;
+      } else {
+        nextUrl = null; // done
+      }
+    }
+
+    console.log(`[etenders] Total mapped tenders: ${results.length}`);
+    return results;
   }
 }

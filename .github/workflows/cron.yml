@@ -1,0 +1,87 @@
+name: Tenderpreneurs Cron
+
+on:
+  # Run ingestion every 6 hours
+  schedule:
+    - cron: '0 */6 * * *'
+  # Run audit daily at 06:00 UTC (08:00 SAST)
+  # (handled by the separate job below)
+
+  # Allow manual trigger from the GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which job to run'
+        required: false
+        default: 'ingest'
+        type: choice
+        options:
+          - ingest
+          - audit
+          - both
+
+jobs:
+  # ── Ingestion ──────────────────────────────────────────────────────────────
+  ingest:
+    name: Ingest tenders
+    runs-on: ubuntu-latest
+    # Run on schedule OR when manually triggered with ingest/both
+    if: >
+      github.event_name == 'schedule' ||
+      github.event.inputs.job == 'ingest' ||
+      github.event.inputs.job == 'both'
+    steps:
+      - name: Trigger ingestion endpoint
+        run: |
+          echo "Triggering ingestion at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          response=$(curl -s -o /tmp/ingest-body.txt -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            --max-time 300 \
+            "https://tenderpreneurs.pages.dev/api/cron/ingest")
+          echo "HTTP status: $response"
+          echo "Response body:"
+          cat /tmp/ingest-body.txt
+          if [ "$response" -ne 200 ]; then
+            echo "ERROR: Ingestion returned HTTP $response"
+            exit 1
+          fi
+
+  # ── Daily audit ────────────────────────────────────────────────────────────
+  audit:
+    name: Daily coverage audit
+    runs-on: ubuntu-latest
+    # Run once daily at 06:00 UTC — only on schedule (not every 6h ingest cycle)
+    # We use a separate cron expression here.
+    if: >
+      (github.event_name == 'schedule' && (github.event.schedule == '0 6 * * *')) ||
+      github.event.inputs.job == 'audit' ||
+      github.event.inputs.job == 'both'
+    steps:
+      - name: Trigger audit endpoint
+        run: |
+          echo "Triggering audit at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          response=$(curl -s -o /tmp/audit-body.txt -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            --max-time 60 \
+            "https://tenderpreneurs.pages.dev/api/cron/audit")
+          echo "HTTP status: $response"
+          echo "Response body:"
+          cat /tmp/audit-body.txt
+          if [ "$response" -ne 200 ]; then
+            echo "ERROR: Audit returned HTTP $response"
+            exit 1
+          fi
+
+# ── Setup instructions ────────────────────────────────────────────────────────
+# Before this workflow will work, add the CRON_SECRET secret to GitHub:
+#
+# 1. Go to: https://github.com/LeeMcQ/tenderpreneurs-web/settings/secrets/actions
+# 2. Click "New repository secret"
+# 3. Name:  CRON_SECRET
+# 4. Value: (the SESSION_SECRET value from your .local-secrets.txt file)
+# 5. Click "Add secret"
+#
+# The CRON_SECRET value must match SESSION_SECRET in Cloudflare Pages settings.
+# ─────────────────────────────────────────────────────────────────────────────

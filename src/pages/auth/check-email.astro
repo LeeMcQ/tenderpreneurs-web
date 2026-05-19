@@ -1,31 +1,133 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
-const email = Astro.url.searchParams.get("e") || "";
+/**
+ * /auth/check-email
+ * Shown after the user submits their email for a magic link.
+ * Dark navy theme — matches the rest of the site.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const email = Astro.url.searchParams.get('email') ?? '';
 ---
 
 <BaseLayout
   title="Check your email — Tenderpreneurs"
-  description="We just sent you a sign-in link."
+  description="We've sent you a magic link to sign in."
 >
-  <article class="container mx-auto px-4 py-16 max-w-md text-center">
-    <div class="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-        <polyline points="22,6 12,13 2,6"/>
-      </svg>
-    </div>
-    <h1 class="text-2xl font-bold text-slate-900 mb-3">Check your inbox</h1>
-    <p class="text-slate-700 mb-2">We sent a sign-in link to</p>
-    {email && <p class="font-mono text-sm text-slate-900 mb-6">{email}</p>}
-    <p class="text-sm text-slate-600 mb-8">The link expires in 15 minutes. Open it on any device to sign in.</p>
+  <main class="auth-page">
+    <div class="auth-card">
+      <div class="icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+          width="48" height="48" aria-hidden="true">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="m2 7 10 7 10-7"/>
+        </svg>
+      </div>
 
-    <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-left text-sm text-slate-700">
-      <p class="font-medium mb-2">Didn't get it?</p>
-      <ul class="list-disc pl-5 space-y-1">
-        <li>Check your spam / promotions folder</li>
-        <li>Some corporate firewalls quarantine link-only emails — try a personal address</li>
-        <li>Wait 60 seconds, then <a href="/" class="text-amber-700 hover:underline">try again</a></li>
-      </ul>
+      <h1>Check your inbox</h1>
+
+      {email ? (
+        <p class="lead">
+          We sent a sign-in link to <strong class="highlight">{email}</strong>.
+        </p>
+      ) : (
+        <p class="lead">We sent you a sign-in link.</p>
+      )}
+
+      <p class="secondary">
+        The link expires in <strong>15 minutes</strong>. If you don't see it, check your spam folder.
+      </p>
+
+      <div class="divider"></div>
+
+      <p class="footer-note">
+        Wrong email?{' '}
+        <a href="/auth/login">Try again</a>
+      </p>
     </div>
-  </article>
+  </main>
 </BaseLayout>
+
+<style>
+  .auth-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .auth-card {
+    background: var(--color-card-bg, #1e2a3a);
+    border: 1px solid var(--color-border, #2d3f55);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .icon-wrap {
+    width: 72px;
+    height: 72px;
+    background: rgba(245, 158, 11, 0.12);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-amber, #f59e0b);
+    margin-bottom: 0.25rem;
+  }
+
+  h1 {
+    font-size: 1.65rem;
+    color: var(--color-text, #e2e8f0);
+    margin: 0;
+  }
+
+  .lead {
+    font-size: 1rem;
+    color: var(--color-text, #e2e8f0);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .highlight {
+    color: var(--color-amber, #f59e0b);
+    font-weight: 600;
+  }
+
+  .secondary {
+    font-size: 0.9rem;
+    color: var(--color-muted, #94a3b8);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--color-border, #2d3f55);
+    margin: 0.5rem 0;
+  }
+
+  .footer-note {
+    font-size: 0.88rem;
+    color: var(--color-muted, #94a3b8);
+    margin: 0;
+  }
+
+  .footer-note a {
+    color: var(--color-amber, #f59e0b);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .footer-note a:hover {
+    text-decoration: underline;
+  }
+</style>

@@ -1,33 +1,177 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
+/**
+ * /tenders/thanks
+ * Shown after a user submits the waitlist/signup form on a locked tender.
+ * Dark navy theme — matches the rest of the site.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
 
-const hub = Astro.url.searchParams.get("hub") || "";
-const [hubType = "", hubName = ""] = hub.split(":");
-const niceName = hubName || "the next tender feed";
+const email = Astro.url.searchParams.get('email') ?? '';
 ---
 
 <BaseLayout
-  title="You're on the waitlist — Tenderpreneurs"
-  description="Thanks for joining the Tenderpreneurs waitlist."
+  title="You're on the list — Tenderpreneurs"
+  description="Thanks for signing up. We'll notify you when early access opens."
 >
-  <article class="container mx-auto px-4 py-16 max-w-2xl text-center">
-    <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">You're in.</h1>
-    <p class="text-lg text-slate-700 mb-6">
-      We'll email you the moment the {niceName} feed goes live. No spam, ever — just the launch notice
-      and the first batch of opportunities.
-    </p>
+  <main class="auth-page">
+    <div class="auth-card">
+      <div class="icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+          width="48" height="48" aria-hidden="true">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
 
-    <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-      <a href="/tenders" class="rounded-md bg-amber-700 px-5 py-2 font-semibold text-white hover:bg-amber-800">
-        Back to Tenders
-      </a>
-      <a href="/blog" class="rounded-md border border-slate-300 px-5 py-2 font-semibold text-slate-700 hover:bg-slate-50">
-        Read the procurement guides
-      </a>
+      <h1>You're on the list!</h1>
+
+      {email ? (
+        <p class="lead">
+          We'll send early access details to <strong class="highlight">{email}</strong> as soon as we launch.
+        </p>
+      ) : (
+        <p class="lead">We'll be in touch as soon as early access opens.</p>
+      )}
+
+      <p class="secondary">
+        In the meantime, browse our free tender summaries and procurement guides below.
+      </p>
+
+      <div class="btn-row">
+        <a href="/tenders" class="btn-primary">Browse tenders</a>
+        <a href="/blog" class="btn-secondary">Read guides</a>
+      </div>
+
+      <div class="divider"></div>
+
+      <p class="footer-note">
+        Didn't mean to sign up?{' '}
+        <a href="mailto:support@tenderpreneurs.co.za">Let us know</a>
+      </p>
     </div>
-
-    {hubType && hubName && (
-      <p class="text-xs text-slate-500 mt-10">Signed up for: {hubType} — {hubName}</p>
-    )}
-  </article>
+  </main>
 </BaseLayout>
+
+<style>
+  .auth-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .auth-card {
+    background: var(--color-card-bg, #1e2a3a);
+    border: 1px solid var(--color-border, #2d3f55);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    max-width: 460px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .icon-wrap {
+    width: 72px;
+    height: 72px;
+    background: rgba(34, 197, 94, 0.12);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #22c55e;
+    margin-bottom: 0.25rem;
+  }
+
+  h1 {
+    font-size: 1.65rem;
+    color: var(--color-text, #e2e8f0);
+    margin: 0;
+  }
+
+  .lead {
+    font-size: 1rem;
+    color: var(--color-text, #e2e8f0);
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .highlight {
+    color: var(--color-amber, #f59e0b);
+    font-weight: 600;
+  }
+
+  .secondary {
+    font-size: 0.9rem;
+    color: var(--color-muted, #94a3b8);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+
+  .btn-primary {
+    background: var(--color-amber, #f59e0b);
+    color: #0f1923;
+    font-weight: 700;
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: background 0.15s;
+  }
+
+  .btn-primary:hover {
+    background: #d97706;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--color-text, #e2e8f0);
+    font-weight: 600;
+    padding: 0.65rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border, #2d3f55);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: border-color 0.15s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--color-amber, #f59e0b);
+    color: var(--color-amber, #f59e0b);
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--color-border, #2d3f55);
+    margin: 0.25rem 0;
+  }
+
+  .footer-note {
+    font-size: 0.88rem;
+    color: var(--color-muted, #94a3b8);
+    margin: 0;
+  }
+
+  .footer-note a {
+    color: var(--color-amber, #f59e0b);
+    text-decoration: none;
+  }
+
+  .footer-note a:hover {
+    text-decoration: underline;
+  }
+</style>
