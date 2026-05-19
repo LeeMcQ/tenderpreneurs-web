@@ -6,6 +6,7 @@ import '@/styles/globals.css';
 import ConsentBanner from '../components/ConsentBanner.astro';
 import Analytics from "../components/Analytics.astro";
 import CookieBanner from "../components/CookieBanner.astro";
+
 export interface Props {
   title?: string;
   description?: string;
@@ -22,10 +23,10 @@ export interface Props {
 }
 
 const {
-  title = 'Tenderpreneur — South African Government Tender Intelligence',
+  title = 'Tenderpreneur – South African Government Tender Intelligence',
   description = 'Browse live SA government tenders, score win-probability with AI, and get instant PFMA, PPPFA and B-BBEE answers. Built for South African SMMEs.',
   canonical,
-  ogImage = 'https://tenderpreneur.co.za/og-default.png',
+  ogImage = 'https://tenderpreneurs.co.za/og-default.png',
   ogType = 'website',
   noIndex = false,
   schema,
@@ -39,17 +40,17 @@ const {
 const orgSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'Tenderpreneur',
-  url: 'https://tenderpreneur.co.za',
-  logo: 'https://tenderpreneur.co.za/logo.png',
+  name: 'Tenderpreneurs',
+  url: 'https://tenderpreneurs.co.za',
+  logo: 'https://tenderpreneurs.co.za/logo.png',
   sameAs: [
-    'https://twitter.com/tenderpreneur',
-    'https://linkedin.com/company/tenderpreneur',
+    'https://twitter.com/tenderpreneurs',
+    'https://linkedin.com/company/tenderpreneurs',
   ],
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer support',
-    email: 'hello@tenderpreneur.co.za',
+    email: 'hello@tenderpreneurs.co.za',
     availableLanguage: 'English',
   },
   address: {
@@ -74,12 +75,7 @@ const orgSchema = {
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#0C1B33" />
 
-    <!--
-      Fonts: load via <link> with preconnect + display=swap so the browser
-      can parallelise font discovery with the rest of the HTML. The old
-      approach (CSS @import inside globals.css) was render-blocking and
-      cost ~400ms of LCP on mobile.
-    -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -92,7 +88,7 @@ const orgSchema = {
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;900&display=swap"
     />
 
-    <!-- SEO (title, description, OG, Twitter, schema) -->
+    <!-- SEO -->
     <SEO
       title={title}
       description={description}
@@ -111,7 +107,7 @@ const orgSchema = {
     <link
       rel="alternate"
       type="application/rss+xml"
-      title="Tenderpreneur Blog"
+      title="Tenderpreneurs Blog"
       href="/blog/rss.xml"
     />
 
@@ -129,11 +125,7 @@ const orgSchema = {
     </main>
 
     <Footer />
-	---
-<ConsentBanner /> 
-<!-- existing layout HTML -->
-    <slot />
-
+    <ConsentBanner />
     <CookieBanner />
     <Analytics />
   </body>
