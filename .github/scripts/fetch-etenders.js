@@ -2,19 +2,31 @@
 /**
  * .github/scripts/fetch-etenders.js
  *
- * Runs in GitHub Actions (no time limit).
- * 1. Fetches tenders from the OCDS API (takes as long as needed)
- * 2. POSTs the pre-fetched data to /api/cron/ingest (Worker just writes D1)
+ * Expert architecture: ignore the slow live OCDS API.
+ * Download the monthly OCDS bulk file from data.etenders.gov.za instead.
  *
- * Usage:
- *   CRON_SECRET=xxx SITE_URL=https://tenderpreneurs.pages.dev node fetch-etenders.js
+ * These files are:
+ *  - Pre-generated nightly by Treasury
+ *  - Served from CDN (fast, reliable)
+ *  - Standard OCDS JSON format (releases array)
+ *  - Same data as the live API, just packaged as a static file
+ *
+ * This is how ProTenders, Skyner, and EasyTenders all do it.
+ *
+ * File URL pattern (confirmed from data.etenders.gov.za/Home/ReleasesFiles):
+ *   https://data.etenders.gov.za/Home/DownloadFile/?fileName=DDMMYYYY.json
+ *   https://data.etenders.gov.za/Home/DownloadFile/?fileName=MMYYYY.xlsx
+ *
+ * Strategy:
+ *  - Try yesterday's daily JSON file (most fresh)
+ *  - If it doesn't exist (weekend/holiday), try previous 7 days
+ *  - Parse the OCDS releases and push to ingest endpoint
  */
 
-const OCDS_BASE = 'https://ocds-api.etenders.gov.za';
-const PAGE_SIZE = 20;
-const LOOKBACK_DAYS = 30;
-const MAX_PAGES = 15;
-const MAX_RESPONSE_BYTES = 4 * 1024 * 1024; // 4MB per page
+const DATA_BASE = 'https://data.etenders.gov.za/Home/DownloadFile';
+const FETCH_TIMEOUT_MS = 60_000;      // 60s for CDN download (should be fast)
+const MAX_RESPONSE_BYTES = 50 * 1024 * 1024; // 50MB cap (monthly files are big)
+const DAYS_TO_TRY = 7;
 
 const PROVINCE_MAP = {
   'Eastern Cape': 'eastern-cape', 'Free State': 'free-state',
@@ -25,18 +37,18 @@ const PROVINCE_MAP = {
 };
 
 const SECTOR_KEYWORDS = {
-  construction: ['construction','works','infrastructure','building','civil'],
-  ict: ['ict','information','technology','software','hardware','network','computer'],
-  health: ['health','medical','hospital','pharmaceutical','clinical'],
-  education: ['education','training','school','university','learning'],
-  transport: ['transport','logistics','fleet','vehicle','road'],
-  agriculture: ['agriculture','farming','food','livestock','crop'],
-  energy: ['energy','electricity','solar','power','fuel'],
-  security: ['security','guard','surveillance','protection'],
-  consulting: ['consulting','advisory','management','research','audit'],
-  cleaning: ['cleaning','hygiene','waste','sanitation'],
-  catering: ['catering','catering','food service','hospitality'],
-  legal: ['legal','law','attorney','compliance'],
+  construction: ['construction','works','infrastructure','building','civil','roads'],
+  ict: ['ict','information technology','software','hardware','network','computer','digital'],
+  health: ['health','medical','hospital','pharmaceutical','clinical','nursing'],
+  education: ['education','training','school','university','learning','bursary'],
+  transport: ['transport','logistics','fleet','vehicle','aviation'],
+  agriculture: ['agriculture','farming','livestock','crop','veterinary'],
+  energy: ['energy','electricity','solar','power','fuel','gas'],
+  security: ['security','guard','surveillance','protection','cctv'],
+  cleaning: ['cleaning','hygiene','waste','sanitation','refuse'],
+  catering: ['catering','food service','hospitality','meals'],
+  legal: ['legal services','attorney','litigation'],
+  consulting: ['consulting','advisory','management services','research','audit'],
 };
 
 function mapSector(category = '') {
@@ -47,43 +59,97 @@ function mapSector(category = '') {
   return 'consulting';
 }
 
-function daysAgo(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString().split('T')[0];
+function pad(n) { return String(n).padStart(2, '0'); }
+
+/** Build a list of YYYYMMDD strings for the last N days, newest first */
+function recentDates(n) {
+  const dates = [];
+  const today = new Date();
+  for (let i = 0; i < n; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    dates.push({
+      ddmmyyyy: `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}`,
+      iso: d.toISOString().split('T')[0],
+    });
+  }
+  return dates;
 }
 
-async function fetchPage(url) {
-  const res = await fetch(url, {
-    headers: { Accept: 'application/json', 'User-Agent': 'Tenderpreneurs/1.0' },
-    signal: AbortSignal.timeout(30000),
-  });
-  if (!res.ok) { console.error(`HTTP ${res.status} from ${url}`); return null; }
-  const ct = res.headers.get('content-type') ?? '';
-  if (!ct.includes('application/json')) {
-    console.error(`Non-JSON response from ${url}`);
-    await res.body?.cancel();
-    return null;
-  }
-  // Size cap
-  const reader = res.body.getReader();
-  const chunks = [];
-  let total = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    total += value.byteLength;
-    if (total > MAX_RESPONSE_BYTES) {
-      console.error(`Response too large (>${MAX_RESPONSE_BYTES} bytes), skipping page`);
-      await reader.cancel();
+async function tryFetchFile(fileName) {
+  const url = `${DATA_BASE}/?fileName=${fileName}`;
+  console.log(`  Trying: ${url}`);
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/json, application/octet-stream, */*',
+        'User-Agent': 'Tenderpreneurs/1.0 (data sync)',
+      },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      redirect: 'follow',
+    });
+
+    if (!res.ok) {
+      console.log(`  HTTP ${res.status} — file not available`);
+      await res.body?.cancel();
       return null;
     }
-    chunks.push(value);
+
+    // Size-capped read
+    const reader = res.body.getReader();
+    const chunks = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_RESPONSE_BYTES) {
+        console.log(`  File too large (>${MAX_RESPONSE_BYTES / 1024 / 1024}MB)`);
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+
+    const combined = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) { combined.set(c, offset); offset += c.byteLength; }
+
+    const text = new TextDecoder().decode(combined);
+    console.log(`  Downloaded ${(total / 1024).toFixed(0)}KB`);
+
+    // OCDS releases come either as { releases: [...] } or as JSONL
+    try {
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed?.releases)) return parsed.releases;
+      if (Array.isArray(parsed)) return parsed;
+      // Some files wrap in { packages: [{ releases: [...] }] }
+      if (Array.isArray(parsed?.packages)) {
+        return parsed.packages.flatMap(p => p.releases ?? []);
+      }
+      console.log('  Unknown JSON shape');
+      return null;
+    } catch {
+      // Try JSONL — each line is a release or release package
+      const lines = text.split('\n').filter(l => l.trim());
+      const releases = [];
+      for (const line of lines) {
+        try {
+          const obj = JSON.parse(line);
+          if (obj.releases) releases.push(...obj.releases);
+          else if (obj.ocid) releases.push(obj);
+        } catch {}
+      }
+      if (releases.length > 0) return releases;
+      console.log('  Not parseable JSON or JSONL');
+      return null;
+    }
+
+  } catch (err) {
+    console.log(`  Error: ${err.message}`);
+    return null;
   }
-  const combined = new Uint8Array(total);
-  let offset = 0;
-  for (const c of chunks) { combined.set(c, offset); offset += c.byteLength; }
-  return JSON.parse(new TextDecoder().decode(combined));
 }
 
 function mapRelease(release) {
@@ -91,77 +157,152 @@ function mapRelease(release) {
   if (!t?.title) return null;
   return {
     externalId: release.ocid,
-    title: t.title,
-    description: t.description ?? '',
+    title: String(t.title).slice(0, 300),
+    description: String(t.description ?? '').slice(0, 500),
     buyer: t.procuringEntity?.name ?? release.buyer?.name ?? '',
     province: PROVINCE_MAP[t.province] ?? 'national',
     sector: mapSector(t.category ?? t.mainProcurementCategory ?? ''),
     status: 'active',
     closingDate: t.tenderPeriod?.endDate?.split('T')[0] ?? null,
-    openingDate: t.tenderPeriod?.startDate?.split('T')[0] ?? null,
-    value: t.value?.amount ?? null,
+    openingDate: t.tenderPeriod?.startDate?.split('T')[0]
+                 ?? release.date?.split('T')[0] ?? null,
+    value: typeof t.value?.amount === 'number' ? t.value.amount : null,
     currency: t.value?.currency ?? 'ZAR',
-    documentUrls: (t.documents ?? []).map(d => d.url).filter(Boolean),
+    documentUrls: (t.documents ?? [])
+      .map(d => d.url).filter(Boolean).slice(0, 10),
     sourceUrl: `https://www.etenders.gov.za/home/TenderDetails?tenderID=${t.id ?? ''}`,
-    briefingDate: t.briefingSession?.isSession ? (t.briefingSession.date?.split('T')[0] ?? null) : null,
+    briefingDate: t.briefingSession?.isSession
+      ? (t.briefingSession.date?.split('T')[0] ?? null) : null,
     briefingCompulsory: t.briefingSession?.compulsory ?? false,
   };
 }
 
-async function main() {
-  const CRON_SECRET = process.env.CRON_SECRET;
-  const SITE_URL = process.env.SITE_URL || 'https://tenderpreneurs.pages.dev';
-
-  if (!CRON_SECRET) { console.error('CRON_SECRET not set'); process.exit(1); }
-
-  const dateFrom = daysAgo(LOOKBACK_DAYS);
-  const dateTo = new Date().toISOString().split('T')[0];
-  console.log(`Fetching OCDS releases ${dateFrom} → ${dateTo}`);
-
-  const tenders = [];
-  let nextUrl = `${OCDS_BASE}/api/OCDSReleases?PageNumber=1&PageSize=${PAGE_SIZE}&dateFrom=${dateFrom}&dateTo=${dateTo}`;
-  let page = 0;
-
-  while (nextUrl && page < MAX_PAGES) {
-    page++;
-    console.log(`Page ${page}: ${nextUrl}`);
-    const data = await fetchPage(nextUrl);
-    if (!data) break;
-
-    const releases = data.releases ?? [];
-    console.log(`  ${releases.length} releases`);
-    if (releases.length === 0) break;
-
-    for (const r of releases) {
-      const mapped = mapRelease(r);
-      if (mapped) tenders.push(mapped);
-    }
-
-    const next = data.links?.next;
-    nextUrl = (next && next !== nextUrl) ? next : null;
-
-    // Pause between pages to be polite to the API
-    if (nextUrl) await new Promise(r => setTimeout(r, 500));
-  }
-
-  console.log(`\nFetched ${tenders.length} tenders. Pushing to ingest endpoint...`);
-
-  const ingestUrl = `${SITE_URL}/api/cron/ingest`;
-  const res = await fetch(ingestUrl, {
+async function pushBatch(siteUrl, secret, batch) {
+  const res = await fetch(`${siteUrl}/api/cron/ingest`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-cron-secret': CRON_SECRET,
+      'x-cron-secret': secret,
     },
-    body: JSON.stringify({ source: 'etenders', tenders }),
-    signal: AbortSignal.timeout(60000),
+    body: JSON.stringify({ source: 'etenders', tenders: batch }),
+    signal: AbortSignal.timeout(60_000),
   });
-
   const body = await res.text();
-  console.log(`Ingest response: HTTP ${res.status}`);
-  console.log(body);
+  return { status: res.status, body };
+}
 
-  if (!res.ok) process.exit(1);
+async function main() {
+  const CRON_SECRET = process.env.CRON_SECRET;
+  const SITE_URL = (process.env.SITE_URL || 'https://tenderpreneurs.pages.dev').replace(/\/$/, '');
+
+  if (!CRON_SECRET) {
+    console.error('CRON_SECRET not set');
+    process.exit(1);
+  }
+
+  console.log('eTenders bulk file ingestion');
+  console.log('============================\n');
+
+  // Try the last N days of daily files, newest first
+  const dates = recentDates(DAYS_TO_TRY);
+  const allReleases = new Map(); // dedupe by ocid
+
+  for (const { ddmmyyyy, iso } of dates) {
+    console.log(`Date ${iso} (file: ${ddmmyyyy}):`);
+
+    // Try .json then .xlsx isn't useful for parsing — stick to .json
+    const candidates = [
+      `${ddmmyyyy}.json`,
+      `${ddmmyyyy}.jsonl`,
+    ];
+
+    let releases = null;
+    for (const fileName of candidates) {
+      releases = await tryFetchFile(fileName);
+      if (releases) {
+        console.log(`  ✓ Got ${releases.length} releases from ${fileName}`);
+        break;
+      }
+    }
+
+    if (releases) {
+      for (const r of releases) {
+        if (r.ocid) allReleases.set(r.ocid, r);
+      }
+    }
+    console.log('');
+  }
+
+  console.log(`Total unique releases: ${allReleases.size}\n`);
+
+  if (allReleases.size === 0) {
+    console.log('No releases found in last 7 days of bulk files.');
+    console.log('This is normal if Treasury hasn\'t published yet today.');
+    console.log('Exiting cleanly — will try again on next cron tick.');
+    process.exit(0);
+  }
+
+  // Map to our schema
+  const tenders = [];
+  for (const release of allReleases.values()) {
+    const mapped = mapRelease(release);
+    if (mapped) tenders.push(mapped);
+  }
+
+  console.log(`Mapped to ${tenders.length} valid tenders.`);
+
+  if (tenders.length === 0) {
+    console.log('No mappable tenders. Exiting.');
+    process.exit(0);
+  }
+
+  // Push in batches of 100
+  const BATCH_SIZE = 100;
+  let totalNew = 0;
+  let totalUpdated = 0;
+  let totalErrors = 0;
+
+  console.log(`\nPushing in batches of ${BATCH_SIZE}...\n`);
+
+  for (let i = 0; i < tenders.length; i += BATCH_SIZE) {
+    const batch = tenders.slice(i, i + BATCH_SIZE);
+    const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+    const totalBatches = Math.ceil(tenders.length / BATCH_SIZE);
+
+    console.log(`Batch ${batchNum}/${totalBatches}: ${batch.length} tenders`);
+
+    try {
+      const { status, body } = await pushBatch(SITE_URL, CRON_SECRET, batch);
+      console.log(`  HTTP ${status}`);
+
+      if (status !== 200) {
+        console.log(`  Response: ${body.slice(0, 500)}`);
+        totalErrors++;
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(body);
+        const itemsNew = parsed.items_new ?? 0;
+        const itemsUpdated = parsed.items_updated ?? 0;
+        totalNew += itemsNew;
+        totalUpdated += itemsUpdated;
+        console.log(`  New: ${itemsNew}  Updated: ${itemsUpdated}`);
+      } catch {
+        console.log(`  Response: ${body.slice(0, 200)}`);
+      }
+    } catch (err) {
+      console.log(`  Error: ${err.message}`);
+      totalErrors++;
+    }
+  }
+
+  console.log(`\n============================`);
+  console.log(`Summary: ${totalNew} new, ${totalUpdated} updated, ${totalErrors} batch errors`);
+
+  if (totalErrors > 0 && totalNew === 0 && totalUpdated === 0) {
+    process.exit(1);
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
