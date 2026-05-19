@@ -1,148 +1,145 @@
-// Ingestion cron.
-//
-// Triggered by Cloudflare cron (every 6 hours, see wrangler.toml).
-// Iterates over enabled sources, runs each adapter, persists results,
-// records ingestion_runs. Also reachable as a POST endpoint with a
-// shared secret (for manual triggering during development).
+/**
+ * src/pages/api/cron/ingest.ts
+ *
+ * Triggered every 6h by GitHub Actions (x-cron-secret auth).
+ * Loops over all registered adapters, fetches raw tenders,
+ * upserts into D1, and logs an ingestion_run row.
+ *
+ * Uses D1 binding (env.DB) directly — no import from lib/db.ts needed.
+ */
 
-import type { APIRoute } from "astro";
-import { getEnv, now } from "../../../lib/db";
-import { ADAPTERS, getAdapter } from "../../../lib/adapters";
-import { persistTender } from "../../../lib/persist";
-import { extractWithDeepSeek, mergeExtraction } from "../../../lib/extract/deepseek";
+import type { APIRoute } from 'astro';
+import { getAllAdapters } from '../../../lib/adapters/index.js';
 
 export const prerender = false;
 
-interface RunSummary {
-  source_id: string;
-  status: "success" | "failed" | "partial";
-  found: number;
-  new: number;
-  updated: number;
-  error?: string;
-  duration_ms: number;
-}
+export const POST: APIRoute = async ({ request, locals }) => {
+  const env = (locals as any).runtime?.env as Record<string, any> | undefined;
 
-async function runOnce(env: any): Promise<RunSummary[]> {
-  // Get active sources from D1, ordered by oldest last_run_at first.
-  const sources = await env.DB.prepare(
-    `SELECT id, last_run_at FROM sources
-     WHERE active = 1
-     ORDER BY COALESCE(last_run_at, '1970-01-01') ASC`
-  ).all<{ id: string; last_run_at: string | null }>();
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  const secret = request.headers.get('x-cron-secret');
+  if (!env?.SESSION_SECRET || secret !== env.SESSION_SECRET) {
+    return json({ error: 'Unauthorised' }, 401);
+  }
 
-  const summaries: RunSummary[] = [];
+  const db = env?.DB as D1Database | undefined;
+  if (!db) {
+    return json({ error: 'D1 binding DB not found in runtime env' }, 500);
+  }
 
-  for (const src of sources.results || []) {
-    const adapter = getAdapter(src.id);
-    if (!adapter) continue;
+  const adapters = getAllAdapters();
+  const results: Record<string, unknown> = {};
+  const globalStart = Date.now();
 
-    const runStart = now();
-    const inserted = await env.DB.prepare(
-      `INSERT INTO ingestion_runs (source_id, started_at, status) VALUES (?, ?, 'running')`
-    )
-      .bind(src.id, runStart)
-      .run();
-    const runId = inserted.meta.last_row_id;
+  for (const adapter of adapters) {
+    const adapterStart = Date.now();
+    let itemsFound = 0;
+    let itemsNew = 0;
+    let errorMessage: string | null = null;
 
-    const result = await adapter.run(env);
+    try {
+      const tenders = await adapter.fetch();
+      itemsFound = tenders.length;
 
-    let newCount = 0, updatedCount = 0, errored = 0;
-    if (result.ok) {
-      for (const raw of result.items) {
-        try {
-          // Enrich if critical fields are missing
-          let enriched = raw;
-          const missingCritical =
-            !raw.closing_date ||
-            !raw.procuring_entity ||
-            (raw.raw_html && (!raw.contact_email && !raw.contact_phone));
+      for (const t of tenders) {
+        // Upsert — on conflict (source_id, external_id) update mutable fields
+        const result = await db
+          .prepare(
+            `INSERT INTO tenders
+               (source_id, external_id, title, description, buyer, province,
+                sector, status, closing_date, opening_date, value, currency,
+                procurement_method, document_urls, source_url, raw_json,
+                contact_name, contact_email, contact_phone,
+                briefing_date, briefing_venue, briefing_compulsory)
+             VALUES
+               (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             ON CONFLICT(source_id, external_id) DO UPDATE SET
+               title              = excluded.title,
+               description        = excluded.description,
+               buyer              = excluded.buyer,
+               status             = excluded.status,
+               closing_date       = excluded.closing_date,
+               value              = excluded.value,
+               raw_json           = excluded.raw_json,
+               updated_at         = CURRENT_TIMESTAMP`
+          )
+          .bind(
+            t.sourceId,
+            t.externalId,
+            t.title,
+            t.description ?? '',
+            t.buyer ?? '',
+            t.province ?? 'national',
+            t.sector ?? 'General',
+            t.status ?? 'active',
+            t.closingDate ?? null,
+            t.openingDate ?? null,
+            t.value ?? null,
+            t.currency ?? 'ZAR',
+            t.procurementMethod ?? null,
+            JSON.stringify(t.documentUrls ?? []),
+            t.sourceUrl ?? null,
+            t.rawJson ?? null,
+            (t as any).contactName ?? null,
+            (t as any).contactEmail ?? null,
+            (t as any).contactPhone ?? null,
+            (t as any).briefingDate ?? null,
+            (t as any).briefingVenue ?? null,
+            (t as any).briefingCompulsory ? 1 : 0,
+          )
+          .run();
 
-          if (missingCritical && raw.raw_html && env.OPENROUTER_API_KEY) {
-            try {
-              const ex = await extractWithDeepSeek(env.OPENROUTER_API_KEY, {
-                title: raw.title,
-                rawText: raw.raw_html,
-              });
-              enriched = mergeExtraction(raw, ex);
-            } catch (e) {
-              // Extraction failures are non-fatal; persist what we have
-            }
-          }
-
-          const persisted = await persistTender(env.DB, env.GEMINI_API_KEY, env.GROQ_API_KEY, enriched);
-          if (persisted.status === "new") newCount++;
-          if (persisted.status === "updated") updatedCount++;
-        } catch (err) {
-          errored++;
-        }
+        // D1 meta: rows_written === 1 means INSERT (not UPDATE)
+        if (result.meta?.rows_written === 1) itemsNew++;
       }
+
+    } catch (err) {
+      errorMessage = String(err);
+      console.error(`[ingest] ${adapter.sourceId} error:`, err);
     }
 
-    const summary: RunSummary = {
-      source_id: src.id,
-      status: result.ok ? (errored > result.items.length / 2 ? "partial" : "success") : "failed",
-      found: result.items.length,
-      new: newCount,
-      updated: updatedCount,
-      error: result.error,
-      duration_ms: result.duration_ms,
+    const duration = Date.now() - adapterStart;
+
+    // Log ingestion run
+    try {
+      await db
+        .prepare(
+          `INSERT INTO ingestion_runs
+             (source_id, status, items_found, items_new, error_message, duration_ms)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+          adapter.sourceId,
+          errorMessage ? 'error' : 'success',
+          itemsFound,
+          itemsNew,
+          errorMessage,
+          duration,
+        )
+        .run();
+    } catch (logErr) {
+      console.error(`[ingest] Failed to log run for ${adapter.sourceId}:`, logErr);
+    }
+
+    results[adapter.sourceId] = {
+      items_found: itemsFound,
+      items_new: itemsNew,
+      duration_ms: duration,
+      error: errorMessage,
     };
-    summaries.push(summary);
-
-    await env.DB.prepare(
-      `UPDATE ingestion_runs
-       SET finished_at = ?, status = ?, items_found = ?, items_new = ?, items_updated = ?, error_message = ?, duration_ms = ?
-       WHERE id = ?`
-    )
-      .bind(
-        now(),
-        summary.status,
-        summary.found,
-        summary.new,
-        summary.updated,
-        summary.error || null,
-        summary.duration_ms,
-        runId
-      )
-      .run();
-
-    await env.DB.prepare(
-      `UPDATE sources
-       SET last_run_at = ?, last_success_at = CASE WHEN ? = 'success' THEN ? ELSE last_success_at END
-       WHERE id = ?`
-    )
-      .bind(now(), summary.status, now(), src.id)
-      .run();
   }
 
-  return summaries;
+  return json({
+    ok: true,
+    adapters: Object.keys(results).length,
+    results,
+    total_duration_ms: Date.now() - globalStart,
+  }, 200);
+};
+
+function json(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
-
-// Manual trigger (dev / catch-up): POST with shared secret header
-export const POST: APIRoute = async (ctx) => {
-  const env = getEnv(ctx);
-  const auth = ctx.request.headers.get("x-cron-secret");
-  if (auth !== env.SESSION_SECRET) {
-    return new Response("unauthorized", { status: 401 });
-  }
-  const summaries = await runOnce(env);
-  return new Response(JSON.stringify({ ok: true, summaries }, null, 2), {
-    headers: { "content-type": "application/json" },
-  });
-};
-
-// Cron entry point — Cloudflare invokes this via the scheduled handler.
-// Astro on Pages exposes scheduled() via the worker; we mirror the logic here.
-export const GET: APIRoute = async (ctx) => {
-  // Block public GET — only manual debug invocations with secret
-  const env = getEnv(ctx);
-  const auth = ctx.request.headers.get("x-cron-secret");
-  if (auth !== env.SESSION_SECRET) {
-    return new Response("unauthorized", { status: 401 });
-  }
-  const summaries = await runOnce(env);
-  return new Response(JSON.stringify({ ok: true, summaries }, null, 2), {
-    headers: { "content-type": "application/json" },
-  });
-};
