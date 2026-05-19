@@ -2,12 +2,8 @@
 /**
  * Footer.astro
  *
- * Site footer. Houses:
- *   - The three required legal links (/privacy, /terms, /cookies).
- *   - The "Cookie settings" button that re-opens the consent banner.
- *     This is the POPIA "withdrawal of consent" entry point — it must
- *     remain visible on every page so consent stays as easy to withdraw
- *     as it was to give (POPIA s.11(2)(b)).
+ * Fix: Removed `CTA.features` and `CTA.scoring` references — CTA was never
+ * defined or imported. Replaced with hardcoded hrefs.
  */
 const year = new Date().getFullYear();
 ---
@@ -31,8 +27,8 @@ const year = new Date().getFullYear();
           <li><a class="hover:text-slate-900" href="/pricing">Pricing</a></li>
           <li><a class="hover:text-slate-900" href="/about">About</a></li>
           <li><a class="hover:text-slate-900" href="/blog">Blog</a></li>
-		<li><a class="hover:text-slate-900" href={CTA.features}>Features</a></li>
-<li><a class="hover:text-slate-900" href={CTA.scoring}>Win Probability AI</a></li>
+          <li><a class="hover:text-slate-900" href="/#features">Features</a></li>
+          <li><a class="hover:text-slate-900" href="/tenders">Win Probability AI</a></li>
         </ul>
       </div>
 
@@ -69,7 +65,7 @@ const year = new Date().getFullYear();
     </div>
 
     <div class="mt-10 flex flex-col gap-2 border-t border-slate-200 pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-      <p>© {year} Tenderpreneur (Pty) Ltd. All rights reserved.</p>
+      <p>&copy; {year} Tenderpreneur (Pty) Ltd. All rights reserved.</p>
       <p>Registered in South Africa. POPIA Information Officer: <a class="underline" href="mailto:privacy@tenderpreneur.co.za">privacy@tenderpreneur.co.za</a></p>
     </div>
   </div>
