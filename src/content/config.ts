@@ -1,12 +1,24 @@
+/**
+ * src/content/config.ts
+ *
+ * Fixes applied:
+ *  1. z.date()  →  z.coerce.date()  for both collections
+ *  2. pfma publishedDate is OPTIONAL (pfma MDX files don't have it → was breaking build)
+ *  3. All pfma non-title fields are optional (they are reference docs, not blog posts)
+ */
+
 import { defineCollection, z } from 'astro:content';
 
+// ---------------------------------------------------------------------------
+// Blog — publishedDate is required
+// ---------------------------------------------------------------------------
 const blogCollection = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string().max(100),
     description: z.string().max(200),
-    publishedDate: z.date(),
-    modifiedDate: z.date().optional(),
+    publishedDate: z.coerce.date(),
+    modifiedDate: z.coerce.date().optional(),
     author: z.string().default('Tenderpreneur Editorial'),
     tags: z.array(z.string()).default([]),
     category: z.string().default('Procurement'),
@@ -18,25 +30,24 @@ const blogCollection = defineCollection({
   }),
 });
 
+// ---------------------------------------------------------------------------
+// PFMA — all fields except title are optional
+// ---------------------------------------------------------------------------
 const pfmaCollection = defineCollection({
   type: 'content',
   schema: z.object({
-    title: z.string().max(100),
-    description: z.string().max(200),
-    publishedDate: z.date(),
-    modifiedDate: z.date().optional(),
-    order: z.number().default(99),
-    relatedTopics: z.array(z.string()).default([]),
-    faqs: z
-      .array(
-        z.object({
-          question: z.string(),
-          answer: z.string(),
-        })
-      )
-      .default([]),
-    ogImage: z.string().optional(),
+    title: z.string(),
+    description: z.string().optional(),
+    publishedDate: z.coerce.date().optional(),   // ← was Required, broke build
+    modifiedDate: z.coerce.date().optional(),
+    category: z.string().default('PFMA'),
+    tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
+    section: z.string().optional(),
+    applicableTo: z.array(z.string()).default([]),
+    effectiveDate: z.coerce.date().optional(),
+    repealedDate: z.coerce.date().optional(),
+    sourceUrl: z.string().url().optional(),
   }),
 });
 

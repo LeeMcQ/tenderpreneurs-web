@@ -1,101 +1,300 @@
 ---
-import { getCollection, getEntry } from 'astro:content';
-import type { GetStaticPaths } from 'astro';
-import { format } from 'date-fns';
-import RelatedArticles from '../../components/RelatedArticles.astro';
+/**
+ * src/pages/blog/[slug].astro
+ *
+ * Fix: Add `export const prerender = true` so Astro pre-renders all blog
+ * posts at build time instead of trying to render them at edge runtime.
+ * Without this, getStaticPaths() is ignored in SSR mode and all blog URLs 404.
+ */
+export const prerender = true;
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  const posts = await getCollection('blog');
+import { getCollection, getEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => {
+    return import.meta.env.PROD ? !data.draft : true;
+  });
+
   return posts.map((post) => ({
     params: { slug: post.slug },
     props: { post },
   }));
-};
+}
 
-const slug = Astro.params.slug;
-if (!slug) return Astro.redirect('/blog');
-
-const post = await getEntry('blog', slug);
-if (!post) return Astro.redirect('/404');
-
+const { post } = Astro.props;
 const { Content } = await post.render();
 
-const articleSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: post.data.title,
-  description: post.data.description,
-  datePublished: post.data.date.toISOString(),
-  author: {
-    '@type': 'Organization',
-    name: 'tenderpreneurs Editorial Team',
-  },
-  publisher: {
-    '@type': 'Organization',
-    name: 'tenderpreneurs',
-    logo: {
-      '@type': 'ImageObject',
-      url: 'https://tenderpreneurs.co.za/logo.png',
-    },
-  },
-  mainEntityOfPage: {
-    '@type': 'WebPage',
-    '@id': Astro.url.href,
-  },
-};
+function formatDate(d: Date | string): string {
+  const date = d instanceof Date ? d : new Date(d);
+  return date.toLocaleDateString('en-ZA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+const publishedDate = new Date(post.data.publishedDate);
+const modifiedDate = post.data.modifiedDate ? new Date(post.data.modifiedDate) : null;
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>{post.data.title} – tenderpreneurs Blog</title>
-    <meta name="description" content={post.data.description} />
-    <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
-  </head>
-  <body>
-    <main class="max-w-3xl mx-auto px-4 py-12">
-      <nav class="text-sm text-gray-500 mb-4">
-        <a href="/blog" class="hover:text-gray-700">Blog</a>
-        <span class="mx-2">/</span>
-        <span>{post.data.title}</span>
-      </nav>
+<BaseLayout
+  title={`${post.data.title} — Tenderpreneurs`}
+  description={post.data.description}
+  ogImage={post.data.ogImage}
+>
+  <article class="blog-post">
+    <header class="post-header">
+      <div class="post-meta">
+        <span class="category">{post.data.category}</span>
+        <time datetime={publishedDate.toISOString()}>
+          {formatDate(publishedDate)}
+        </time>
+        {modifiedDate && (
+          <span class="updated">
+            Updated <time datetime={modifiedDate.toISOString()}>{formatDate(modifiedDate)}</time>
+          </span>
+        )}
+      </div>
 
-      <article>
-        <h1 class="text-4xl font-bold text-gray-900 mb-2">
-          {post.data.title}
-        </h1>
-        <div class="flex items-center gap-2 text-gray-600 mb-8">
-          <span>tenderpreneurs Editorial Team</span>
-          <span class="text-gray-300">|</span>
-          <time datetime={post.data.date.toISOString()}>
-            {format(post.data.date, 'd MMM yyyy')}
-          </time>
+      <h1>{post.data.title}</h1>
+      <p class="description">{post.data.description}</p>
+
+      <div class="author-row">
+        <span class="author">{post.data.author}</span>
+        {post.data.readingTime && (
+          <span class="reading-time">{post.data.readingTime} min read</span>
+        )}
+      </div>
+
+      {post.data.tags.length > 0 && (
+        <div class="tags">
+          {post.data.tags.map((tag) => (
+            <span class="tag">{tag}</span>
+          ))}
         </div>
+      )}
+    </header>
 
-        <div class="prose prose-lg max-w-none text-gray-800">
-          <Content />
-        </div>
-      </article>
+    <div class="prose">
+      <Content />
+    </div>
 
-      <section class="mt-16 bg-blue-50 rounded-2xl p-8 text-center">
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">
-          Get AI‑powered tender alerts — sign up free
-        </h2>
-        <p class="text-gray-600 mb-6">
-          Never miss a government contract again. Our AI scans every
-          official bulletin and sends you matching opportunities instantly.
-        </p>
-        <a
-          href="/signup"
-          class="inline-block bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-        >
-          Start Free
-        </a>
-      </section>
+    <footer class="post-footer">
+      <a href="/blog" class="back-link">← Back to all articles</a>
+    </footer>
+  </article>
+</BaseLayout>
 
-      <RelatedArticles tags={post.data.tags ?? []} />
-    </main>
-  </body>
-</html>
+<style>
+  .blog-post {
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .post-header {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border, #2d3f55);
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--color-muted, #94a3b8);
+    margin-bottom: 1.25rem;
+  }
+
+  .category {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-amber, #f59e0b);
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .updated {
+    font-style: italic;
+  }
+
+  h1 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--color-text, #e2e8f0);
+    line-height: 1.25;
+    margin: 0 0 1rem;
+  }
+
+  .description {
+    font-size: 1.1rem;
+    color: var(--color-muted, #94a3b8);
+    line-height: 1.65;
+    margin: 0 0 1.25rem;
+  }
+
+  .author-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.88rem;
+    color: var(--color-muted, #94a3b8);
+    margin-bottom: 1rem;
+  }
+
+  .reading-time::before {
+    content: '·';
+    margin-right: 1rem;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .tag {
+    background: var(--color-surface, #0f1923);
+    color: var(--color-muted, #94a3b8);
+    border: 1px solid var(--color-border, #2d3f55);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+  }
+
+  /* ── Prose (MDX content) ── */
+  .prose {
+    color: var(--color-text, #e2e8f0);
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  .prose :global(h2) {
+    font-size: 1.5rem;
+    color: var(--color-text, #e2e8f0);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border, #2d3f55);
+  }
+
+  .prose :global(h3) {
+    font-size: 1.2rem;
+    color: var(--color-text, #e2e8f0);
+    margin: 2rem 0 0.75rem;
+  }
+
+  .prose :global(p) {
+    margin: 0 0 1.25rem;
+  }
+
+  .prose :global(a) {
+    color: var(--color-amber, #f59e0b);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .prose :global(a:hover) {
+    color: #d97706;
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    padding-left: 1.5rem;
+    margin: 0 0 1.25rem;
+  }
+
+  .prose :global(li) {
+    margin-bottom: 0.4rem;
+  }
+
+  .prose :global(blockquote) {
+    border-left: 3px solid var(--color-amber, #f59e0b);
+    padding: 0.75rem 1.25rem;
+    margin: 1.5rem 0;
+    background: rgba(245, 158, 11, 0.06);
+    border-radius: 0 8px 8px 0;
+    color: var(--color-muted, #94a3b8);
+    font-style: italic;
+  }
+
+  .prose :global(code) {
+    background: var(--color-surface, #0f1923);
+    border: 1px solid var(--color-border, #2d3f55);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.88em;
+    color: var(--color-amber, #f59e0b);
+  }
+
+  .prose :global(pre) {
+    background: var(--color-surface, #0f1923);
+    border: 1px solid var(--color-border, #2d3f55);
+    border-radius: 8px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+  }
+
+  .prose :global(pre code) {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: 0.9rem;
+  }
+
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  .prose :global(th),
+  .prose :global(td) {
+    border: 1px solid var(--color-border, #2d3f55);
+    padding: 0.6rem 1rem;
+    text-align: left;
+  }
+
+  .prose :global(th) {
+    background: var(--color-surface, #0f1923);
+    color: var(--color-amber, #f59e0b);
+    font-weight: 600;
+  }
+
+  .prose :global(img) {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+  }
+
+  .prose :global(hr) {
+    border: none;
+    border-top: 1px solid var(--color-border, #2d3f55);
+    margin: 2.5rem 0;
+  }
+
+  /* ── Footer ── */
+  .post-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border, #2d3f55);
+  }
+
+  .back-link {
+    color: var(--color-amber, #f59e0b);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>

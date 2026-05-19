@@ -1,25 +1,309 @@
 ---
-import { getCollection, getEntry } from 'astro:content';
-import PfmaLayout from '@layouts/PfmaLayout.astro';
+/**
+ * src/pages/pfma/[slug].astro
+ *
+ * Fix: Add `export const prerender = true` so PFMA reference pages are
+ * built as static HTML. Without this, getStaticPaths() is ignored in SSR
+ * mode and all /pfma/* URLs return 404.
+ */
+export const prerender = true;
+
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export async function getStaticPaths() {
-  const entries = await getCollection('pfma');
-  return entries.map((entry) => ({
-    params: { slug: entry.slug },
-    props: { entry },
+  const docs = await getCollection('pfma', ({ data }) => {
+    return import.meta.env.PROD ? !data.draft : true;
+  });
+
+  return docs.map((doc) => ({
+    params: { slug: doc.slug },
+    props: { doc },
   }));
 }
 
-const { entry } = Astro.props;
-const { Content } = await entry.render();
+const { doc } = Astro.props;
+const { Content } = await doc.render();
 
-// Build related topics list (all topics except current)
-const allTopics = await getCollection('pfma');
-const related = allTopics
-  .filter((t) => t.slug !== entry.slug)
-  .slice(0, 6);
+function formatDate(d: Date | string | undefined): string {
+  if (!d) return '';
+  const date = d instanceof Date ? d : new Date(d);
+  return date.toLocaleDateString('en-ZA', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+const effectiveDate = doc.data.effectiveDate ? formatDate(doc.data.effectiveDate) : null;
+const publishedDate = doc.data.publishedDate ? formatDate(doc.data.publishedDate) : null;
 ---
 
-<PfmaLayout entry={entry} related={related}>
-  <Content />
-</PfmaLayout>
+<BaseLayout
+  title={`${doc.data.title} — PFMA — Tenderpreneurs`}
+  description={doc.data.description ?? `PFMA reference: ${doc.data.title}`}
+>
+  <article class="pfma-doc">
+    <header class="doc-header">
+      <nav class="breadcrumb">
+        <a href="/pfma">PFMA Reference</a>
+        <span>›</span>
+        <span>{doc.data.title}</span>
+      </nav>
+
+      <div class="doc-meta">
+        <span class="category-badge">{doc.data.category}</span>
+        {doc.data.section && <span class="section-badge">{doc.data.section}</span>}
+      </div>
+
+      <h1>{doc.data.title}</h1>
+
+      {doc.data.description && (
+        <p class="description">{doc.data.description}</p>
+      )}
+
+      <div class="meta-row">
+        {effectiveDate && (
+          <span>Effective: <strong>{effectiveDate}</strong></span>
+        )}
+        {publishedDate && (
+          <span>Published: <strong>{publishedDate}</strong></span>
+        )}
+        {doc.data.applicableTo.length > 0 && (
+          <span>Applies to: <strong>{doc.data.applicableTo.join(', ')}</strong></span>
+        )}
+      </div>
+
+      {doc.data.tags.length > 0 && (
+        <div class="tags">
+          {doc.data.tags.map((tag) => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    {doc.data.sourceUrl && (
+      <div class="source-link">
+        <a href={doc.data.sourceUrl} target="_blank" rel="noopener noreferrer">
+          View official source ↗
+        </a>
+      </div>
+    )}
+
+    <footer class="doc-footer">
+      <a href="/pfma" class="back-link">← Back to PFMA Reference</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .pfma-doc {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--color-muted, #94a3b8);
+    margin-bottom: 1.5rem;
+  }
+
+  .breadcrumb a {
+    color: var(--color-amber, #f59e0b);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .doc-meta {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .category-badge,
+  .section-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+  }
+
+  .category-badge {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-amber, #f59e0b);
+  }
+
+  .section-badge {
+    background: rgba(99, 179, 237, 0.12);
+    color: #63b3ed;
+  }
+
+  h1 {
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    color: var(--color-text, #e2e8f0);
+    line-height: 1.3;
+    margin: 0 0 0.85rem;
+  }
+
+  .description {
+    font-size: 1.05rem;
+    color: var(--color-muted, #94a3b8);
+    line-height: 1.65;
+    margin: 0 0 1rem;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    font-size: 0.85rem;
+    color: var(--color-muted, #94a3b8);
+    margin-bottom: 1rem;
+  }
+
+  .meta-row strong {
+    color: var(--color-text, #e2e8f0);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .tag {
+    background: var(--color-surface, #0f1923);
+    color: var(--color-muted, #94a3b8);
+    border: 1px solid var(--color-border, #2d3f55);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+  }
+
+  /* ── Prose ── */
+  .doc-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border, #2d3f55);
+  }
+
+  .prose {
+    color: var(--color-text, #e2e8f0);
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  .prose :global(h2) {
+    font-size: 1.35rem;
+    color: var(--color-text, #e2e8f0);
+    margin: 2.5rem 0 0.85rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--color-border, #2d3f55);
+  }
+
+  .prose :global(h3) {
+    font-size: 1.1rem;
+    color: var(--color-text, #e2e8f0);
+    margin: 1.75rem 0 0.6rem;
+  }
+
+  .prose :global(p) { margin: 0 0 1.25rem; }
+
+  .prose :global(a) {
+    color: var(--color-amber, #f59e0b);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .prose :global(ul), .prose :global(ol) {
+    padding-left: 1.5rem;
+    margin: 0 0 1.25rem;
+  }
+
+  .prose :global(li) { margin-bottom: 0.4rem; }
+
+  .prose :global(blockquote) {
+    border-left: 3px solid var(--color-amber, #f59e0b);
+    padding: 0.75rem 1.25rem;
+    margin: 1.5rem 0;
+    background: rgba(245, 158, 11, 0.06);
+    border-radius: 0 8px 8px 0;
+    color: var(--color-muted, #94a3b8);
+    font-style: italic;
+  }
+
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.88rem;
+  }
+
+  .prose :global(th), .prose :global(td) {
+    border: 1px solid var(--color-border, #2d3f55);
+    padding: 0.55rem 0.9rem;
+    text-align: left;
+  }
+
+  .prose :global(th) {
+    background: var(--color-surface, #0f1923);
+    color: var(--color-amber, #f59e0b);
+    font-weight: 600;
+  }
+
+  .prose :global(code) {
+    background: var(--color-surface, #0f1923);
+    border: 1px solid var(--color-border, #2d3f55);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.88em;
+    color: var(--color-amber, #f59e0b);
+  }
+
+  .source-link {
+    margin: 2rem 0 0;
+    padding: 1rem 1.25rem;
+    background: var(--color-surface, #0f1923);
+    border: 1px solid var(--color-border, #2d3f55);
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
+
+  .source-link a {
+    color: var(--color-amber, #f59e0b);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .source-link a:hover { text-decoration: underline; }
+
+  .doc-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border, #2d3f55);
+  }
+
+  .back-link {
+    color: var(--color-amber, #f59e0b);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+
+  .back-link:hover { text-decoration: underline; }
+</style>
