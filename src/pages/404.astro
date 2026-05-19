@@ -1,73 +1,142 @@
 ---
-import BaseLayout from '@layouts/BaseLayout.astro';
-import SEO from '@components/SEO.astro';
+// src/pages/404.astro
+// Honest, helpful 404. No corporate "Oops!" — gets the user to a useful page in one click.
 
-const seoData = {
-  title: '404 — Page Not Found | Tenderpreneur',
-  description: "The page you were looking for doesn't exist. Return to Tenderpreneur to browse government tenders and PFMA guides.",
-  canonical: 'https://tenderpreneur.co.za/404',
-  ogImage: 'https://tenderpreneur.co.za/og-default.png',
-  noIndex: true,
-};
+import BaseLayout from "../layouts/BaseLayout.astro";
+import StructuredData from "../components/StructuredData.astro";
 
-const quickLinks = [
-  { href: '/', label: 'Home', icon: '🏠' },
-  { href: '/tenders', label: 'Browse Tenders', icon: '📋' },
-  { href: '/pfma', label: 'PFMA Knowledge Base', icon: '📚' },
-  { href: '/blog', label: 'Blog', icon: '📰' },
-  { href: '/pricing', label: 'Pricing', icon: '💰' },
-];
+const title = "Page not found — Tenderpreneur";
+const description =
+  "The page you're looking for doesn't exist. Here are the most useful pages on Tenderpreneur.";
 ---
 
-<BaseLayout>
-  <SEO slot="head" {...seoData} />
+<BaseLayout title={title} description={description}>
+  <StructuredData
+    breadcrumbs={[
+      { name: "Home", url: "/" },
+      { name: "Page not found", url: "/404" },
+    ]}
+  />
+  <main id="main-content" class="nf-main">
+    <div class="nf-code" aria-hidden="true">404</div>
+    <h1>Page not found</h1>
+    <p class="nf-lede">
+      The page you're looking for has moved, been renamed, or never existed. Here's where most people are going:
+    </p>
 
-  <section class="flex min-h-[80vh] items-center bg-[var(--color-surface-2)] py-20">
-    <div class="container max-w-2xl text-center">
-      <!-- Giant 404 — gold gradient, properly visible -->
-      <p
-        class="font-display font-extrabold leading-none text-gradient-gold select-none"
-        style="font-size: clamp(7rem, 18vw, 12rem);"
-        aria-hidden="true"
-      >
-        404
-      </p>
+    <ul class="nf-links" aria-label="Popular destinations">
+      <li>
+        <a href="/">
+          <span class="nf-link-title">Home</span>
+          <span class="nf-link-sub">Overview of Tenderpreneur</span>
+        </a>
+      </li>
+      <li>
+        <a href="/pfma">
+          <span class="nf-link-title">PFMA Knowledge Base</span>
+          <span class="nf-link-sub">Free guides to South African public procurement law</span>
+        </a>
+      </li>
+      <li>
+        <a href="/tenders">
+          <span class="nf-link-title">Tender Feed</span>
+          <span class="nf-link-sub">Coming soon — join the waitlist</span>
+        </a>
+      </li>
+      <li>
+        <a href="/features">
+          <span class="nf-link-title">Features</span>
+          <span class="nf-link-sub">What's live, in beta, and coming next</span>
+        </a>
+      </li>
+      <li>
+        <a href="/pricing">
+          <span class="nf-link-title">Pricing</span>
+          <span class="nf-link-sub">Free, Professional, and Enterprise plans</span>
+        </a>
+      </li>
+      <li>
+        <a href="/blog">
+          <span class="nf-link-title">Blog</span>
+          <span class="nf-link-sub">CSD, B-BBEE, and bid-writing guides</span>
+        </a>
+      </li>
+    </ul>
 
-      <div class="-mt-4 sm:-mt-8">
-        <h1 class="font-display text-3xl sm:text-4xl font-bold text-[var(--color-navy)] dark:text-white">
-          That page took an early closing date.
-        </h1>
-        <p class="mx-auto mt-4 max-w-md text-[var(--color-text-muted)] dark:text-gray-300">
-          We couldn't find what you were looking for. The URL may have moved,
-          been removed, or contain a typo.
-        </p>
-
-        <!-- Quick links -->
-        <nav aria-label="Helpful links" class="mt-10">
-          <p class="mb-4 text-xs font-bold tracking-[0.18em] uppercase text-[var(--color-text-muted)]">
-            Try one of these instead
-          </p>
-          <ul class="flex flex-wrap justify-center gap-2.5">
-            {quickLinks.map((link) => (
-              <li>
-                <a
-                  href={link.href}
-                  class="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-navy)] transition hover:border-civic-300 hover:bg-civic-50 hover:text-civic-700 hover:shadow-sm dark:bg-navy-700 dark:text-white dark:hover:bg-navy-600"
-                >
-                  <span aria-hidden="true">{link.icon}</span>
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div class="mt-12">
-          <a href="/" class="btn-primary">
-            ← Back to Tenderpreneur
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
+    <p class="nf-help">
+      Still stuck? Email
+      <a href="mailto:hello@tenderpreneur.co.za">hello@tenderpreneur.co.za</a>
+      and tell us which link sent you here — we'll fix it.
+    </p>
+  </main>
 </BaseLayout>
+
+<style>
+  .nf-main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+    text-align: center;
+  }
+  .nf-code {
+    font-size: clamp(80px, 16vw, 140px);
+    font-weight: 800;
+    color: #0C1B33;
+    opacity: 0.08;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin-bottom: -32px;
+  }
+  .nf-main h1 {
+    font-size: clamp(28px, 5vw, 38px);
+    margin: 0 0 12px;
+    color: #0C1B33;
+  }
+  .nf-lede {
+    font-size: 17px;
+    color: #4b5563;
+    margin: 0 auto 36px;
+    max-width: 540px;
+    line-height: 1.5;
+  }
+  .nf-links {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 36px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    text-align: left;
+  }
+  .nf-links a {
+    display: block;
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    color: #0C1B33;
+    text-decoration: none;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .nf-links a:hover {
+    border-color: #0C1B33;
+    transform: translateY(-1px);
+  }
+  .nf-link-title {
+    display: block;
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+  .nf-link-sub {
+    display: block;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.4;
+  }
+  .nf-help {
+    color: #6b7280;
+    font-size: 14px;
+  }
+  .nf-help a { color: #0C1B33; }
+</style>

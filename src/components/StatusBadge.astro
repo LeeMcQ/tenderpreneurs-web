@@ -1,0 +1,51 @@
+---
+// src/components/StatusBadge.astro
+// Renders a "Live", "Beta", or "Coming Soon" pill next to a feature name.
+// Drives every honest-pricing claim across the site.
+
+import type { FeatureStatus } from "../config/site";
+
+interface Props {
+  status: FeatureStatus;
+  eta?: string;
+}
+
+const { status, eta } = Astro.props;
+
+const labels: Record<FeatureStatus, string> = {
+  "live": "Live",
+  "beta": "Beta",
+  "coming-soon": "Coming soon",
+};
+---
+
+<span class:list={["status-badge", `status-${status}`]} title={eta ? `ETA: ${eta}` : undefined}>
+  {labels[status]}{eta && status === "coming-soon" ? ` · ${eta}` : ""}
+</span>
+
+<style>
+  .status-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    line-height: 1.6;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .status-live {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  .status-beta {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  .status-coming-soon {
+    background: #e5e7eb;
+    color: #374151;
+  }
+</style>

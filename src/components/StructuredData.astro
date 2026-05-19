@@ -1,0 +1,130 @@
+---
+// src/components/StructuredData.astro
+// Renders one or more JSON-LD blocks for SEO.
+// Pass any combination of:
+//   <StructuredData
+//     breadcrumbs={[{ name: "Home", url: "/" }, { name: "Pricing", url: "/pricing" }]}
+//     organisation
+//     softwareApp
+//     faqs={[{ question: "...", answer: "..." }]}
+//     extra={[{ "@context": "https://schema.org", "@type": "Article", ... }]}
+//   />
+//
+// Anything you don't pass simply doesn't render — zero overhead.
+
+import { ORGANISATION, PRODUCT_OFFERS } from "../data/organisation";
+
+interface BreadcrumbItem {
+  name: string;
+  url: string; // absolute or root-relative
+}
+
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+interface Props {
+  breadcrumbs?: BreadcrumbItem[];
+  organisation?: boolean;
+  softwareApp?: boolean;
+  faqs?: FaqItem[];
+  extra?: Record<string, unknown>[];
+}
+
+const {
+  breadcrumbs,
+  organisation = false,
+  softwareApp = false,
+  faqs,
+  extra = [],
+} = Astro.props;
+
+const SITE = ORGANISATION.url;
+
+const blocks: Record<string, unknown>[] = [];
+
+// ─── BreadcrumbList ─────────────────────────────────────────
+if (breadcrumbs && breadcrumbs.length > 0) {
+  blocks.push({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbs.map((b, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: b.name,
+      item: b.url.startsWith("http") ? b.url : `${SITE}${b.url}`,
+    })),
+  });
+}
+
+// ─── Organization ───────────────────────────────────────────
+if (organisation) {
+  const org: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: ORGANISATION.name,
+    legalName: ORGANISATION.legalName,
+    url: ORGANISATION.url,
+    logo: ORGANISATION.logo,
+    email: ORGANISATION.email,
+    foundingDate: ORGANISATION.foundingDate,
+    areaServed: ORGANISATION.areaServed,
+    contactPoint: {
+      "@type": "ContactPoint",
+      ...ORGANISATION.contactPoint,
+    },
+  };
+  if (ORGANISATION.sameAs.length > 0) org.sameAs = ORGANISATION.sameAs;
+  if (ORGANISATION.vatNumber) org.vatID = ORGANISATION.vatNumber;
+  blocks.push(org);
+}
+
+// ─── SoftwareApplication ────────────────────────────────────
+if (softwareApp) {
+  blocks.push({
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Tenderpreneur",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    description:
+      "South African government tender intelligence platform: PFMA research, AI-assisted compliance, and tender tracking for SMMEs.",
+    url: ORGANISATION.url,
+    publisher: {
+      "@type": "Organization",
+      name: ORGANISATION.legalName,
+      url: ORGANISATION.url,
+    },
+    offers: PRODUCT_OFFERS.map((o) => ({
+      "@type": "Offer",
+      name: o.name,
+      price: o.price,
+      priceCurrency: o.priceCurrency,
+    })),
+  });
+}
+
+// ─── FAQPage ────────────────────────────────────────────────
+if (faqs && faqs.length > 0) {
+  blocks.push({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.answer,
+      },
+    })),
+  });
+}
+
+// ─── Extra (free-form) ──────────────────────────────────────
+for (const e of extra) blocks.push(e);
+---
+
+{blocks.map((b) => (
+  <script type="application/ld+json" set:html={JSON.stringify(b)} />
+))}

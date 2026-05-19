@@ -1,0 +1,284 @@
+---
+// src/pages/features.astro
+// Dedicated features page — fixes the broken /#features footer anchor
+// (which only worked from the homepage). Now every page can link here.
+
+import BaseLayout from "../layouts/BaseLayout.astro";
+import StatusBadge from "../components/StatusBadge.astro";
+import { CTA, FEATURES } from "../config/site";
+
+const title = "Features — Tenderpreneur";
+const description =
+  "Everything Tenderpreneur offers: PFMA knowledge base, AI Assistant, live tender feed, win-probability scoring, and B-BBEE tools. Honest status labels on every feature.";
+---
+
+<BaseLayout title={title} description={description}>
+  <main id="main-content">
+    <nav aria-label="Breadcrumb" class="breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Features</li>
+      </ol>
+    </nav>
+
+    <header class="features-hero">
+      <p class="eyebrow">Platform features</p>
+      <h1>Everything Tenderpreneur offers</h1>
+      <p class="lede">
+        Honest labels on every capability — Live, Beta, or Coming Soon. We never charge
+        you for a feature that isn't shipped.
+      </p>
+    </header>
+
+    <section class="feature-group" aria-labelledby="research-h">
+      <h2 id="research-h">PFMA research &amp; compliance</h2>
+      <p class="group-intro">Free, forever. The foundation of Tenderpreneur.</p>
+      <ul class="feature-list">
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.pfmaKnowledgeBase.label}</span>
+            <StatusBadge status={FEATURES.pfmaKnowledgeBase.status} />
+          </div>
+          <p>Plain-language guides to PFMA, PPPFA, B-BBEE, Treasury Regulations, CIDB, and MFMA. Every claim cited to the actual Act or Regulation.</p>
+          <a href={CTA.pfmaGuide} class="feature-link">Browse the guide →</a>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.sbdFormLibrary.label}</span>
+            <StatusBadge status={FEATURES.sbdFormLibrary.status} />
+          </div>
+          <p>SBD 1 through SBD 9 explained — when each form is required and how to complete it without disqualification.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.complianceChecklist.label}</span>
+            <StatusBadge status={FEATURES.complianceChecklist.status} />
+          </div>
+          <p>CSD, SARS tax clearance, and B-BBEE document checklist. Track expiry dates so a single lapsed certificate never disqualifies your bid.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.pfmaAssistant.label}</span>
+            <StatusBadge status={FEATURES.pfmaAssistant.status} />
+          </div>
+          <p>Ask procurement questions in plain English. Answers cite the underlying legislation. No hallucinations — when the AI is unsure, it says so.</p>
+          <a href={CTA.assistant} class="feature-link">Try the assistant →</a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="feature-group" aria-labelledby="tenders-h">
+      <h2 id="tenders-h">Tender intelligence</h2>
+      <p class="group-intro">The Professional plan. Built for SMMEs actively bidding.</p>
+      <ul class="feature-list">
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.liveTenderFeed.label}</span>
+            <StatusBadge status={FEATURES.liveTenderFeed.status} eta={FEATURES.liveTenderFeed.eta} />
+          </div>
+          <p>Aggregated from etenders.gov.za, 9 provincial portals, and 257 municipalities. Refreshed every 4 hours.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.provinceFilters.label}</span>
+            <StatusBadge status={FEATURES.provinceFilters.status} eta={FEATURES.provinceFilters.eta} />
+          </div>
+          <p>Filter by all 9 provinces, 12 sectors, CIDB grade, B-BBEE level, value range, and closing date.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.emailAlerts.label}</span>
+            <StatusBadge status={FEATURES.emailAlerts.status} eta={FEATURES.emailAlerts.eta} />
+          </div>
+          <p>Save your filter combinations and get instant email alerts when a matching tender is published.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.documentDownloads.label}</span>
+            <StatusBadge status={FEATURES.documentDownloads.status} eta={FEATURES.documentDownloads.eta} />
+          </div>
+          <p>One-click download of bid documents — no more bouncing between departmental websites.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="feature-group" aria-labelledby="ai-h">
+      <h2 id="ai-h">AI scoring &amp; analysis</h2>
+      <p class="group-intro">The competitive edge. Know whether to bid before you spend a week preparing.</p>
+      <ul class="feature-list">
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.winProbability.label}</span>
+            <StatusBadge status={FEATURES.winProbability.status} eta={FEATURES.winProbability.eta} />
+          </div>
+          <p>Score across 6 dimensions: B-BBEE, CSD status, technical capability, experience, financial standing, and pricing. Get a bid/no-bid recommendation in under 60 seconds.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.bbbeeCalculator.label}</span>
+            <StatusBadge status={FEATURES.bbbeeCalculator.status} eta={FEATURES.bbbeeCalculator.eta} />
+          </div>
+          <p>Calculate your preference points under the 2022 PPPFA Regulations. 80/20 and 90/10 scoring with subcontracting scenarios.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.unlimitedAssistant.label}</span>
+            <StatusBadge status={FEATURES.unlimitedAssistant.status} />
+          </div>
+          <p>No daily caps on AI Assistant questions for Professional and Enterprise subscribers.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="feature-group" aria-labelledby="team-h">
+      <h2 id="team-h">For teams &amp; advisors</h2>
+      <p class="group-intro">Enterprise plan only.</p>
+      <ul class="feature-list">
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.teamSeats.label}</span>
+            <StatusBadge status={FEATURES.teamSeats.status} eta={FEATURES.teamSeats.eta} />
+          </div>
+          <p>Unlimited seats for procurement teams, advisors, and SCM consultants.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.apiAccess.label}</span>
+            <StatusBadge status={FEATURES.apiAccess.status} eta={FEATURES.apiAccess.eta} />
+          </div>
+          <p>Programmatic access to the tender feed and scoring engine.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="features-cta">
+      <h2>Start with the free PFMA toolkit</h2>
+      <p>No credit card required. Upgrade to Professional once the tender feed and AI scoring are live.</p>
+      <div class="cta-row">
+        <a href={CTA.signup} class="btn-primary">Get started free</a>
+        <a href={CTA.pricing} class="btn-secondary">See pricing</a>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  .breadcrumb ol {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px;
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+    color: #6b7280;
+  }
+  .breadcrumb a { color: #0C1B33; }
+  .features-hero {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 32px;
+  }
+  .eyebrow {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+    margin-bottom: 8px;
+  }
+  .features-hero h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    line-height: 1.15;
+    margin: 0 0 12px;
+    color: #0C1B33;
+  }
+  .lede {
+    font-size: 17px;
+    color: #4b5563;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+  .feature-group {
+    margin: 48px 0;
+  }
+  .feature-group h2 {
+    font-size: 22px;
+    margin: 0 0 4px;
+    color: #0C1B33;
+  }
+  .group-intro {
+    color: #6b7280;
+    margin: 0 0 20px;
+    font-size: 14px;
+  }
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 16px;
+  }
+  .feature-list li {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .feature-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .feature-name {
+    font-weight: 600;
+    color: #0C1B33;
+    font-size: 16px;
+  }
+  .feature-list p {
+    margin: 4px 0 8px;
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .feature-link {
+    font-size: 14px;
+    color: #0C1B33;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .feature-link:hover { text-decoration: underline; }
+  .features-cta {
+    margin-top: 64px;
+    padding: 32px;
+    background: #0C1B33;
+    color: #fff;
+    border-radius: 16px;
+    text-align: center;
+  }
+  .features-cta h2 { color: #fff; margin: 0 0 8px; }
+  .features-cta p { color: #cbd5e1; margin: 0 0 20px; }
+  .cta-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-primary, .btn-secondary {
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary { background: #fff; color: #0C1B33; }
+  .btn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+  .btn-primary:hover { opacity: 0.92; }
+  .btn-secondary:hover { background: rgba(255,255,255,0.08); }
+</style>

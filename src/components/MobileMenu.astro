@@ -1,0 +1,254 @@
+---
+// src/components/MobileMenu.astro
+// Accessible mobile nav: hamburger SVG, full ARIA, Escape-to-close,
+// focus trap inside the open panel, scroll lock on <body>.
+//
+// Usage in your Header.astro:
+//
+//   import MobileMenu from "../components/MobileMenu.astro";
+//   ---
+//   <MobileMenu>
+//     <a href="/features">Features</a>
+//     <a href="/pricing">Pricing</a>
+//     <a href="/pfma">PFMA Guide</a>
+//     <a href="/blog">Blog</a>
+//     <a href="/about">About</a>
+//   </MobileMenu>
+//
+// The trigger button is included — render it wherever you want it in the header.
+// Hide your existing desktop nav at <768px and let this take over.
+---
+
+<button
+  type="button"
+  id="tp-menu-trigger"
+  class="tp-menu-trigger"
+  aria-expanded="false"
+  aria-controls="tp-mobile-panel"
+  aria-label="Open menu"
+>
+  <span class="tp-hamburger" aria-hidden="true">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="4" y1="7" x2="20" y2="7" class="bar bar-top" />
+      <line x1="4" y1="12" x2="20" y2="12" class="bar bar-mid" />
+      <line x1="4" y1="17" x2="20" y2="17" class="bar bar-bot" />
+    </svg>
+  </span>
+</button>
+
+<div
+  id="tp-mobile-panel"
+  class="tp-mobile-panel"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Site navigation"
+  hidden
+>
+  <div class="tp-mobile-backdrop" data-tp-close></div>
+  <nav class="tp-mobile-nav" aria-label="Primary">
+    <button
+      type="button"
+      class="tp-mobile-close"
+      aria-label="Close menu"
+      data-tp-close
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="6" y1="18" x2="18" y2="6" />
+      </svg>
+    </button>
+    <div class="tp-mobile-links">
+      <slot />
+    </div>
+  </nav>
+</div>
+
+<style>
+  .tp-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: #0C1B33;
+    cursor: pointer;
+  }
+  .tp-menu-trigger:hover {
+    background: rgba(12, 27, 51, 0.05);
+  }
+  .tp-menu-trigger:focus-visible {
+    outline: 2px solid #0C1B33;
+    outline-offset: 2px;
+  }
+  .tp-menu-trigger[aria-expanded="true"] .bar-top {
+    transform: rotate(45deg) translate(4px, 4px);
+  }
+  .tp-menu-trigger[aria-expanded="true"] .bar-mid {
+    opacity: 0;
+  }
+  .tp-menu-trigger[aria-expanded="true"] .bar-bot {
+    transform: rotate(-45deg) translate(4px, -4px);
+  }
+  .bar {
+    transition: transform 0.2s ease, opacity 0.15s ease;
+    transform-origin: center;
+  }
+
+  .tp-mobile-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+  }
+  .tp-mobile-panel[hidden] {
+    display: none;
+  }
+  .tp-mobile-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(12, 27, 51, 0.5);
+    animation: tp-fade 0.18s ease-out;
+  }
+  .tp-mobile-nav {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    background: #fff;
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 16px 24px;
+    animation: tp-slide 0.22s ease-out;
+  }
+  .tp-mobile-close {
+    align-self: flex-end;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: #0C1B33;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tp-mobile-close:hover {
+    background: rgba(12, 27, 51, 0.05);
+  }
+  .tp-mobile-close:focus-visible {
+    outline: 2px solid #0C1B33;
+    outline-offset: 2px;
+  }
+  .tp-mobile-links {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tp-mobile-links :global(a) {
+    display: block;
+    padding: 14px 16px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #0C1B33;
+    text-decoration: none;
+    border-radius: 10px;
+  }
+  .tp-mobile-links :global(a:hover) {
+    background: rgba(12, 27, 51, 0.05);
+  }
+  .tp-mobile-links :global(a[aria-current="page"]) {
+    background: rgba(12, 27, 51, 0.08);
+  }
+  @keyframes tp-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes tp-slide {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tp-mobile-backdrop, .tp-mobile-nav { animation: none; }
+    .bar { transition: none; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var trigger = document.getElementById("tp-menu-trigger");
+    var panel = document.getElementById("tp-mobile-panel");
+    if (!trigger || !panel) return;
+
+    var lastFocused = null;
+
+    function open() {
+      panel.hidden = false;
+      trigger.setAttribute("aria-expanded", "true");
+      trigger.setAttribute("aria-label", "Close menu");
+      lastFocused = document.activeElement;
+      document.body.style.overflow = "hidden";
+      // Focus the close button for keyboard users
+      var closeBtn = panel.querySelector(".tp-mobile-close");
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function close() {
+      panel.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.setAttribute("aria-label", "Open menu");
+      document.body.style.overflow = "";
+      if (lastFocused && typeof lastFocused.focus === "function") {
+        lastFocused.focus();
+      }
+    }
+
+    trigger.addEventListener("click", function () {
+      if (trigger.getAttribute("aria-expanded") === "true") {
+        close();
+      } else {
+        open();
+      }
+    });
+
+    panel.addEventListener("click", function (ev) {
+      var t = ev.target;
+      if (t && t.closest && t.closest("[data-tp-close]")) {
+        close();
+      }
+      // Clicking any nav link should also close the panel
+      if (t && t.tagName === "A") {
+        close();
+      }
+    });
+
+    document.addEventListener("keydown", function (ev) {
+      if (panel.hidden) return;
+      if (ev.key === "Escape") {
+        close();
+      } else if (ev.key === "Tab") {
+        // Simple focus trap
+        var focusables = panel.querySelectorAll(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        var first = focusables[0];
+        var last = focusables[focusables.length - 1];
+        if (ev.shiftKey && document.activeElement === first) {
+          ev.preventDefault();
+          last.focus();
+        } else if (!ev.shiftKey && document.activeElement === last) {
+          ev.preventDefault();
+          first.focus();
+        }
+      }
+    });
+  })();
+</script>

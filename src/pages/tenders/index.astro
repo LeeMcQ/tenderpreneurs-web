@@ -1,95 +1,214 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+// src/pages/tenders/index.astro
+// Phase 2 placeholder — honest copy + working waitlist form.
+// When the live feed ships, swap the body for the real listing.
 
-const provinces = [
-  { slug: 'gauteng',        name: 'Gauteng',        blurb: 'Joburg, Tshwane, Ekurhuleni metros + provincial departments.' },
-  { slug: 'western-cape',   name: 'Western Cape',   blurb: 'City of Cape Town, energy resilience, water infrastructure.' },
-  { slug: 'kwazulu-natal',  name: 'KwaZulu-Natal',  blurb: 'eThekwini Metro, flood reconstruction, rural infrastructure.' },
-  { slug: 'eastern-cape',   name: 'Eastern Cape',   blurb: 'NMB and Buffalo City metros, school infrastructure pipeline.' },
-  { slug: 'free-state',     name: 'Free State',     blurb: 'Mangaung Metro, agri-infrastructure, district municipalities.' },
-  { slug: 'limpopo',        name: 'Limpopo',        blurb: 'School infrastructure, platinum belt, Musina-Makhado SEZ.' },
-  { slug: 'mpumalanga',     name: 'Mpumalanga',     blurb: 'Just energy transition, Highveld, Lowveld agri-tourism.' },
-  { slug: 'north-west',     name: 'North West',     blurb: 'Platinum belt, Rustenburg, Mahikeng, mining-adjacent work.' },
-  { slug: 'northern-cape',  name: 'Northern Cape',  blurb: 'Renewable energy IPPs, mining services, Kimberley to Upington.' },
-];
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import WaitlistForm from "../../components/WaitlistForm.astro";
+import StatusBadge from "../../components/StatusBadge.astro";
+import { TENDER_STATS, FEATURES, CTA } from "../../config/site";
 
-const sectors = [
-  { slug: 'construction', name: 'Construction', blurb: 'SANRAL, provincial public works, water boards. CIDB-graded.', status: 'live' },
-  { slug: 'ict',          name: 'ICT',          blurb: 'SITA, departmental systems, municipal smart infrastructure.', status: 'live' },
-  { slug: 'health',       name: 'Health',       blurb: 'Pharmaceuticals, medical equipment, facility services.', status: 'live' },
-  { slug: 'education',    name: 'Education',    blurb: 'School infrastructure, scholar transport, nutrition, e-learning.', status: 'live' },
-  { slug: 'security',     name: 'Security',     blurb: 'Physical guarding, electronic, access control. PSIRA-regulated.', status: 'live' },
-  { slug: 'transport',    name: 'Transport',    blurb: 'Fleet, scholar transport, rail, aviation, BRT systems.', status: 'soon' },
-  { slug: 'agriculture',  name: 'Agriculture',  blurb: 'Agri-infrastructure, fencing, irrigation, veterinary services.', status: 'soon' },
-  { slug: 'energy',       name: 'Energy',       blurb: 'Eskom, municipal embedded gen, JET, solar PV and storage.', status: 'soon' },
-  { slug: 'consulting',   name: 'Consulting',   blurb: 'Built-environment PSPs, management, IT advisory, audit.', status: 'soon' },
-  { slug: 'cleaning',     name: 'Cleaning',     blurb: 'Facility cleaning, hospital hygiene, hygiene consumables.', status: 'soon' },
-  { slug: 'catering',     name: 'Catering',     blurb: 'Hospital patient meals, NSNP, institutional catering.', status: 'soon' },
-  { slug: 'legal',        name: 'Legal',        blurb: 'State Attorney panels, litigation, conveyancing, advisory.', status: 'soon' },
-];
+const title = "Browse Government Tenders | Tenderpreneur";
+const description = TENDER_STATS.isLive
+  ? `Browse ${TENDER_STATS.tracking.toLocaleString()}+ open South African government tenders from etenders.gov.za. Filter by province, sector, value, and B-BBEE level.`
+  : `Tracking ${TENDER_STATS.tracking.toLocaleString()}+ South African government tenders. The live feed is launching soon — join the waitlist for early access.`;
 ---
 
-<BaseLayout
-  title="Browse Tenders by Province and Sector — Tenderpreneurs"
-  description="Find South African government tender opportunities by province (all 9) or sector. Live feed from eTenders and procuring departments."
->
-  <section class="container mx-auto px-4 py-12 max-w-6xl">
-    <header class="mb-10">
-      <p class="text-sm uppercase tracking-wide text-amber-400 font-semibold mb-2">Tender hubs</p>
-      <h1 class="text-4xl md:text-5xl font-bold text-white mb-3">Browse Tenders</h1>
-      <p class="text-lg text-slate-300 max-w-prose">
-        Government tender opportunities across South Africa, organised by province and sector.
-        Top 5 latest opportunities visible to everyone, full feed free with email sign-in.
+<BaseLayout title={title} description={description}>
+  <main id="main-content">
+    <nav aria-label="Breadcrumb" class="breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Tenders</li>
+      </ol>
+    </nav>
+
+    <header class="tenders-hero">
+      <div class="hero-status">
+        <StatusBadge
+          status={FEATURES.liveTenderFeed.status}
+          eta={FEATURES.liveTenderFeed.eta}
+        />
+      </div>
+      <h1>
+        Tracking <strong>{TENDER_STATS.tracking.toLocaleString()}+</strong> South African government tenders
+      </h1>
+      <p class="lede">
+        We're integrating with etenders.gov.za, 9 provincial procurement portals, and 257
+        municipal websites. Join the waitlist and we'll notify you the moment the live feed
+        goes live.
       </p>
     </header>
 
-    <!-- Provinces -->
-    <section class="mb-14">
-      <h2 class="text-2xl font-bold text-white mb-2">By province</h2>
-      <p class="text-sm text-slate-400 mb-6">All 9 provinces.</p>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {provinces.map((p) => (
-          <a
-            href={`/tenders/${p.slug}`}
-            class="group block rounded-xl bg-slate-800/50 border border-slate-700 p-5 transition hover:border-amber-500 hover:bg-slate-800"
-          >
-            <h3 class="text-lg font-semibold text-white mb-1 group-hover:text-amber-400 transition">
-              {p.name}
-            </h3>
-            <p class="text-sm text-slate-300">{p.blurb}</p>
-            <p class="mt-3 text-xs font-medium text-amber-400 group-hover:underline">
-              View tenders →
-            </p>
-          </a>
-        ))}
-      </div>
+    <section class="waitlist-card" aria-labelledby="waitlist-h">
+      <div class="emoji" aria-hidden="true">🚀</div>
+      <h2 id="waitlist-h">Live tender feed — coming soon</h2>
+      <p>Get notified when full access opens. No credit card required.</p>
+      <WaitlistForm source="tenders-page" />
     </section>
 
-    <!-- Sectors -->
-    <section>
-      <h2 class="text-2xl font-bold text-white mb-2">By sector</h2>
-      <p class="text-sm text-slate-400 mb-6">12 sectors. 5 live now, 7 coming soon.</p>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sectors.map((s) => (
-          <a
-            href={`/tenders/${s.slug}`}
-            class="group block rounded-xl bg-slate-800/50 border border-slate-700 p-5 transition hover:border-amber-500 hover:bg-slate-800 relative"
-          >
-            {s.status === 'soon' && (
-              <span class="absolute top-3 right-3 inline-flex items-center rounded-full bg-slate-700 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-300">
-                Soon
-              </span>
-            )}
-            <h3 class="text-lg font-semibold text-white mb-1 group-hover:text-amber-400 transition">
-              {s.name}
-            </h3>
-            <p class="text-sm text-slate-300">{s.blurb}</p>
-            <p class="mt-3 text-xs font-medium text-amber-400 group-hover:underline">
-              {s.status === 'live' ? 'View tenders →' : 'View hub →'}
-            </p>
-          </a>
-        ))}
+    <section class="preview-grid" aria-labelledby="preview-h">
+      <h2 id="preview-h" class="sr-only">What's included when the feed goes live</h2>
+
+      <article class="preview-card">
+        <h3>Full tender feed</h3>
+        <p>
+          {TENDER_STATS.tracking.toLocaleString()}+ tenders from etenders.gov.za, 9 provincial
+          portals, and 257 municipalities. Refreshed every 4 hours.
+        </p>
+        <StatusBadge status={FEATURES.liveTenderFeed.status} eta={FEATURES.liveTenderFeed.eta} />
+      </article>
+
+      <article class="preview-card">
+        <h3>Smart filters</h3>
+        <p>Filter by province, sector, CIDB grade, B-BBEE level, value range, and closing date.</p>
+        <StatusBadge status={FEATURES.provinceFilters.status} eta={FEATURES.provinceFilters.eta} />
+      </article>
+
+      <article class="preview-card">
+        <h3>Email alerts</h3>
+        <p>Save search filters and get notified when matching tenders are published.</p>
+        <StatusBadge status={FEATURES.emailAlerts.status} eta={FEATURES.emailAlerts.eta} />
+      </article>
+
+      <article class="preview-card">
+        <h3>AI win-probability</h3>
+        <p>Get a score from 0–100 based on your B-BBEE, CSD status, experience, and pricing.</p>
+        <StatusBadge status={FEATURES.winProbability.status} eta={FEATURES.winProbability.eta} />
+      </article>
+    </section>
+
+    <section class="ready-now" aria-labelledby="ready-h">
+      <h2 id="ready-h">Already available — free</h2>
+      <p>
+        While the live feed is being built, you can already use the free PFMA Knowledge Base
+        and AI Assistant to prepare your business for tender season.
+      </p>
+      <div class="cta-row">
+        <a href={CTA.pfmaGuide} class="btn-primary">Browse PFMA Guide</a>
+        <a href={CTA.assistant} class="btn-secondary">Try the AI Assistant</a>
       </div>
     </section>
-  </section>
+  </main>
 </BaseLayout>
+
+<style>
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  .breadcrumb ol {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px;
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+    color: #6b7280;
+  }
+  .breadcrumb a { color: #0C1B33; }
+  .tenders-hero {
+    padding: 24px 0 32px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 32px;
+  }
+  .hero-status { margin-bottom: 12px; }
+  .tenders-hero h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    line-height: 1.15;
+    margin: 0 0 12px;
+    color: #0C1B33;
+  }
+  .tenders-hero h1 strong { color: #0C1B33; }
+  .lede {
+    font-size: 17px;
+    color: #4b5563;
+    max-width: 640px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .waitlist-card {
+    background: linear-gradient(135deg, #0C1B33 0%, #1e3a5f 100%);
+    color: #fff;
+    padding: 36px 28px;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .waitlist-card .emoji { font-size: 36px; margin-bottom: 8px; }
+  .waitlist-card h2 {
+    color: #fff;
+    margin: 0 0 8px;
+    font-size: 24px;
+  }
+  .waitlist-card p {
+    color: #cbd5e1;
+    margin: 0 0 20px;
+  }
+  .waitlist-card :global(.waitlist-form) {
+    margin: 0 auto;
+  }
+  .waitlist-card :global(.waitlist-meta) {
+    color: #94a3b8;
+  }
+  .preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .preview-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .preview-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #0C1B33;
+  }
+  .preview-card p {
+    margin: 0 0 12px;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .ready-now {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+  }
+  .ready-now h2 { margin: 0 0 8px; color: #0C1B33; }
+  .ready-now p { margin: 0 0 20px; color: #4b5563; }
+  .cta-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-primary, .btn-secondary {
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary { background: #0C1B33; color: #fff; }
+  .btn-secondary { background: transparent; color: #0C1B33; border: 1px solid #0C1B33; }
+  .btn-primary:hover { opacity: 0.92; }
+  .btn-secondary:hover { background: rgba(12, 27, 51, 0.05); }
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

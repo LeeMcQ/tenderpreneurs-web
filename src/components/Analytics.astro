@@ -1,0 +1,71 @@
+---
+// src/components/Analytics.astro
+// Google Analytics 4 loader, gated on POPIA consent.
+//
+// Behaviour:
+// - GA4 tag is NOT loaded on page render. We wait for explicit consent.
+// - If localStorage["tp-consent"] === "accepted" on page load, GA4 loads.
+// - Otherwise, we wait for the "tp-consent-change" event from CookieBanner.
+// - Once loaded, we mark `window.__tpGaLoaded` so we never inject it twice.
+//
+// Usage: drop <Analytics /> once in your layout, alongside <CookieBanner />.
+//
+// Configure the measurement ID via env var (preferred) or pass as a prop:
+//   <Analytics measurementId="G-XXXXXXXXXX" />
+// or set PUBLIC_GA_MEASUREMENT_ID in your Cloudflare Pages env vars.
+
+interface Props {
+  measurementId?: string;
+}
+
+const measurementId =
+  Astro.props.measurementId ?? import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
+
+// If no ID is configured, render nothing — keeps dev/preview clean.
+const enabled = Boolean(measurementId);
+---
+
+{enabled && (
+  <script is:inline define:vars={{ measurementId }}>
+    (function () {
+      var STORAGE_KEY = "tp-consent";
+
+      function loadGA() {
+        if (window.__tpGaLoaded) return;
+        window.__tpGaLoaded = true;
+
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + measurementId;
+        document.head.appendChild(s);
+
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { window.dataLayer.push(arguments); }
+        window.gtag = gtag;
+
+        gtag("js", new Date());
+        // anonymize_ip is no longer needed in GA4 (IP is never logged),
+        // but we explicitly disable ad personalisation for POPIA.
+        gtag("config", measurementId, {
+          allow_google_signals: false,
+          allow_ad_personalization_signals: false,
+        });
+      }
+
+      // Check existing consent
+      var consent = null;
+      try { consent = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+
+      if (consent === "accepted") {
+        loadGA();
+      }
+
+      // Listen for the banner's choice
+      window.addEventListener("tp-consent-change", function (ev) {
+        if (ev && ev.detail && ev.detail.consent === "accepted") {
+          loadGA();
+        }
+      });
+    })();
+  </script>
+)}

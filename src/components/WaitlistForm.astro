@@ -1,0 +1,192 @@
+---
+// src/components/WaitlistForm.astro
+// Drop-in waitlist form. Posts to /api/waitlist.
+// Usage: <WaitlistForm source="tenders-page" />
+
+interface Props {
+  source?: string;
+  placeholder?: string;
+  buttonLabel?: string;
+}
+
+const {
+  source = "unknown",
+  placeholder = "your.name@company.co.za",
+  buttonLabel = "Notify me",
+} = Astro.props;
+---
+
+<form
+  class="waitlist-form"
+  data-source={source}
+  aria-label="Tender feed waitlist signup"
+>
+  <div class="waitlist-row">
+    <label class="sr-only" for={`waitlist-email-${source}`}>Email address</label>
+    <input
+      id={`waitlist-email-${source}`}
+      class="waitlist-input"
+      type="email"
+      name="email"
+      required
+      autocomplete="email"
+      inputmode="email"
+      placeholder={placeholder}
+    />
+    <!-- Honeypot — hidden from real users, bots fill it in -->
+    <input
+      type="text"
+      name="company_url"
+      tabindex="-1"
+      autocomplete="off"
+      aria-hidden="true"
+      class="waitlist-honeypot"
+    />
+    <button class="waitlist-btn" type="submit">
+      <span class="waitlist-btn-label">{buttonLabel}</span>
+      <span class="waitlist-btn-spinner" aria-hidden="true"></span>
+    </button>
+  </div>
+  <p class="waitlist-meta">POPIA compliant. No spam. Unsubscribe anytime.</p>
+  <p class="waitlist-msg" role="status" aria-live="polite"></p>
+</form>
+
+<style>
+  .waitlist-form {
+    width: 100%;
+    max-width: 520px;
+  }
+  .waitlist-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .waitlist-input {
+    flex: 1 1 240px;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+    background: #fff;
+    color: #0C1B33;
+  }
+  .waitlist-input:focus {
+    outline: 2px solid #0C1B33;
+    outline-offset: 1px;
+  }
+  .waitlist-honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  .waitlist-btn {
+    padding: 12px 20px;
+    background: #0C1B33;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .waitlist-btn:hover:not(:disabled) {
+    opacity: 0.92;
+  }
+  .waitlist-btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .waitlist-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .waitlist-btn-spinner {
+    display: none;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: waitlist-spin 0.7s linear infinite;
+  }
+  .waitlist-form[data-state="submitting"] .waitlist-btn-spinner {
+    display: inline-block;
+  }
+  @keyframes waitlist-spin {
+    to { transform: rotate(360deg); }
+  }
+  .waitlist-meta {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #6b7280;
+  }
+  .waitlist-msg {
+    margin-top: 8px;
+    font-size: 14px;
+    min-height: 1.2em;
+  }
+  .waitlist-msg[data-tone="ok"] { color: #065f46; }
+  .waitlist-msg[data-tone="err"] { color: #b91c1c; }
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
+
+<script>
+  // Progressive enhancement — form still POSTs without JS if the action is set,
+  // but we want fetch() for the nicer UX.
+  document.querySelectorAll<HTMLFormElement>(".waitlist-form").forEach((form) => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector<HTMLParagraphElement>(".waitlist-msg")!;
+      const btn = form.querySelector<HTMLButtonElement>(".waitlist-btn")!;
+      const input = form.querySelector<HTMLInputElement>('input[name="email"]')!;
+      const honeypot = form.querySelector<HTMLInputElement>('input[name="company_url"]')!;
+      const source = form.dataset.source ?? "unknown";
+
+      msg.textContent = "";
+      msg.removeAttribute("data-tone");
+      form.setAttribute("data-state", "submitting");
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/waitlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: input.value,
+            source,
+            honeypot: honeypot.value,
+          }),
+        });
+        const data = (await res.json()) as { ok: boolean; message?: string; error?: string };
+        if (res.ok && data.ok) {
+          msg.textContent = data.message ?? "You're on the list. Check your inbox.";
+          msg.setAttribute("data-tone", "ok");
+          input.value = "";
+        } else {
+          msg.textContent = data.error ?? "Something went wrong. Please try again.";
+          msg.setAttribute("data-tone", "err");
+        }
+      } catch {
+        msg.textContent = "Network error. Please try again.";
+        msg.setAttribute("data-tone", "err");
+      } finally {
+        form.removeAttribute("data-state");
+        btn.disabled = false;
+      }
+    });
+  });
+</script>

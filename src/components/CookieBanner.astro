@@ -1,0 +1,186 @@
+---
+// src/components/CookieBanner.astro
+// POPIA-aware consent banner: notice + Accept / Reject.
+// - Defaults to "rejected" until the user clicks Accept.
+// - Stores choice in localStorage as "tp-consent" = "accepted" | "rejected"
+// - Dispatches a window event "tp-consent-change" so analytics can react.
+//
+// This pairs with <Analytics /> which only injects GA4 after consent.
+//
+// Drop it once anywhere in your layout (recommended: just before </body>).
+---
+
+<div
+  id="tp-cookie-banner"
+  class="tp-cookie-banner"
+  role="dialog"
+  aria-labelledby="tp-cookie-title"
+  aria-describedby="tp-cookie-desc"
+  hidden
+>
+  <div class="tp-cookie-inner">
+    <div class="tp-cookie-text">
+      <p id="tp-cookie-title" class="tp-cookie-title">We use cookies</p>
+      <p id="tp-cookie-desc" class="tp-cookie-desc">
+        We use a small amount of analytics cookies to understand which pages help
+        SMMEs win tenders. They're not used for advertising. Read our
+        <a href="/privacy">Privacy Notice</a>.
+      </p>
+    </div>
+    <div class="tp-cookie-actions">
+      <button
+        type="button"
+        class="tp-cookie-btn tp-cookie-btn-secondary"
+        data-tp-consent="rejected"
+      >
+        Reject
+      </button>
+      <button
+        type="button"
+        class="tp-cookie-btn tp-cookie-btn-primary"
+        data-tp-consent="accepted"
+      >
+        Accept
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tp-cookie-banner {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 9999;
+    background: #0C1B33;
+    color: #fff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .tp-cookie-banner[hidden] {
+    display: none;
+  }
+  .tp-cookie-inner {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .tp-cookie-text {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+  .tp-cookie-title {
+    font-weight: 700;
+    font-size: 15px;
+    margin: 0 0 4px;
+  }
+  .tp-cookie-desc {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #cbd5e1;
+  }
+  .tp-cookie-desc a {
+    color: #fff;
+    text-decoration: underline;
+  }
+  .tp-cookie-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .tp-cookie-btn {
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-family: inherit;
+  }
+  .tp-cookie-btn-primary {
+    background: #fff;
+    color: #0C1B33;
+  }
+  .tp-cookie-btn-primary:hover { opacity: 0.92; }
+  .tp-cookie-btn-secondary {
+    background: transparent;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .tp-cookie-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .tp-cookie-btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+  @media (max-width: 480px) {
+    .tp-cookie-banner {
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      padding: 14px;
+    }
+    .tp-cookie-actions {
+      width: 100%;
+      justify-content: stretch;
+    }
+    .tp-cookie-btn {
+      flex: 1;
+    }
+  }
+</style>
+
+<script is:inline>
+  // Inline script so it runs before hydration and can hide the banner instantly.
+  (function () {
+    var STORAGE_KEY = "tp-consent";
+    var banner = document.getElementById("tp-cookie-banner");
+    if (!banner) return;
+
+    var current = null;
+    try {
+      current = localStorage.getItem(STORAGE_KEY);
+    } catch (e) {
+      // localStorage blocked (private mode or strict cookies) — show banner each visit.
+    }
+
+    if (current !== "accepted" && current !== "rejected") {
+      banner.hidden = false;
+    }
+
+    banner.addEventListener("click", function (ev) {
+      var target = ev.target;
+      if (!(target instanceof HTMLElement)) return;
+      var btn = target.closest("[data-tp-consent]");
+      if (!btn) return;
+
+      var choice = btn.getAttribute("data-tp-consent");
+      if (choice !== "accepted" && choice !== "rejected") return;
+
+      try {
+        localStorage.setItem(STORAGE_KEY, choice);
+      } catch (e) {
+        // ignore
+      }
+      banner.hidden = true;
+
+      // Notify Analytics.astro (and anything else that cares)
+      window.dispatchEvent(
+        new CustomEvent("tp-consent-change", { detail: { consent: choice } })
+      );
+    });
+
+    // Public helper so a "Manage cookies" link anywhere can re-open the banner:
+    //   <a href="#" onclick="window.tpOpenCookieBanner(); return false;">Manage cookies</a>
+    window.tpOpenCookieBanner = function () {
+      banner.hidden = false;
+    };
+  })();
+</script>
