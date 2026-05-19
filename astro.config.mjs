@@ -1,58 +1,72 @@
+// astro.config.mjs
 import { defineConfig } from 'astro/config';
-import AstroPWA from '@vite-pwa/astro';
 import cloudflare from '@astrojs/cloudflare';
-import tailwind from '@astrojs/tailwind';
 import mdx from '@astrojs/mdx';
-//import sitemap from '@astrojs/sitemap';
+import sitemap from '@astrojs/sitemap';
+import tailwind from '@astrojs/tailwind';
 
-// NOTE: previously this file declared `integrations:` TWICE in the same
-// object literal. In JS, the second key silently overwrites the first —
-// which meant Tailwind was NOT loading in production. That single bug
-// is responsible for the bulk of the visual breakage on the live site.
-// Fixed by merging into ONE integrations array.
+// NOTE: @vite-pwa/astro is intentionally omitted here.
+// It conflicts with @astrojs/cloudflare's directory output mode and causes
+// build failures on Cloudflare Pages. PWA manifest/service-worker can be
+// added manually if needed later.
+
+const SITE_URL =
+  process.env.PUBLIC_SITE_URL || 'https://tenderpreneurs.co.za';
 
 export default defineConfig({
-  site: 'https://tenderpreneurs.co.za',
+  site: SITE_URL,
 
-  output: 'hybrid',
-  adapter: cloudflare(),
-  integrations: [mdx()],           // ← must be in integrations array
-  adapter: cloudflare({ mode: 'directory' }),
   output: 'server',
 
-  // Astro picks up tsconfig paths automatically, so the `@/...` aliases
-  // declared in tsconfig.json work without extra Vite config here.
+  adapter: cloudflare({
+    mode: 'directory',
+    // Prevent Node.js built-ins (like node-cron) from being bundled into
+    // the Worker. node-cron is only used in local dev / GitHub Actions.
+    platformProxy: {
+      enabled: true,
+    },
+  }),
 
   integrations: [
-    tailwind({
-      // We import globals.css ourselves in BaseLayout, so disable the
-      // injected base stylesheet to avoid double-loading.
-      applyBaseStyles: false,
-    }),
-    //sitemap(),
-    AstroPWA({
-      registerType: 'autoUpdate',
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.js',
-      injectManifest: {
-        globPatterns: ['**/*.{css,js,html,png,svg,ico,woff2}'],
+    mdx(),
+    tailwind(),
+    sitemap({
+      // Only include static / publicly cacheable pages in the sitemap.
+      // Dynamic tender detail pages are excluded to keep the sitemap manageable.
+      filter: (page) => {
+        if (page.includes('/api/')) return false;
+        if (page.includes('/auth/')) return false;
+        if (page.includes('/tenders/t/')) return false; // dynamic tender detail pages
+        return true;
       },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
-      manifest: false, // keep public/manifest.json as-is
     }),
   ],
 
-  // Small image perf wins for Cloudflare Pages.
-  image: {
-    service: { entrypoint: 'astro/assets/services/sharp' },
+  vite: {
+    // Prevent server-only packages from being accidentally bundled into
+    // client-side code or the Worker bundle.
+    ssr: {
+      external: [
+        'node-cron',
+        '@sentry/node',
+      ],
+      noExternal: [],
+    },
+    optimizeDeps: {
+      exclude: ['node-cron', '@sentry/node'],
+    },
+    build: {
+      // Increase the chunk size warning threshold — the app has large
+      // adapter modules (OCDS JSON mappings, DeepSeek calls) that are fine.
+      chunkSizeWarningLimit: 1000,
+    },
   },
 
-  vite: {
-    build: {
-      // Keep CSS in a single file so it can be HTTP/2-pushed and cached
-      // efficiently by Cloudflare.
-      cssCodeSplit: false,
+  // Markdown / MDX options
+  markdown: {
+    shikiConfig: {
+      theme: 'github-dark',
+      wrap: true,
     },
   },
 });
