@@ -1,0 +1,181 @@
+# .github/workflows/cron.yml — SNIPPET TO MERGE INTO YOUR EXISTING WORKFLOW
+#
+# These steps go INSIDE the existing `ingest` job, AFTER the OCDS fetch step.
+# Do not create a new job for these — staying in one job avoids burning Actions
+# minutes on duplicate environment setup.
+#
+# Each step has:
+#   - continue-on-error: true   → one failing scraper can't kill the others
+#   - timeout-minutes: 5        → workflow-level hard cap (belt-and-braces with
+#                                 the in-script TIME_BUDGET_MS in common.js)
+#
+# Final summary step at the bottom collects results.
+
+# ----- Tier 1: Metro municipalities -----
+
+      - name: Fetch City of Cape Town tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-city-cape-town.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch City of Johannesburg tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-joburg-metro.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch City of Tshwane tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-tshwane.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch eThekwini (Durban) tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-ethekwini.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch Ekurhuleni tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-ekurhuleni.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch Nelson Mandela Bay tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-nelson-mandela-bay.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch Buffalo City tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-buffalo-city.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch Mangaung tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-mangaung.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch Msunduzi tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-msunduzi.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+# ----- Tier 2: SOEs -----
+# Transnet gets 8 minutes because it's likely Playwright-rendered.
+
+      - name: Fetch Eskom tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-eskom.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch Transnet tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-transnet.js
+        continue-on-error: true
+        timeout-minutes: 8
+
+      - name: Fetch SANRAL tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-sanral.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch PRASA tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-prasa.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch ACSA tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-acsa.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch Rand Water tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-rand-water.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch Umgeni Water tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-umgeni-water.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Fetch Telkom tenders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-telkom.js
+        continue-on-error: true
+        timeout-minutes: 5
+
+# ----- Tier 3: Catch-all bulletin (weekly Fridays only) -----
+# This step only runs on Fridays since the GTB is published weekly.
+# The PDF can be ~50 MB so it gets a longer timeout.
+
+      - name: Fetch Government Tender Bulletin PDF (Fridays)
+        if: github.event.schedule == '0 18 * * 5' || github.event_name == 'workflow_dispatch'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+        run: node .github/scripts/fetch-gtb.js
+        continue-on-error: true
+        timeout-minutes: 10
+
+# ----- Step at the end: check overall health and notify on regression -----
+# This runs even if some scrapers failed. It hits the admin health endpoint
+# and triggers WhatsApp/email alerts if any source has been failing for ≥ 3 days.
+
+      - name: Check scraper health & alert on regression
+        if: always()   # runs even if earlier steps failed
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.pages.dev
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          WHATSAPP_WEBHOOK_URL: ${{ secrets.WHATSAPP_WEBHOOK_URL }}
+        run: node .github/scripts/check-scraper-health.js
+        continue-on-error: true
+        timeout-minutes: 2
