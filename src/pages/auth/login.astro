@@ -1,0 +1,84 @@
+---
+// Login / sign-up page.
+// Email magic link + Google OAuth. Carries ?plan and ?redirect_to through.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const url = new URL(Astro.request.url);
+const plan = url.searchParams.get("plan") || "";
+const redirectTo = url.searchParams.get("redirect_to") || "/tenders";
+
+const planLabel =
+  plan === "pro_monthly" ? "Professional (Monthly)" :
+  plan === "pro_annual"  ? "Professional (Annual)"  :
+  plan === "pro"          ? "Professional"           : "";
+---
+<BaseLayout title="Sign in — Tenderpreneurs">
+  <main class="auth-page">
+    <div class="auth-card">
+      <h1>Sign in or create your account</h1>
+      {planLabel && (
+        <p class="plan-note">You're signing up for <strong>{planLabel}</strong>. You'll be sent to checkout after sign-in.</p>
+      )}
+
+      <a class="btn-google" href={`/api/auth/google/start?plan=${encodeURIComponent(plan)}&redirect_to=${encodeURIComponent(redirectTo)}`}>
+        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16.1 18.9 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.3 35 26.8 36 24 36c-5.3 0-9.7-3.1-11.3-7.5l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.7l6.3 5.3C42.5 35.4 44 30 44 24c0-1.2-.1-2.3-.4-3.5z"/>
+        </svg>
+        Continue with Google
+      </a>
+
+      <div class="divider"><span>or</span></div>
+
+      <form id="magic-form" method="post" action="/api/auth/request">
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+        <input type="hidden" name="redirect_to" value={plan ? `/api/payments/checkout?plan=${plan}` : redirectTo} />
+        <button type="submit">Send me a magic link</button>
+      </form>
+
+      <p class="legal">By continuing you agree to our <a href="/terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.</p>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .auth-page { min-height: 70vh; display: grid; place-items: center; padding: 2rem 1rem; }
+  .auth-card { width: 100%; max-width: 420px; background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  .auth-card h1 { font-size: 1.4rem; margin: 0 0 1rem; }
+  .plan-note { background:#f0f9ff; border:1px solid #bae6fd; padding:.6rem .8rem; border-radius:8px; font-size:.9rem; color:#075985; margin-bottom:1rem; }
+  .btn-google { display:flex; align-items:center; justify-content:center; gap:.6rem; width:100%; padding:.7rem 1rem; border:1px solid #d1d5db; border-radius:8px; background:#fff; text-decoration:none; color:#1f2937; font-weight:500; cursor:pointer; }
+  .btn-google:hover { background:#f9fafb; }
+  .divider { display:flex; align-items:center; gap:.5rem; margin:1.2rem 0; color:#9ca3af; font-size:.85rem; }
+  .divider::before, .divider::after { content:""; flex:1; height:1px; background:#e5e7eb; }
+  form label { display:block; font-size:.85rem; color:#374151; margin-bottom:.3rem; }
+  form input[type=email] { width:100%; padding:.6rem .75rem; border:1px solid #d1d5db; border-radius:8px; font-size:1rem; margin-bottom:.8rem; }
+  form button { width:100%; padding:.7rem 1rem; background:#0f172a; color:#fff; border:0; border-radius:8px; font-weight:600; cursor:pointer; }
+  form button:hover { background:#1e293b; }
+  .legal { font-size:.75rem; color:#6b7280; text-align:center; margin-top:1rem; }
+  .legal a { color:#6b7280; text-decoration:underline; }
+</style>
+
+<script>
+  // Intercept the magic-link form so we can show inline confirmation instead of a full page reload.
+  const form = document.getElementById('magic-form') as HTMLFormElement;
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const btn = form.querySelector('button')!;
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const res = await fetch(form.action, { method: 'POST', body: fd });
+      if (res.ok) {
+        window.location.href = '/auth/check-email?email=' + encodeURIComponent(fd.get('email') as string);
+      } else {
+        btn.disabled = false; btn.textContent = 'Send me a magic link';
+        alert('Something went wrong. Please try again.');
+      }
+    } catch {
+      btn.disabled = false; btn.textContent = 'Send me a magic link';
+    }
+  });
+</script>
