@@ -1,0 +1,188 @@
+diff --git a/src/components/FeatureGrid.astro b/src/components/FeatureGrid.astro
+index f0117c2..6623999 100644
+--- a/src/components/FeatureGrid.astro
++++ b/src/components/FeatureGrid.astro
+@@ -16,7 +16,7 @@ const features = [
+     description: 'Our AI scores your tender odds across 6 dimensions: B-BBEE, CSD, technical, experience, financial, pricing. Know before you bid.',
+     color: '#D97706',
+     lightColor: '#FEF3C7',
+-    link: 'https://app.tenderpreneurs.co.za',
++    link: '/auth/login',
+     linkLabel: 'Try AI Scoring →',
+     highlights: ['6-dimension scoring', 'B-BBEE analysis', 'Bid/no-bid guidance'],
+   },
+diff --git a/src/components/Header.astro b/src/components/Header.astro
+index b4fab2c..a25e27f 100644
+--- a/src/components/Header.astro
++++ b/src/components/Header.astro
+@@ -44,7 +44,7 @@ function isActive(href: string) {
+ 
+       <!-- CTA -->
+       <div class="nav-cta">
+-        <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary" rel="noopener">
++        <a href="/auth/login" class="btn btn-primary">
+           Get Started Free
+           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+@@ -87,7 +87,7 @@ function isActive(href: string) {
+           </li>
+         ))}
+         <li>
+-          <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary w-full mt-2" rel="noopener">
++          <a href="/auth/login" class="btn btn-primary w-full mt-2">
+             Get Started Free
+           </a>
+         </li>
+diff --git a/src/components/HeroSection.astro b/src/components/HeroSection.astro
+index 97657b6..3295fca 100644
+--- a/src/components/HeroSection.astro
++++ b/src/components/HeroSection.astro
+@@ -13,7 +13,7 @@ const {
+   headline = 'Win More Government Tenders',
+   subheadline = 'Tenderpreneurs uses AI to help South African SMMEs navigate PFMA procurement, track opportunities, and submit winning bids.',
+   ctaLabel = 'Get Started Free',
+-  ctaHref = 'https://app.tenderpreneurs.co.za',
++  ctaHref = '/auth/login',
+   secondaryLabel = 'Explore PFMA Guide',
+   secondaryHref = '/pfma',
+   badge = '🇿🇦 Built for SA SMMEs',
+diff --git a/src/config/site.ts b/src/config/site.ts
+index 67449d5..3d91e02 100644
+--- a/src/config/site.ts
++++ b/src/config/site.ts
+@@ -2,18 +2,18 @@
+ // Single source of truth for CTAs, app URLs, and feature status flags.
+ // Import this anywhere instead of hardcoding URLs or "Live/Beta" labels.
+ 
+-export const APP_URL = "https://app.tenderpreneurs.co.za";
++export const APP_URL = "";  // app.* subdomain removed — everything lives on this domain
+ 
+ export const CTA = {
+   // Marketing → app conversion CTAs (signup funnel)
+-  signup: `${APP_URL}/register`,
+-  signupPro: `${APP_URL}/register?plan=pro`,
++  signup: `/auth/login`,
++  signupPro: `/auth/login?plan=pro_monthly`,
+   signupEnterprise: "mailto:sales@tenderpreneurs.co.za",
+ 
+   // Product feature deep-links (live in app)
+-  scoring: `${APP_URL}/scoring`,
+-  assistant: `${APP_URL}/assistant`,
+-  tenderFeed: `${APP_URL}/tenders`,
++  scoring: `/tenders`,
++  assistant: `/tenders`,
++  tenderFeed: `/tenders`,
+ 
+   // Marketing pages (this site)
+   pfmaGuide: "/pfma",
+diff --git a/src/content/pfma/b-bbee.mdx b/src/content/pfma/b-bbee.mdx
+index 6408e97..3037bbb 100644
+--- a/src/content/pfma/b-bbee.mdx
++++ b/src/content/pfma/b-bbee.mdx
+@@ -163,4 +163,4 @@ Government evaluators are increasingly sophisticated at identifying fronting. Th
+ 
+ ---
+ 
+-*Calculate your PPPFA preference score and see how your B-BBEE level affects your win probability for specific tenders at [app.tenderpreneurs.co.za](https://app.tenderpreneurs.co.za).*
++*Calculate your PPPFA preference score and see how your B-BBEE level affects your win probability for specific tenders at [tenderpreneurs.co.za](/auth/login).*
+diff --git a/src/content/pfma/irregular-expenditure.mdx b/src/content/pfma/irregular-expenditure.mdx
+index 9b471b7..cefa263 100644
+--- a/src/content/pfma/irregular-expenditure.mdx
++++ b/src/content/pfma/irregular-expenditure.mdx
+@@ -139,4 +139,4 @@ Condonation is not automatic. The accounting officer must apply for condonation
+ 
+ ---
+ 
+-*For specific questions about procurement compliance, use the [PFMA Assistant](https://app.tenderpreneurs.co.za) for instant answers with legislative citations.*
++*For specific questions about procurement compliance, use the [PFMA Assistant](/auth/login) for instant answers with legislative citations.*
+diff --git a/src/content/pfma/pfma-overview.mdx b/src/content/pfma/pfma-overview.mdx
+index 5463bfd..348cdbd 100644
+--- a/src/content/pfma/pfma-overview.mdx
++++ b/src/content/pfma/pfma-overview.mdx
+@@ -156,4 +156,4 @@ Expenditure made in vain and would have been avoided had reasonable care been ex
+ 
+ ---
+ 
+-*Explore related PFMA topics or ask a specific question to our [AI PFMA Assistant](https://app.tenderpreneurs.co.za).*
++*Explore related PFMA topics or ask a specific question to our [AI PFMA Assistant](/auth/login).*
+diff --git a/src/content/pfma/scm-regulations.mdx b/src/content/pfma/scm-regulations.mdx
+index 64ab743..28fd583 100644
+--- a/src/content/pfma/scm-regulations.mdx
++++ b/src/content/pfma/scm-regulations.mdx
+@@ -164,4 +164,4 @@ The risk: this low-value threshold is frequently abused through **quote splittin
+ 
+ ---
+ 
+-*For specific SCM compliance questions, ask the [Tenderpreneurs PFMA Assistant](https://app.tenderpreneurs.co.za) for instant answers with regulatory citations.*
++*For specific SCM compliance questions, ask the [Tenderpreneurs PFMA Assistant](/auth/login) for instant answers with regulatory citations.*
+diff --git a/src/content/pfma/thresholds.mdx b/src/content/pfma/thresholds.mdx
+index 3936971..4a4b417 100644
+--- a/src/content/pfma/thresholds.mdx
++++ b/src/content/pfma/thresholds.mdx
+@@ -189,4 +189,4 @@ Updated guidance on supplier payment terms and the 30-day payment obligation.
+ 
+ ---
+ 
+-*Use the [Tenderpreneurs PFMA Assistant](https://app.tenderpreneurs.co.za) to look up specific threshold rules and get answers to procurement compliance questions with legislative citations.*
++*Use the [Tenderpreneurs PFMA Assistant](/auth/login) to look up specific threshold rules and get answers to procurement compliance questions with legislative citations.*
+diff --git a/src/layouts/BlogLayout.astro b/src/layouts/BlogLayout.astro
+index cf51ca2..a0cd680 100644
+--- a/src/layouts/BlogLayout.astro
++++ b/src/layouts/BlogLayout.astro
+@@ -166,7 +166,7 @@ const breadcrumbSchema = {
+                 <p class="blog-cta-text">Stay ahead of closing dates. Free for South African SMMEs.</p>
+               </div>
+             </div>
+-            <form class="blog-cta-form" action="https://app.tenderpreneurs.co.za/signup" method="GET" novalidate>
++            <form class="blog-cta-form" action="/auth/login" method="GET" novalidate>
+               <label for="email-cta" class="sr-only">Email address</label>
+               <input
+                 id="email-cta"
+diff --git a/src/layouts/PfmaLayout.astro b/src/layouts/PfmaLayout.astro
+index 3cb29fa..a139e1d 100644
+--- a/src/layouts/PfmaLayout.astro
++++ b/src/layouts/PfmaLayout.astro
+@@ -149,7 +149,7 @@ const allTopicLinks = [
+ 
+             <div class="sidebar-cta-box">
+               <p class="sidebar-cta-text">Have a question about procurement?</p>
+-              <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary text-sm">
++              <a href="/auth/login" class="btn btn-primary text-sm">
+                 Ask the AI Assistant
+               </a>
+             </div>
+@@ -200,7 +200,7 @@ const allTopicLinks = [
+             <div class="pfma-cta-body">
+               <h3>Still have questions about {title}?</h3>
+               <p>Ask our AI-powered PFMA Assistant. Free answers with legislative citations, available 24/7.</p>
+-              <a href="https://app.tenderpreneurs.co.za" class="btn btn-primary mt-4" rel="noopener">
++              <a href="/auth/login" class="btn btn-primary mt-4">
+                 Ask the PFMA Assistant →
+               </a>
+             </div>
+diff --git a/src/pages/about.astro b/src/pages/about.astro
+index 431b643..db4b8ba 100644
+--- a/src/pages/about.astro
++++ b/src/pages/about.astro
+@@ -132,7 +132,7 @@ const values = [
+           Create your free account and access the PFMA knowledge base instantly.
+         </p>
+         <div class="mt-6 flex flex-wrap justify-center gap-4">
+-          <a href="https://app.tenderpreneurs.co.za/register" class="btn-primary">
++          <a href="/auth/login" class="btn-primary">
+             Get started free
+           </a>
+           <a href="/pricing" class="btn-secondary">See pricing</a>
+diff --git a/src/pages/pfma/index.astro b/src/pages/pfma/index.astro
+index b5dbae5..2a69738 100644
+--- a/src/pages/pfma/index.astro
++++ b/src/pages/pfma/index.astro
+@@ -157,7 +157,7 @@ const topics = [
+         citations to the actual legislation. Free for all users.
+       </p>
+       <a
+-        href="https://app.tenderpreneurs.co.za/assistant"
++        href="/tenders"
+         class="btn-primary mt-6 inline-flex"
+       >
+         Ask the PFMA Assistant
