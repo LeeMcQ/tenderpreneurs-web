@@ -1,0 +1,87 @@
+---
+/**
+ * Nav.astro
+ * src/components/Nav.astro
+ *
+ * Sticky top navigation with:
+ *   - Logo (TP mark + wordmark)
+ *   - Desktop links
+ *   - Mobile hamburger + blur drawer
+ *   - Scroll-blur effect (via global JS in BaseLayout)
+ */
+---
+
+<nav class="nav" aria-label="Main navigation">
+  <div class="nav-inner">
+
+    <!-- Logo -->
+    <a href="/" class="logo" aria-label="Tenderpreneurs home">
+      <div class="logo-mark" aria-hidden="true">TP</div>
+      <span class="logo-name">
+        Tenderpreneurs<span class="logo-tld">.co.za</span>
+      </span>
+    </a>
+
+    <!-- Desktop links -->
+    <ul class="nav-links list-none" role="list">
+      <li><a href="/tenders">Tenders</a></li>
+      <li><a href="/pfma">PFMA Guide</a></li>
+      <li><a href="/pricing">Pricing</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+
+    <!-- Right side -->
+    <div class="nav-right">
+      <!-- Desktop CTA -->
+      <a
+        href="https://app.tenderpreneurs.co.za"
+        class="btn btn-gold nav-cta"
+        aria-label="Get started free"
+      >
+        Get Started Free
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </a>
+
+      <!-- Hamburger (mobile) -->
+      <button
+        class="hamburger"
+        id="tp-ham"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="tp-drawer"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+  </div><!-- /nav-inner -->
+
+  <!-- Mobile drawer -->
+  <div
+    class="nav-drawer"
+    id="tp-drawer"
+    role="navigation"
+    aria-label="Mobile navigation"
+  >
+    <a href="/tenders">Tenders</a>
+    <a href="/pfma">PFMA Guide</a>
+    <a href="/pricing">Pricing</a>
+    <a href="/blog">Blog</a>
+    <a href="/about">About</a>
+    <a
+      href="https://app.tenderpreneurs.co.za"
+      class="btn btn-gold btn-full drawer-cta"
+    >
+      Get Started Free
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M3 8h10M9 4l4 4-4 4"/>
+      </svg>
+    </a>
+  </div>
+
+</nav>

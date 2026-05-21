@@ -1,0 +1,2532 @@
+
+. Major SOEs
+Transnet: https://esupplierportal.transnet.net/portal/advertisedTenders  
+Eskom: https://tenderbulletin.eskom.co.za/  
+SANRAL: https://www.nra.co.za/sanral-tenders/list/open-tenders  
+DBSA: https://www.dbsa.org/procurement  
+ACSA: https://www.airports.co.za/Pages/Tender-Bulletin.aspx  
+SITA: https://www.sita.co.za/content/new-rfq-invitations  
+PRASA: https://www.etenders.gov.za/ (primary; no fully standalone direct portal)  
+NHLS: https://www.nhls.ac.za/supply-chain/latest-tenders/
+
+2. Provincial (independent/primary)Gauteng: https://etenders.gauteng.gov.za/  
+Western Cape: https://www.westerncape.gov.za/treasury/tenders
+
+3. Major Metros (dedicated tender pages)City of Johannesburg: https://www.joburg.org.za/work_/Pages/Work%20in%20Joburg/Tenders%20and%20Quotations/Tenders-and-Quotations.aspx  
+City of Cape Town: https://web1.capetown.gov.za/web1/tenderportal/  
+eThekwini (Durban): https://ethekwinisupplierportal.durban.gov.za/  
+City of Tshwane: https://www.tshwane.gov.za/?page_id=108 (Tenders section loads directly)  
+Ekurhuleni: https://www.ekurhuleni.gov.za/tenders/  
+Nelson Mandela Bay: https://www.nelsonmandelabay.gov.za/tenders  
+Buffalo City: https://www.buffalocity.gov.za/tenders/  
+Mangaung: https://www.mangaung.co.za/tenders/
+
+4. CIDBCIDB Current Tenders: https://www.cidb.org.za/cidb-tenders/current-tenders/
+
+5. Key OthersRand Water: https://bids.randwater.co.za/Public/Procurement/Bids/ViewPublishedBids.aspx
+
+
+uMngeni-uThukela Water: https://umngeni-uthukela.co.za/tender/  
+Magalies Water: https://magalieswater.co.za/tenders/  
+Lepelle Northern Water: https://lepellewater.co.za/procurement/tenders/  
+Amatola Water: https://www.amatolawater.co.za/scm/tenders  
+Vaal Central Water (formerly Bloem Water): https://vaalcentralwater.co.za/advertised-tenders/
+
+Armscor: https://www.armscor.co.za/tenders/  
+Denel: https://www.denel.co.za/tenders
+
+ICASA (Independent Communications Authority of South Africa): https://www.icasa.org.za/bids-and-tenders/open-bids  
+SANSA (South African National Space Agency): https://www.sansa.org.za/procurement/open-tenders/  
+IRBA (Independent Regulatory Board for Auditors): https://www.irba.co.za/library/procurement  
+CSIR (Council for Scientific and Industrial Research): https://www.csir.co.za/work-with-us/tenders  
+SABS (South African Bureau of Standards): https://www.sabs.co.za/tenders  
+NRF (National Research Foundation): https://www.nrf.ac.za/procurement/procurement-invitations/
+
+
+SARS (South African Revenue Service): https://www.sars.gov.za/procurement/published-tenders/  
+SABC (South African Broadcasting Corporation): https://www.sabc.co.za/sabc/tender-search/  
+South African Post Office: https://www.postoffice.co.za/business/tenders.html  
+NERSA (National Energy Regulator of South Africa): https://www.nersa.org.za/procurement  
+HSRC (Human Sciences Research Council): https://hsrc.ac.za/tenders/  
+Land Bank: https://landbank.co.za/Supply-Chain/Pages/Tenders.aspx  
+IDT (Independent Development Trust): https://www.idt.org.za/cat_doc/advertised-tenders/  
+Necsa (South African Nuclear Energy Corporation): https://www.necsa.co.za/tenders/
+
+
+
+
+
+
+Eastern cape: 
+Alfred Nzo District
+District
+https://www.andm.gov.za
+https://www.andm.gov.za/current-tenders/
+Yes
+Amathole District
+District
+http://www.amathole.gov.za
+http://www.amathole.gov.za/index.php/scm/current-tenders
+Yes
+Chris Hani District
+District
+https://www.chrishanidm.gov.za
+https://www.chrishanidm.gov.za/tenders/
+Yes
+Joe Gqabi District
+District
+https://jgdm.gov.za
+https://jgdm.gov.za/tenders/tender-quotation-advertisements/
+Yes
+OR Tambo District
+District
+https://ortambodm.gov.za
+https://ortambodm.gov.za/tenders/
+Yes
+Sarah Baartman District
+District
+https://www.sarahbaartman.gov.za
+Check “Tenders” or “SCM” section on homepage
+Yes (some)
+Amahlathi
+Amathole
+https://www.amahlathi.gov.za
+https://www.amahlathi.gov.za/tenders
+Yes
+Blue Crane Route
+Sarah Baartman
+https://www.bcrm.gov.za
+https://www.bcrm.gov.za/tenders
+Yes
+Dr AB Xuma
+Chris Hani
+https://www.drabxuma.gov.za
+/tenders or /scm (standard pattern – page exists)
+Yes
+Dr Beyers Naudé
+Sarah Baartman
+https://www.dr beyersnaude.gov.za
+SCM / Tenders section
+Yes
+Elundini
+Joe Gqabi
+https://www.elundini.gov.za
+Tenders / SCM page
+Yes
+Emalahleni
+Chris Hani
+https://www.emalahleni.gov.za
+/tenders or /supply-chain
+Yes
+Enoch Mgijima
+Chris Hani
+https://www.enochmgijima.gov.za
+Tenders section
+Yes
+Great Kei
+Amathole
+https://www.greatkeilm.gov.za
+SCM / Tenders
+Yes
+Ingquza Hill
+OR Tambo
+https://www.ingquzahill.gov.za
+Tenders page
+Yes
+Inxuba Yethemba
+Chris Hani
+https://www.inxubayethemba.gov.za
+Tenders / SCM
+Yes
+King Sabata Dalindyebo
+OR Tambo
+https://www.ksd.gov.za
+Tenders section
+Yes
+Kouga
+Sarah Baartman
+https://www.kouga.gov.za
+https://www.kouga.gov.za/tenders
+Yes
+KouKamma
+Sarah Baartman
+https://www.koukamma.gov.za
+SCM / Tenders
+Yes
+Makana
+Sarah Baartman
+https://www.makana.gov.za
+Tenders page
+Yes
+Matatiele
+Alfred Nzo
+https://www.matatiele.gov.za
+Tenders / SCM
+Yes
+Mbhashe
+Amathole
+https://www.mbhashe.gov.za
+SCM / Tenders
+Yes
+Mhlontlo
+OR Tambo
+https://www.mhlontlo.gov.za
+Tenders page
+Yes
+Mnquma
+Amathole
+https://www.mnquma.gov.za
+Tenders / SCM
+Yes
+Ndlambe
+Sarah Baartman
+https://www.ndlambe.gov.za
+Tenders section
+Yes
+Ngqushwa
+Amathole
+https://www.ngqushwa.gov.za
+Tenders / SCM (page active)
+Yes
+Ntabankulu
+Alfred Nzo
+https://www.ntabankulu.gov.za
+Tenders page
+Yes
+Nyandeni
+OR Tambo
+https://www.nyandeni.gov.za
+SCM / Tenders
+Yes
+Port St Johns
+OR Tambo
+https://www.portstjohns.gov.za
+Tenders section
+Yes
+Raymond Mhlaba
+Amathole
+https://www.raymondmhlaba.gov.za
+Tenders / SCM
+Yes
+Sakhisizwe
+Chris Hani
+https://www.sakhisizwe.gov.za
+Tenders page
+Yes
+Senqu
+Joe Gqabi
+https://www.senqu.gov.za
+Tenders / SCM
+Yes
+Sundays River Valley
+Sarah Baartman
+https://www.sundaysrivervalley.gov.za
+Tenders page
+Yes
+Umzimvubu
+Alfred Nzo
+https://www.umzimvubu.gov.za
+SCM / Tenders
+Yes
+Walter Sisulu
+Joe Gqabi
+https://www.waltersisulu.gov.za
+Tenders section
+Yes
+Winnie Madikizela-Mandela
+Alfred Nzo
+https://www.winniemadikizelamandela.gov.za
+Tenders / SCM
+Yes
+
+Free State :
+
+Fezile Dabi District
+https://feziledabi.gov.za/
+SCM / Tenders section (homepage menu)
+Yes
+Lejweleputswa District
+https://www.lejweleputswa.fs.gov.za/
+https://www.lejweleputswa.fs.gov.za/tenders
+Yes
+Thabo Mofutsanyana District
+http://www.thabomofutsanyana.gov.za/
+http://www.thabomofutsanyana.gov.za/notices.aspx or /tenders
+Yes
+Xhariep District
+https://www.xhariep.fs.gov.za/
+Tenders / SCM section on homepage
+Yes
+
+Dihlabeng
+Thabo Mofutsanyana
+https://www.dihlabeng.gov.za
+Tenders / SCM section
+Yes
+Kopanong
+Xhariep
+https://www.kopanong.gov.za
+SCM / Tenders
+Yes
+Letsemeng
+Xhariep
+https://www.letsemeng.gov.za
+Tenders page
+Yes
+Mafube
+Fezile Dabi
+https://www.mafube.gov.za
+Supply Chain / Tenders
+Yes
+Maluti-a-Phofung
+Thabo Mofutsanyana
+https://www.map.fs.gov.za
+Tenders / SCM
+Yes
+Mantsopa
+Thabo Mofutsanyana
+https://www.mantsopa.gov.za
+SCM section
+Yes
+Masilonyana
+Lejweleputswa
+https://www.masilonyana.gov.za
+Tenders / Bids
+Yes
+Matjhabeng
+Lejweleputswa
+https://www.matjhabeng.gov.za
+Supply Chain Management
+Yes
+Metsimaholo
+Fezile Dabi
+https://www.metsimaholo.gov.za
+Tenders page
+Yes
+Mohokare
+Xhariep
+https://www.mohokare.gov.za
+https://www.mohokare.gov.za/tenders
+Yes
+Moqhaka
+Fezile Dabi
+https://www.moqhaka.gov.za
+Tenders / SCM
+Yes
+Nala
+Lejweleputswa
+https://www.nala.gov.za
+SCM / Tenders
+Yes
+Ngwathe
+Fezile Dabi
+https://www.ngwathe.gov.za
+Tenders section
+Yes
+Nketoana
+Thabo Mofutsanyana
+https://www.nketoana.gov.za
+Supply Chain
+Yes
+Phumelela
+Thabo Mofutsanyana
+https://www.phumelela.gov.za
+Tenders / SCM
+Yes
+Setsoto
+Thabo Mofutsanyana
+https://www.setsoto.gov.za
+Tenders page
+Yes
+Tokologo
+Lejweleputswa
+https://www.tokologo.gov.za
+SCM / Tenders
+Yes
+Tswelopele
+Lejweleputswa
+https://www.tswelopele.gov.za
+Tenders section
+Yes
+
+Gauteng:
+
+Sedibeng District
+https://www.sedibeng.gov.za
+https://www.sedibeng.gov.za/tenders.html
+Yes (9 active tenders + RFQs, closing Mar–Jun 2026)
+West Rand District
+https://www.wrdm.gov.za
+https://www.wrdm.gov.za/open-tenders/
+Page loads (no tenders currently open)
+Emfuleni
+Sedibeng
+https://emfuleni.gov.za
+https://emfuleni.gov.za/tenders/
+Yes
+Lesedi
+Sedibeng
+https://lesedi-lm.gauteng.gov.za
+“Tenders” / “SCM” / “Quotations” section on homepage
+Yes
+Midvaal
+Sedibeng
+https://www.midvaal.gov.za
+Tenders / SCM section (or contact tenders@midvaal.gov.za)
+Yes
+Merafong City
+West Rand
+https://merafong.gov.za
+https://merafong.gov.za/tenders-available/
+Yes (multiple active, closing late May 2026)
+Mogale City
+West Rand
+https://mogalecity.gov.za
+https://mogalecity.gov.za/mogale-city/work-in/tenders/
+Yes (active tenders closing June 2026)
+Rand West City
+West Rand
+https://randwestcity.gauteng.gov.za
+“Tenders” / “SCM” section on homepage
+Yes
+
+KwaZulu-Natal:
+Amajuba District
+https://www.amajuba.gov.za
+SCM / Tenders section on homepage
+Yes
+Harry Gwala District
+https://www.harrygwaladm.gov.za
+https://www.harrygwaladm.gov.za/supply-chain.html
+Yes (multiple active RFPs, e.g. solar borehole projects closing April–June 2026)
+iLembe District
+https://www.ilembe.gov.za
+Tenders / SCM section
+Yes
+King Cetshwayo District
+https://www.kingcetshwayo.gov.za
+Tenders / SCM section
+Yes
+Ugu District
+https://www.ugu.gov.za
+Tenders / SCM section
+Yes
+uMgungundlovu District
+https://www.umgungundlovu.gov.za
+https://www.umgungundlovu.gov.za/tenders
+Yes
+uMkhanyakude District
+https://www.umkhanyakude.gov.za
+SCM / Tenders section
+Yes
+uMzinyathi District
+https://www.umzinyathi.gov.za
+Tenders / SCM section
+Yes
+uThukela District
+https://www.uthukela.gov.za
+Tenders / SCM section
+Yes
+Zululand District
+https://www.zululand.org.za
+Tenders / SCM section
+Yes
+
+AbaQulusi
+Zululand
+https://www.abaqulusi.gov.za
+https://www.abaqulusi.gov.za/tenders
+Yes
+Alfred Duma
+uMzinyathi
+https://www.alfredduma.gov.za
+https://www.alfredduma.gov.za/supply-chain
+Yes
+Big 5 Hlabisa
+uMkhanyakude
+https://www.big5hlabisa.gov.za
+SCM / Tenders section
+Yes
+City of uMhlathuze
+King Cetshwayo
+https://www.umhlathuze.gov.za
+Tenders / SCM section
+Yes
+Dannhauser
+Amajuba
+https://www.dannhauser.gov.za
+SCM / Tenders
+Yes
+Dr Nkosazana Dlamini Zuma
+Harry Gwala
+https://www.dndz.gov.za
+Tenders / SCM section
+Yes
+eDumbe
+Zululand
+https://www.edumbe.gov.za
+Tenders / SCM
+Yes
+Emadlangeni
+Amajuba
+https://www.emadlangeni.gov.za
+SCM / Tenders
+Yes
+Endumeni
+uMzinyathi
+https://www.endumeni.gov.za
+Tenders / SCM
+Yes
+Greater Kokstad
+Harry Gwala
+https://www.greaterkokstad.gov.za
+Tenders / SCM
+Yes
+Impendle
+uMgungundlovu
+https://www.impendle.gov.za
+SCM / Tenders
+Yes
+Inkosi Langalibalele
+uThukela
+https://www.inkosilangalibalele.gov.za
+Tenders / SCM
+Yes
+Inkosi Mtubatuba
+uMkhanyakude
+https://www.mtubatuba.gov.za
+Tenders / SCM
+Yes
+Jozini
+uMkhanyakude
+https://www.jozini.gov.za
+SCM / Tenders
+Yes
+KwaDukuza
+iLembe
+https://www.kwadukuza.gov.za
+Tenders / SCM
+Yes
+Mandeni
+iLembe
+https://www.mandeni.gov.za
+Tenders / SCM
+Yes
+Maphumulo
+iLembe
+https://www.maphumulo.gov.za
+SCM / Tenders
+Yes
+Mkhambathini
+uMgungundlovu
+https://www.mkhambathini.gov.za
+Tenders / SCM
+Yes
+Mpofana
+uMgungundlovu
+https://www.mpofana.gov.za
+SCM / Tenders
+Yes
+Msunduzi
+uMgungundlovu
+https://www.msunduzi.gov.za
+Tenders / SCM
+Yes
+Mthonjaneni
+King Cetshwayo
+https://www.mthonjaneni.gov.za
+Tenders / SCM
+Yes
+Ndwedwe
+iLembe
+https://www.ndwedwe.gov.za
+SCM / Tenders
+Yes
+Newcastle
+Amajuba
+https://www.newcastle.gov.za
+Tenders / SCM
+Yes
+Nkandla
+King Cetshwayo
+https://www.nkandla.gov.za
+Tenders / SCM
+Yes
+Nongoma
+Zululand
+https://www.nongoma.gov.za
+SCM / Tenders
+Yes
+Nquthu
+uMzinyathi
+https://www.nquthu.gov.za
+Tenders / SCM
+Yes
+Okhahlamba
+uThukela
+https://www.okhahlamba.gov.za
+SCM / Tenders
+Yes
+Ray Nkonyeni
+Ugu
+https://www.rnm.gov.za
+Tenders / SCM
+Yes
+Richmond
+uMgungundlovu
+https://www.richmond.gov.za
+SCM / Tenders
+Yes
+Umdoni
+Ugu
+https://www.umdoni.gov.za
+Tenders / SCM
+Yes
+uMfolozi
+King Cetshwayo
+https://www.umfolozi.gov.za
+SCM / Tenders
+Yes
+uMhlabuyalingana
+uMkhanyakude
+https://www.umhlabuyalingana.gov.za
+Tenders / SCM
+Yes
+uMlalazi
+King Cetshwayo
+https://www.umlalazi.gov.za
+Tenders / SCM
+Yes
+uMngeni
+uMgungundlovu
+https://www.umngeni.gov.za
+Tenders / SCM
+Yes
+uMshwathi
+uMgungundlovu
+https://www.umshwathi.gov.za
+SCM / Tenders
+Yes
+uMsinga
+uMzinyathi
+https://www.umsinga.gov.za
+Tenders / SCM
+Yes
+Umuziwabantu
+Ugu
+https://www.umuziwabantu.gov.za
+SCM / Tenders
+Yes
+Umvoti
+uMzinyathi
+https://www.umvoti.gov.za
+Tenders / SCM
+Yes
+Umzimkhulu
+Harry Gwala
+https://www.umzimkhulu.gov.za
+SCM / Tenders
+Yes
+Umzumbe
+Ugu
+https://www.umzumbe.gov.za
+SCM / Tenders (policy & notices on site)
+Yes
+uPhongolo
+Zululand
+https://www.uphongolo.gov.za
+Tenders / SCM
+Yes
+
+Limpopo:
+Capricorn District
+https://www.cdm.org.za
+https://www.cdm.org.za/category/bids/ or SCM section
+Yes
+Mopani District
+https://www.mopani.gov.za
+https://www.mopani.gov.za/index.php?page=tenders (Advertised Tenders)
+Yes
+Sekhukhune District
+https://www.sekhukhunedistrict.gov.za
+https://www.sekhukhunedistrict.gov.za/?q=advertised_tenders or Public Notices
+Yes
+Vhembe District
+https://www.vhembe.gov.za
+https://www.vhembe.gov.za/advertised-tenders/
+Yes
+Waterberg District
+https://www.waterberg.gov.za
+Tenders / SCM section on homepage
+Yes
+Aganang
+Capricorn
+https://www.aganang.gov.za
+SCM / Tenders section
+Yes
+Ba-Phalaborwa
+Mopani
+https://www.ba-phalaborwa.gov.za
+Tenders / SCM section
+Yes
+Bela-Bela
+Waterberg
+https://www.belabela.gov.za
+Tenders / SCM section
+Yes
+Blouberg
+Capricorn
+https://www.blouberg.gov.za
+https://www.blouberg.gov.za/tenders or SCM
+Yes
+Collins Chabane
+Vhembe
+https://www.collinschabane.gov.za
+Tenders / SCM section
+Yes
+Elias Motsoaledi
+Sekhukhune
+https://www.eliasmotsoaledi.gov.za
+Tenders / SCM section
+Yes
+Ephraim Mogale
+Sekhukhune
+https://www.ephraimmogalelm.gov.za
+Tenders / SCM section
+Yes
+Fetakgomo Tubatse
+Sekhukhune
+https://www.fetakgomotubatse.gov.za
+Tenders / SCM section
+Yes
+Greater Giyani
+Mopani
+https://www.greatergiyani.gov.za
+Tenders / SCM section
+Yes
+Greater Letaba
+Mopani
+https://www.greaterletaba.gov.za
+Tenders / SCM section
+Yes
+Greater Tzaneen
+Mopani
+https://www.greatertzaneen.gov.za
+Tenders / SCM section
+Yes
+Lepelle-Nkumpi
+Capricorn
+https://www.lepelle-nkumpi.gov.za
+Tenders / SCM section
+Yes
+Lephalale
+Waterberg
+https://www.lephalale.gov.za
+Tenders / SCM section
+Yes
+Makhado
+Vhembe
+https://www.makhado.gov.za
+Tenders / SCM section
+Yes
+Makhuduthamaga
+Sekhukhune
+https://www.makhuduthamaga.gov.za
+Tenders / SCM section
+Yes
+Maruleng
+Mopani
+https://www.maruleng.gov.za
+Tenders / SCM section
+Yes
+Modimolle-Mookgophong
+Waterberg
+https://www.modimolle.gov.za
+Tenders / SCM section
+Yes
+Mogalakwena
+Waterberg
+https://www.mogalakwena.gov.za
+Tenders / SCM section
+Yes
+Molemole
+Capricorn
+https://www.molemole.gov.za
+Tenders / SCM section
+Yes
+Musina
+Vhembe
+https://www.musina.gov.za
+Tenders / SCM section
+Yes
+Polokwane
+Capricorn
+https://www.polokwane.gov.za
+Tenders / SCM section
+Yes
+Thabazimbi
+Waterberg
+https://www.thabazimbi.gov.za
+Tenders / SCM section
+Yes
+Thulamela
+Vhembe
+https://www.thulamela.gov.za
+Tenders / SCM section
+Yes
+
+Mpumalanga:
+Ehlanzeni District
+https://www.ehlanzeni.gov.za
+https://www.ehlanzeni.gov.za/tenders or SCM section
+Yes
+Gert Sibande District
+https://www.gertsibande.gov.za
+Tenders / SCM section on homepage
+Yes
+Nkangala District
+https://www.nkangaladm.gov.za
+https://www.nkangaladm.gov.za/tenders
+Yes
+
+Albert Luthuli (Chief Albert Luthuli)
+Gert Sibande
+https://www.albertluthuli.gov.za
+Tenders / SCM section
+Yes
+Bushbuckridge
+Ehlanzeni
+https://www.bushbuckridge.gov.za
+https://www.bushbuckridge.gov.za/tenders
+Yes
+City of Mbombela
+Ehlanzeni
+https://www.mbombela.gov.za
+Tenders / SCM section
+Yes
+Dipaleseng
+Gert Sibande
+https://www.dipaleseng.gov.za
+SCM / Tenders section
+Yes
+Dr JS Moroka
+Nkangala
+https://www.moroka.gov.za
+Tenders / SCM section
+Yes
+Emakhazeni
+Nkangala
+https://www.emakhazeni.gov.za
+Tenders / SCM section
+Yes
+Emalahleni
+Nkangala
+https://www.emalahleni.gov.za
+https://www.emalahleni.gov.za/tenders
+Yes
+Govan Mbeki
+Gert Sibande
+https://www.govanmbeki.gov.za
+Tenders / SCM section
+Yes
+Lekwa
+Gert Sibande
+https://www.lekwa.gov.za
+Tenders / SCM section
+Yes
+
+North West:
+Bojanala Platinum District
+https://www.bojanala.gov.za
+Tenders / SCM section on homepage
+Yes
+Dr Kenneth Kaunda District
+https://www.kaundadistrict.gov.za
+SCM / Tenders section
+Yes
+Dr Ruth Segomotsi Mompati District
+https://www.drsmompatidm.gov.za
+Tenders / SCM section
+Yes
+Ngaka Modiri Molema District
+https://www.nmmdm.gov.za
+https://www.nmmdm.gov.za/tenders or SCM section
+Yes
+City of Matlosana
+Dr Kenneth Kaunda
+https://www.matlosana.gov.za
+https://www.matlosana.gov.za/tenders
+Yes
+Ditsobotla
+Ngaka Modiri Molema
+https://www.ditsobotla.gov.za
+Tenders / SCM section
+Yes
+Greater Taung
+Dr Ruth Segomotsi Mompati
+https://www.greatertaung.gov.za
+SCM / Tenders section
+Yes
+Kagisano-Molopo
+Dr Ruth Segomotsi Mompati
+https://www.kagisanomolopo.gov.za
+Tenders / SCM section
+Yes
+Kgetlengrivier
+Bojanala Platinum
+https://www.kgetlengrivier.gov.za
+Tenders / SCM section
+Yes
+Lekwa-Teemane
+Dr Ruth Segomotsi Mompati
+https://www.lekwateemane.gov.za
+SCM / Tenders section
+Yes
+Madibeng
+Bojanala Platinum
+https://www.madibeng.gov.za
+Tenders / SCM section
+Yes
+Mahikeng
+Ngaka Modiri Molema
+https://www.mahikeng.gov.za
+Tenders / SCM section
+Yes
+Mamusa
+Dr Ruth Segomotsi Mompati
+https://www.mamusa.gov.za
+Tenders / SCM section
+Yes
+Maquassi Hills
+Dr Kenneth Kaunda
+https://www.maquassihills.gov.za
+SCM / Tenders section
+Yes
+Moretele
+Bojanala Platinum
+https://www.moretele.gov.za
+Tenders / SCM section
+Yes
+Moses Kotane
+Bojanala Platinum
+https://www.moseskotane.gov.za
+Tenders / SCM section
+Yes
+Naledi
+Dr Ruth Segomotsi Mompati
+https://www.naledi.gov.za
+SCM / Tenders section
+Yes
+Ramotshere Moiloa
+Ngaka Modiri Molema
+https://www.ramotshere.gov.za
+Tenders / SCM section
+Yes
+Ratlou
+Ngaka Modiri Molema
+https://www.ratlou.gov.za
+Tenders / SCM section
+Yes
+Rustenburg
+Bojanala Platinum
+https://www.rustenburg.gov.za
+https://www.rustenburg.gov.za/tenders
+Yes (high volume)
+Tswaing
+Dr Ruth Segomotsi Mompati
+https://www.tswaing.gov.za
+Tenders / SCM section
+
+Northern Cape:
+Frances Baard District
+https://www.francesbaard.gov.za
+SCM / Tenders section on homepage
+Yes
+John Taolo Gaetsewe District
+https://www.jtgdm.gov.za
+Tenders / SCM section
+Yes
+Namakwa District
+https://www.namakwadm.gov.za
+https://www.namakwadm.gov.za/tenders or SCM section
+Yes
+Pixley Ka Seme District
+https://www.pixleykase.me.gov.za
+Tenders / SCM section
+Yes
+ZF Mgcawu District
+https://www.zfmgcawu.gov.za
+https://www.zfmgcawu.gov.za/tenders
+Yes
+
+!Kheis
+ZF Mgcawu
+https://www.kheis.gov.za
+Tenders / SCM section
+Yes
+Dawid Kruiper
+ZF Mgcawu
+https://www.dawidkruiper.gov.za
+Tenders / SCM section
+Yes
+Dikgatlong
+Frances Baard
+https://www.dikgatlong.gov.za
+SCM / Tenders section
+Yes
+Emthanjeni
+Pixley Ka Seme
+https://www.emthanjeni.gov.za
+Tenders / SCM section
+Yes
+Ga-Segonyana
+John Taolo Gaetsewe
+https://www.gasegonyana.gov.za
+Tenders / SCM section
+Yes
+Gamagara
+John Taolo Gaetsewe
+https://www.gamagara.gov.za
+SCM / Tenders section
+Yes
+Hantam
+Namakwa
+https://www.hantam.gov.za
+Tenders / SCM section
+Yes
+Joe Morolong
+John Taolo Gaetsewe
+https://www.joemorolong.gov.za
+Tenders / SCM section
+Yes
+Kai !Garib
+ZF Mgcawu
+https://www.kaigarib.gov.za
+Tenders / SCM section
+Yes
+Kamiesberg
+Namakwa
+https://www.kamiesberg.gov.za
+SCM / Tenders section
+Yes
+Kareeberg
+Pixley Ka Seme
+https://www.kareeberg.gov.za
+Tenders / SCM section
+Yes
+Karoo Hoogland
+Namakwa
+https://www.karoohoogland.gov.za
+Tenders / SCM section
+Yes
+Kgatelopele
+ZF Mgcawu
+https://www.kgatelopele.gov.za
+SCM / Tenders section
+Yes
+Khâi-ma
+Namakwa
+https://www.khaima.gov.za
+Tenders / SCM section
+Yes
+Magareng
+Frances Baard
+https://www.magareng.gov.za
+Tenders / SCM section
+Yes
+Nama Khoi
+Namakwa
+https://www.namakhoi.gov.za
+SCM / Tenders section
+Yes
+Phokwane
+Frances Baard
+https://www.phokwane.gov.za
+Tenders / SCM section
+Yes
+Renosterberg
+Pixley Ka Seme
+https://www.renosterberg.gov.za
+SCM / Tenders section
+Yes
+Richtersveld
+Namakwa
+https://www.richtersveld.gov.za
+Tenders / SCM section
+Yes
+Siyancuma
+Pixley Ka Seme
+https://www.siyancuma.gov.za
+Tenders / SCM section
+Yes
+Siyathemba
+Pixley Ka Seme
+https://www.siyathemba.gov.za
+SCM / Tenders section
+Yes
+Sol Plaatje
+Frances Baard
+https://www.solplaatje.gov.za
+https://www.solplaatje.gov.za/t...
+
+Western Cape:
+Cape Winelands District
+https://capewinelands.gov.za
+Tenders / SCM section on homepage
+Yes
+Central Karoo District
+https://www.ckdm.gov.za
+Tenders / SCM section
+Yes
+Garden Route District
+https://www.gardenroute.gov.za
+https://www.gardenroute.gov.za/tenders or SCM section
+Yes
+Overberg District
+https://www.overberg.gov.za
+Tenders / SCM section
+Yes
+West Coast District
+https://westcoastdm.co.za
+Tenders / SCM section on homepage
+Yes
+Beaufort West
+Central Karoo
+https://www.beaufortwestmun.co.za
+https://www.beaufortwestmun.co.za/tenders
+Yes
+Bergrivier
+West Coast
+https://www.bergmun.org.za
+https://www.bergmun.org.za/supply-chain-management
+Yes
+Bitou
+Garden Route
+https://www.bitou.gov.za
+Tenders / SCM section
+Yes
+Breede Valley
+Cape Winelands
+https://www.bvm.gov.za
+Tenders / SCM section
+Yes
+Cape Agulhas
+Overberg
+https://www.capeagulhas.gov.za
+Tenders / SCM section
+Yes
+Cederberg
+West Coast
+http://www.cederbergmun.gov.za
+Tenders / SCM section
+Yes
+Drakenstein
+Cape Winelands
+https://www.drakenstein.gov.za
+Tenders / SCM section
+Yes
+George
+Garden Route
+https://www.george.gov.za
+Tenders / SCM section
+Yes
+Hessequa
+Garden Route
+https://www.hessequa.gov.za
+Tenders / SCM section
+Yes
+Kannaland
+Garden Route
+https://www.kannaland.gov.za
+Tenders / SCM section
+Yes
+Knysna
+Garden Route
+https://www.knysna.gov.za
+Tenders / SCM section
+Yes
+Laingsburg
+Central Karoo
+https://laingsburg.gov.za
+Tenders / SCM section
+Yes
+Langeberg
+Cape Winelands
+https://www.langeberg.gov.za
+Tenders / SCM section
+Yes
+Matzikama
+West Coast
+https://www.matzikamamunicipality.co.za
+Tenders / SCM section
+Yes
+Mossel Bay
+Garden Route
+https://www.mosselbay.gov.za
+Tenders / SCM section
+Yes
+Oudtshoorn
+Garden Route
+https://www.oudtshoorn.gov.za
+Tenders / SCM section
+Yes
+Overstrand
+Overberg
+https://www.overstrand.gov.za
+Tenders / SCM section
+Yes
+Prince Albert
+Central Karoo
+https://www.pamun.gov.za
+Tenders / SCM section
+Yes
+Saldanha Bay
+West Coast
+https://www.sbm.gov.za
+Tenders / SCM section
+Yes
+Stellenbosch
+Cape Winelands
+https://www.stellenbosch.gov.za
+Tenders / SCM section
+Yes
+Swartland
+West Coast
+https://www.swartland.org.za
+Tenders / SCM section
+Yes
+Swellendam
+Overberg
+https://www.swellenmun.co.za
+Tenders / SCM section
+Yes
+Theewaterskloof
+Overberg
+https://www.twk.org.za
+Tenders / SCM section
+Yes
+Witzenberg
+Cape Winelands
+https://www.witzenberg.gov.za
+Tenders / SCM section
+Yes
+
+
+
+
+Public Universities/Institutions:
+Boland College
+https://bolandcollege.com/work-with-us/tenders/
+Works – active tenders
+Cape Peninsula University of Technology (CPUT)
+https://www.cput.ac.za/services/procurement
+Works
+Central University of Technology, Free State
+https://www.cut.ac.za/tender-bulletins
+Works
+CSIR
+https://www.csir.co.za/tender
+Works
+Durban University of Technology (DUT)
+http://www.dut.ac.za/tenders
+Works
+Engineering Council of South Africa
+https://www.ecsa.co.za/SitePages/Tenders.aspx
+Works
+False Bay College
+http://www.falsebaycollege.co.za/index.php?option=com_content&view=article&id=453:procurement-notice&catid=2:uncategorised&Itemid=391
+Works
+Gert Sibande TVET College
+https://gscollege.edu.za/tenders
+Works
+iThemba Laboratory for Accelerator Based Sciences (NRF)
+https://tlabs.ac.za/?s=Tenders
+Works
+Majuba College
+https://majuba.edu.za/tenders/
+Works
+Mangosuthu University of Technology (MUT)
+https://www.mut.ac.za/tenders-procurement/
+Works
+MINTEK
+http://www.mintek.co.za/corporate-profile/tenders-procurement/
+Works
+Mnambithi TVET College
+https://www.mnambithicollege.co.za/index.php/media-mnambithi-college/tender-information/tenders-quotations
+Works
+Namibia University of Science and Technology
+https://www.nust.na/?q=procurement
+Works
+National Health Laboratory Service (NHLS)
+https://www.nhls.ac.za/supply-chain/latest-tenders/
+Works
+National Research Foundation (NRF)
+http://www.nrf.ac.za/call_for_tenders.php
+Works
+Nkangala TVET College
+http://www.ntc.edu.za/careers-tenders/tenders
+Works
+North West University
+http://www.nwu.ac.za/nwu-tenders
+Works
+Sefako Makgatho Health Sciences University (SMU)
+https://www.smu.ac.za/product-category/active-tenders/
+Works
+Sol Plaatje University (SPU)
+https://www.spu.ac.za/index.php/tenders-2020/
+Works
+South African Agency for Science and Technology Advancement (SAASTA)
+http://www.saasta.ac.za/index.php?option=com_content&view=article&id=277&Itemid=1
+Works
+South African Bureau of Standards
+https://www.sabs.co.za/Procurement/proc_tenders.asp
+Works
+South African Qualifications Authority (SAQA)
+https://www.saqa.org.za/tenders-advertised
+Works
+Stellenbosch University
+http://www.sun.ac.za/english/search/Pages/results.aspx?k=tenders
+Works
+Tshwane University of Technology (TUT)
+https://www.tut.ac.za/tenders/
+Works
+Umalusi
+https://www.umalusi.org.za/tenders/
+Works
+UNISA
+https://www.unisa.ac.za/sites/corporate/default/Tenders
+Works
+University of Cape Town
+http://www.uct.ac.za/services/pps/infoforvendors/current/
+Works
+University of KwaZulu-Natal
+http://www.ukzn.ac.za/tenders
+Works
+University of Limpopo
+http://www.ul.ac.za/index.php?Entity=Tenders
+Works
+University of Mpumalanga
+https://www.ump.ac.za/Procurement
+Works
+University of Namibia
+https://www.unam.edu.na/tenders
+Works
+University of Pretoria
+https://www.up.ac.za/tender/tenderdetails.aspx
+Works
+University of the Free State
+https://www.ufs.ac.za/templates/tenders
+Works
+University of the Witwatersrand (Wits)
+https://www.wits.ac.za/about-wits/tenders/
+Works
+University of Venda
+https://www.univen.ac.za/tenders/
+Works
+University of Zululand
+https://www.univen.ac.za/tenders/
+Works (note: same link as Venda in source)
+Vaal University of Technology
+https://www.vut.ac.za/tenders/
+Works
+Vuselela TVET College
+https://vuselelacollege.co.za/tenders/
+Works
+Walter Sisulu University
+https://www.wsu.ac.za/index.php/tenders
+Works
+Waterberg TVET College
+https://www.waterbergcollege.co.za/tenders.php
+Works
+
+
+
+TVET Colleges:
+Buffalo City TVET College
+https://www.bctvet.edu.za
+Tenders / Procurement section (main menu)
+Yes
+Eastcape Midlands TVET College
+https://www.emcol.co.za
+SCM / Tenders section
+Yes
+Ikhala TVET College
+https://www.ikhala.edu.za
+https://www.ikhala.edu.za/tenders-rfq
+Yes (multiple RFQs)
+Ingwe TVET College
+https://www.ingwecollege.edu.za
+SCM / Tenders section
+Yes
+King Hintsa TVET College
+https://www.kinghintsacollege.edu.za
+Tenders / Procurement section
+Yes
+King Sabata Dalindyebo TVET College
+https://www.ksdcollege.edu.za
+Tenders / SCM section
+Yes
+Lovedale TVET College
+https://www.lovedaletc.edu.za
+SCM / Tenders section
+Yes
+Port Elizabeth TVET College
+https://www.peptc.edu.za
+Tenders section
+Yes
+lavius Mareka TVET College
+https://www.flaviusmareka.net
+Tenders / SCM section
+Yes
+Goldfields TVET College
+https://www.goldfields.edu.za
+SCM / Tenders section
+Yes
+Maluti TVET College
+https://www.malutitvet.edu.za
+Tenders page
+Yes
+Motheo TVET College
+https://www.motheotvet.co.za
+SCM / Tenders section
+Yes
+
+Central Johannesburg TVET College
+https://cjc.edu.za/
+Tenders & Vacancies section (main menu)
+Yes
+Ekurhuleni East TVET College
+https://www.eec.edu.za/
+SCM / Tenders section
+Yes
+Ekurhuleni West TVET College
+https://www.ewc.edu.za/
+https://www.ewc.edu.za/tenders.html
+Yes (active RFQs)
+Sedibeng TVET College
+https://www.sedcol.co.za/
+Supplier Hub → RFQ / Bids / Tenders
+Yes
+South West Gauteng TVET College
+https://www.swgc.co.za/
+https://www.swgc.co.za/tenders/
+Yes (multiple active tenders)
+Tshwane North TVET College
+https://www.tnc.edu.za/
+SCM / Tenders section
+Yes
+Tshwane South TVET College
+https://tsc.edu.za/
+Tenders / Procurement section
+Yes
+Western (Westcol) TVET College
+https://www.westcol.co.za/
+SCM / Tenders section
+Yes
+
+Coastal TVET College
+https://www.coastalkzn.co.za/
+Bid Documents / Tenders section
+Yes
+Elangeni TVET College
+https://www.elangeni.edu.za/
+SCM / Tenders section
+Yes
+Esayidi TVET College
+https://esayiditvet.co.za/
+Tenders section (main menu)
+Yes
+Majuba TVET College
+https://majuba.edu.za/
+https://majuba.edu.za/tenders/
+Yes
+Mnambithi TVET College
+https://www.mnambithicollege.co.za/
+Tenders / Quotations section
+Yes
+Mthashana TVET College
+https://www.mthashanacollege.co.za/
+Supply Chain Management page
+Yes
+Thekwini TVET College
+https://www.thekwini.edu.za/
+SCM / Tenders section
+Yes
+Umfolozi TVET College
+https://www.umfolozi.edu.za/
+Tenders / Procurement section
+Yes
+Umgungundlovu TVET College
+https://www.umgungundlovu.edu.za/
+Tenders / SCM section
+Yes
+
+Capricorn TVET College
+https://www.capricorncollege.edu.za/
+SCM / Tenders section (main menu)
+Yes
+Lephalale TVET College
+https://www.lephalalefetcollege.edu.za/
+Tenders / Procurement section
+Yes
+Letaba TVET College
+https://www.letcol.co.za/
+SCM / Tenders section
+Yes
+Mopani South East TVET College
+https://www.mopanicollege.edu.za/
+Tenders / SCM section
+Yes
+Sekhukhune TVET College
+https://www.sekhukhunefetcollege.edu.za/
+Tenders / RFQs section
+Yes
+Vhembe TVET College
+https://www.vhembecollege.edu.za/
+SCM / Tenders section
+Yes
+Waterberg TVET College
+https://www.waterbergcollege.co.za/
+https://www.waterbergcollege.co.za/tenders.php
+Yes
+
+Ehlanzeni TVET College
+https://www.ehlanzenicollege.edu.za/
+Tenders / SCM section
+Yes
+Gert Sibande TVET College
+https://gscollege.edu.za/
+https://gscollege.edu.za/tenders
+Yes
+Nkangala TVET College
+http://www.ntc.edu.za/
+http://www.ntc.edu.za/careers-tenders/tenders
+Yes
+Northern Cape Rural TVET College
+https://www.ncrfet.edu.za
+SCM / Tenders section (main menu)
+Yes
+Northern Cape Urban TVET College
+https://www.ncufet.edu.za
+Tenders / Procurement section
+Yes
+Orbit TVET College
+https://www.orbitcollege.co.za
+Tenders / SCM section
+Yes
+Taletso TVET College
+https://www.taletso.edu.za
+SCM / Tenders section
+Yes
+Vuselela TVET College
+https://vuselelacollege.co.za
+https://vuselelacollege.co.za/tenders/
+Yes
+Boland TVET College
+https://bolandcollege.com/
+https://bolandcollege.com/work-with-us/tenders/
+Yes
+College of Cape Town for TVET
+https://www.cct.edu.za/
+Tenders / Procurement section (main menu)
+Yes
+False Bay TVET College
+https://falsebaycollege.co.za/
+https://falsebaycollege.co.za/business-and-industry/supply-chain-management/
+Yes (RFQs + notices)
+Northlink TVET College
+https://www.northlink.co.za/
+SCM / Tenders section
+Yes
+South Cape TVET College
+https://www.southcapecollege.co.za/
+Tenders / SCM section
+Yes
+West Coast TVET College
+https://www.westcoastcollege.co.za/
+SCM / Tenders section
+Yes
+
+
+
+National Health Laboratory Service (NHLS)
+https://www.nhls.ac.za/supply-chain/latest-tenders/
+Yes
+Construction Industry Development Board (CIDB)
+https://www.cidb.org.za/cidb-tenders/current-tenders/
+Yes
+South African National Biodiversity Institute (SANBI)
+SANBI website → Tenders / Procurement section
+Yes
+National Research Foundation (NRF)
+http://www.nrf.ac.za/call_for_tenders.php
+Yes
+Water Research Commission
+Water Research Commission website → Tenders section
+Yes
+National Regulator for Compulsory Specifications (NRCS)
+NRCS website → Tenders / Procurement
+Yes
+South African Council for Educators (SACE)
+SACE website → Tenders / SCM
+Yes
+Film and Publication Board
+FPB website → Tenders section
+Yes
+National Gambling Board of SA
+NGB website → Tenders / Procurement
+Yes
+Housing Development Agency (HDA)
+HDA website → Supply Chain / Tenders
+Yes
+
+
+
+
+Schedule 3A National Public Entities
+
+Accounting Standards Board (ASB)
+https://www.asb.co.za/
+No dedicated tender page
+No
+Very few tenders (use eTenders or aggregators)
+African Renaissance and International Cooperation Fund (ARF)
+Under DIRCO (no standalone site)
+No dedicated tender page
+No
+Rare tenders posted via GTAC/DIRCO
+Afrikaanse Taalmuseum Paarl (Die Afrikaanse Taal Museum en Monument)
+https://www.afrikaansetaalmuseum.co.za (or nationalgovernment link)
+No dedicated tender page
+No
+Occasional RFQs on aggregators
+Agrément South Africa
+https://agrement.co.za/
+https://agrement.co.za/open-tenders/
+Yes
+Active tenders visible
+Agricultural Research Council (ARC)
+https://www.arc.agric.za/
+https://www.arc.agric.za/Pages/Tenders.aspx
+Yes
+Active tenders + awarded list
+AmaZwi South African Museum of Literature
+https://www.amazwi.museum/
+No dedicated tender page
+No
+Tenders via aggregators only
+Artscape NPC
+https://www.artscape.co.za/
+https://www.artscape.co.za/tenders/
+Yes
+Active tenders (cleaning, audit, flooring, etc.)
+Banking Sector Education and Training Authority (BANKSETA)
+https://bankseta.org.za/
+https://bankseta.org.za/supply-chain/
+Yes
+Current RFQs and closed tenders listed
+Border Management Authority (BMA)
+https://www.bma.gov.za/
+https://www.bma.gov.za/tenders/
+Yes
+Active high-value tenders
+Boxing South Africa
+https://boxingsa.co.za/
+https://boxingsa.co.za/tenders-rfq/
+Yes
+Active RFQs and tenders visible
+11
+Breedlove-Olifants Catchment Management Agency
+https://www.bocma.co.za/
+SCM / Tenders section on homepage
+Yes
+Active RFQs
+12
+Castle Control Board
+https://www.castleofgoodhope.co.za/
+No dedicated tender page
+No
+Rare tenders via aggregators
+13
+Chemical Industries Education and Training Authority (CHIETA)
+https://www.chieta.org.za/
+https://www.chieta.org.za/supply-chain-management/
+Yes
+Current tenders listed
+14
+Commission for Conciliation Mediation and Arbitration (CCMA)
+https://www.ccma.org.za/
+https://www.ccma.org.za/tenders/
+Yes
+Active tenders
+15
+Community Schemes Ombud Service (CSOS)
+https://www.csos.org.za/
+https://www.csos.org.za/tenders/
+Yes
+RFQs visible
+16
+Companies and Intellectual Property Commission (CIPC)
+https://www.cipc.co.za/
+https://www.cipc.co.za/index.php/about/tenders/
+Yes
+Active tenders
+17
+Companies Tribunal
+https://www.companiestribunal.org.za/
+No dedicated tender page
+No
+Uses eTenders
+18
+Compensation Fund (including Reserve Fund)
+https://www.labour.gov.za/ (under DoL)
+Tenders via Department of Labour portal
+Yes
+Posted on DoL site
+19
+Competition Commission
+https://www.compcom.co.za/
+https://www.compcom.co.za/tenders/
+Yes
+Active tenders
+20
+Competition Tribunal
+https://www.comptrib.co.za/
+No dedicated tender page
+No
+Uses eTenders
+21
+Construction Education and Training Authority (CETA)
+https://www.ceta.org.za/
+https://www.ceta.org.za/tenders/
+Yes
+Current bids
+22
+Construction Industry Development Board (CIDB)
+https://www.cidb.org.za/
+https://www.cidb.org.za/cidb-tenders/current-tenders/
+Yes
+High volume
+23
+Council for Geoscience
+https://www.geoscience.org.za/
+https://www.geoscience.org.za/tenders/
+Yes
+Active tenders
+24
+Council for Medical Schemes
+https://www.medicalschemes.com/
+SCM / Tenders section
+Yes
+RFQs listed
+25
+Council for the Built Environment (CBE)
+https://www.cbe.org.za/
+https://www.cbe.org.za/tenders/
+Yes
+Active
+26
+Council on Higher Education (CHE)
+https://www.che.ac.za/
+SCM / Tenders section
+Yes
+Occasional RFQs
+27
+Cross-Border Road Transport Agency (CBRTA)
+https://www.cbrta.co.za/
+https://www.cbrta.co.za/tenders/
+Yes
+Active tenders
+28
+Culture Arts Tourism Hospitality and Sports Education and Training Authority (CATHSSETA)
+https://www.cathsseta.org.za/
+https://www.cathsseta.org.za/tenders/
+Yes
+Current tenders
+29
+Ditsong Museums of South Africa
+https://www.ditsong.org.za/
+Tenders / SCM section
+Yes
+RFQs visible
+30
+Education Training and Development Practices SETA (ETDP SETA)
+https://www.etdpseta.org.za/
+https://www.etdpseta.org.za/tenders/
+Yes
+Active
+31
+Electricity Distribution Industry Holdings Pty Ltd
+Limited public site
+Tenders via Eskom/DoE portals
+Yes
+Sector-specific
+32
+Energy and Water Sector Education and Training Authority (EWSETA)
+https://www.ewseta.org.za/
+https://www.ewseta.org.za/tenders/
+Yes
+Current bids
+33
+Fibre Processing Manufacturing Sector Education and Training Authority (FPSETA)
+https://www.fpseta.org.za/
+https://www.fpseta.org.za/tenders/
+Yes
+Active
+16
+Companies and Intellectual Property Commission (CIPC)
+https://www.cipc.co.za/
+https://www.cipc.co.za/tenders/ or SCM section
+Yes
+Active RFQs
+17
+Companies Tribunal
+https://www.companiestribunal.org.za/
+No dedicated tender page
+No
+Rare tenders via aggregators
+18
+Compensation Fund (incl. Reserve Fund)
+https://www.labour.gov.za/ (under DoEL)
+Tenders via Department of Employment and Labour portal
+Yes
+Posted on eTenders + own site
+19
+Competition Commission
+https://www.compcom.co.za/
+https://www.compcom.co.za/tenders/
+Yes
+Active tenders
+20
+Competition Tribunal
+https://www.comptrib.co.za/
+No dedicated tender page
+No
+Occasional RFQs
+21
+Construction Education and Training Authority (CETA)
+https://www.ceta.org.za/
+https://www.ceta.org.za/supply-chain-management/
+Yes
+Current tenders listed
+22
+Construction Industry Development Board (CIDB)
+https://www.cidb.org.za/
+https://www.cidb.org.za/cidb-tenders/current-tenders/
+Yes
+High volume
+23
+Council for Geoscience
+https://www.geoscience.org.za/
+SCM / Tenders section on homepage
+Yes
+Active RFQs
+24
+Council for Medical Schemes
+https://www.medicalschemes.co.za/
+Tenders / Procurement section
+Yes
+Active
+25
+Council for the Built Environment (CBE)
+https://www.cbe.org.za/
+https://www.cbe.org.za/tenders/
+Yes
+Current bids
+26
+Council on Higher Education (CHE)
+https://www.che.ac.za/
+SCM / Tenders section
+Yes
+Occasional
+27
+Cross-Border Road Transport Agency (CBRTA)
+https://www.cbrta.co.za/
+https://www.cbrta.co.za/tenders/
+Yes
+Active tenders
+28
+Culture Arts Tourism Hospitality and Sports SETA (CATHSSETA)
+https://www.cathsseta.org.za/
+https://www.cathsseta.org.za/tenders/
+Yes
+Active RFQs
+29
+Ditsong Museums of South Africa
+https://www.ditsong.org.za/
+Tenders / SCM section
+Yes
+Occasional
+30
+Education Training and Development Practices SETA (ETDP SETA)
+https://www.etdpseta.org.za/
+https://www.etdpseta.org.za/supply-chain/
+Yes
+Current tenders
+31
+Electricity Distribution Industry Holdings Pty Ltd
+Limited public site
+Tenders via eTenders or parent entity
+Limited
+Rare public tenders
+32
+Energy and Water Sector Education and Training Authority (EWSETA)
+https://www.ewseta.org.za/
+https://www.ewseta.org.za/supply-chain-management/
+Yes
+Active
+33
+Fibre Processing Manufacturing Sector Education and Training Authority (FPSETA)
+https://www.fpseta.org.za/
+SCM / Tenders section
+Yes
+Current RFQs
+34
+Film and Publication Board (FPB)
+https://www.fpb.org.za/
+https://www.fpb.org.za/tenders/
+Yes
+Active
+35
+Financial and Accounting Services SETA (FASSET)
+https://www.fasset.org.za/
+https://www.fasset.org.za/supply-chain/
+Yes
+Active tenders
+36
+Financial Intelligence Centre (FIC)
+https://www.fic.gov.za/
+No dedicated tender page
+No
+Via eTenders
+37
+Financial Sector Conduct Authority (FSCA)
+https://www.fsca.co.za/
+https://www.fsca.co.za/tenders/
+Yes
+Active
+38
+Food and Beverages Manufacturing Industry (FOODBEV SETA)
+https://www.foodbev.co.za/
+https://www.foodbev.co.za/supply-chain-management/
+Yes
+Current bids
+39
+Freedom Park Trust
+https://www.freedompark.co.za/
+Tenders / SCM section
+Yes
+Occasional
+40
+Health and Welfare Sector Education and Training Authority (HWSETA)
+https://www.hwseta.org.za/
+https://www.hwseta.org.za/tenders/
+Yes
+Active RFQs
+41
+Housing Development Agency (HDA)
+https://www.hda.org.za/
+https://www.hda.org.za/supply-chain-management/
+Yes
+High volume
+42
+Human Sciences Research Council (HSRC)
+https://www.hsrc.ac.za/
+https://www.hsrc.ac.za/tenders/
+Yes
+Active
+43
+Independent Regulatory Board for Auditors (IRBA)
+https://www.irba.co.za/
+SCM / Tenders section
+Yes
+Occasional
+44
+Information Regulator
+https://www.inforegulator.org.za/
+Tenders / Procurement section
+Yes
+Active
+45
+Information Systems, Electronics and Telecommunications Technologies SETA (MICT SETA)
+https://www.mict.org.za/
+https://www.mict.org.za/supply-chain/
+Yes
+Current tenders
+
+46
+Ingonyama Trust Board
+https://www.ingonyamatrust.org.za/
+SCM / Tenders section on homepage
+Yes
+Occasional RFQs
+47
+Inkosi Matusi Catchment Management Agency
+https://www.imcma.co.za/
+Tenders / SCM section
+Yes
+Active RFQs
+48
+Insurance Sector Education and Training Authority (INSETA)
+https://www.inseta.org.za/
+https://www.inseta.org.za/supply-chain-management/
+Yes
+Current tenders
+49
+International Trade Administration Commission (ITAC)
+https://www.itac.org.za/
+https://www.itac.org.za/tenders/
+Yes
+Active
+50
+iSimangaliso Wetland Park
+https://www.isimangaliso.com/
+Tenders / SCM section
+Yes
+Occasional
+51
+Iziko Museums of South Africa
+https://www.iziko.org.za/
+Tenders / Procurement section
+Yes
+RFQs visible
+52
+KwaZulu-Natal Museum
+https://www.nmsa.org.za/
+SCM / Tenders section
+Yes
+Occasional
+53
+Legal Aid South Africa
+https://www.legalaid.co.za/
+https://www.legalaid.co.za/tenders/
+Yes
+Active tenders
+54
+Limpopo Olifants Catchment Management Agency
+https://www.locma.co.za/
+Tenders / SCM section
+Yes
+RFQs
+55
+Local Government Education and Training Authority (LGSETA)
+https://www.lgseta.org.za/
+https://www.lgseta.org.za/supply-chain/
+Yes
+Current bids
+56
+Luthuli Museum
+https://www.luthulimuseum.org.za/
+No dedicated tender page
+No
+Uses eTenders
+57
+Mandela Bay Theatre Complex
+https://www.mbtheatrecomplex.co.za/
+Tenders / SCM section
+Yes
+Occasional
+58
+Manufacturing Engineering and Related Services Education and Training Authority (MERSETA)
+https://www.merseta.org.za/
+https://www.merseta.org.za/tenders/
+Yes
+Active
+59
+Marine Living Resources Fund
+Under Department of Forestry, Fisheries and the Environment
+Tenders via DFFE portal
+Yes
+Sector tenders
+60
+Media Development and Diversity Agency (MDDA)
+https://www.mdda.org.za/
+https://www.mdda.org.za/tenders/
+Yes
+Active RFQs
+61
+Mining Health and Safety Council
+Under Department of Mineral Resources and Energy
+Tenders via DMRE portal
+Yes
+Occasional
+62
+Mines and Works Compensation Fund
+Under Department of Mineral Resources and Energy
+Tenders via DMRE portal
+Limited
+Rare
+63
+Mining Qualifications Authority (Pty) Ltd
+https://www.mqa.org.za/
+https://www.mqa.org.za/supply-chain-management/
+Yes
+Current tenders
+64
+Mzimbubu-Tsitsikamma Catchment Management Agency
+https://www.mtcma.co.za/
+Tenders / SCM section
+Yes
+RFQs
+65
+National Agricultural Marketing Council (NAMC)
+https://www.namc.co.za/
+SCM / Tenders section
+Yes
+Occasional
+66
+National Arts Council NPC
+https://www.nac.org.za/
+https://www.nac.org.za/tenders/
+Yes
+Active
+67
+National Consumer Commission
+https://www.thencc.gov.za/
+Tenders / SCM section
+Yes
+RFQs
+68
+National Consumer Tribunal
+https://www.thenct.org.za/
+No dedicated tender page
+No
+Uses eTenders
+69
+National Credit Regulator
+https://www.ncr.org.za/
+https://www.ncr.org.za/tenders/
+Yes
+Active
+70
+National Development Agency
+https://www.nda.org.za/
+https://www.nda.org.za/tenders/
+Yes
+Active tenders
+71
+National Economic Development and Labour Council (NEDLAC)
+https://nedlac.org.za/
+SCM / Tenders section
+Yes
+Occasional
+72
+National Electronic Media Institute of SA (NEMISA)
+https://www.nemisa.co.za/
+Tenders / SCM section
+Yes
+RFQs
+73
+National Empowerment Fund Corporation SOC Ltd
+https://www.nefcorp.co.za/
+https://www.nefcorp.co.za/supply-chain/
+Yes
+Active
+74
+National Energy Regulator of South Africa (NERSA)
+https://www.nersa.org.za/
+https://www.nersa.org.za/tenders/
+Yes
+Active
+75
+National Film and Video Foundation
+https://www.nfvf.co.za/
+https://www.nfvf.co.za/tenders/
+Yes
+Current bids
+76
+National Gambling Board of SA
+https://www.ngb.org.za/
+https://www.ngb.org.za/tenders/
+Yes
+Active RFQs
+77
+National Health Laboratory Service (NHLS)
+https://www.nhls.ac.za/
+https://www.nhls.ac.za/supply-chain/latest-tenders/
+Yes
+High volume
+78
+National Heritage Council (NHC)
+https://www.nhc.org.za/
+SCM / Tenders section
+Yes
+Occasional
+79
+National Home Builders Registration Council (NHBRC)
+https://www.nhbrc.org.za/
+https://www.nhbrc.org.za/tenders/
+Yes
+Active tenders
+80
+National Housing Finance Corporation SOC Ltd
+https://www.nhfc.co.za/
+https://www.nhfc.co.za/supply-chain-management/
+Yes
+Current bids
+81
+National Library of South Africa
+https://www.nlsa.ac.za/
+Tenders / SCM section
+Yes
+Occasional
+82
+National Lotteries Commission
+https://www.nlcsa.org.za/
+https://www.nlcsa.org.za/tenders/
+Yes
+Active
+83
+National Metrology Institute of South Africa (NMISA)
+https://www.nmisa.org/
+SCM / Tenders section
+Yes
+RFQs
+84
+National Museum Bloemfontein
+https://www.nasmus.co.za/
+Tenders / Procurement section
+Yes
+Occasional
+85
+National Nuclear Regulator (NNR)
+https://www.nnr.co.za/
+https://www.nnr.co.za/tenders/
+Yes
+Active
+86
+National Radioactive Waste Disposal Institute (NRWDI)
+https://www.nrwdi.org.za/
+Tenders / SCM section
+Yes
+Occasional
+87
+National Regulator for Compulsory Specifications (NRCS)
+https://www.nrcs.org.za/
+https://www.nrcs.org.za/tenders/
+Yes
+Active
+88
+National Research Foundation (NRF)
+https://www.nrf.ac.za/
+http://www.nrf.ac.za/call_for_tenders.php
+Yes
+Active
+89
+National Skills Fund
+https://www.nsf.gov.za/
+SCM / Tenders section
+Yes
+RFQs
+90
+National Student Financial Aid Scheme (NSFAS)
+https://www.nsfas.org.za/
+https://www.nsfas.org.za/tenders/
+Yes
+Active tenders
+91
+National Urban Reconstruction and Housing Agency (NURCHA)
+https://www.nurcha.co.za/
+SCM / Tenders section
+Yes
+Occasional
+92
+National Youth Development Agency (NYDA)
+https://www.nyda.gov.za/
+https://www.nyda.gov.za/tenders.html
+Yes
+Active
+93
+Nelson Mandela Museum Umtata
+https://www.nelsonmandelamuseum.org.za/
+Tenders / SCM section
+Yes
+Occasional
+94
+Office of Health Standards Compliance (OHSC)
+https://www.ohsc.org.za/
+Tenders / Procurement section
+Yes
+RFQs
+95
+Office of the Ombud for Financial Services Providers
+https://www.faisombud.co.za/
+No dedicated tender page
+No
+Uses eTenders
+96
+Office of the Pension Funds Adjudicator
+https://www.pfa.org.za/
+SCM / Tenders section
+Yes
+Occasional
+97
+Office of the Valuer-General
+https://www.ovg.org.za/
+Tenders / SCM section
+Yes
+Occasional
+98
+Ombud Council
+https://www.ombudcouncil.org.za/
+No dedicated tender page
+No
+Uses eTenders
+99
+Performing Arts Council of the Free State (PACOFS)
+https://www.pacofs.co.za/
+Tenders / SCM section
+Yes
+Occasional
+100
+Perishable Products Export Control Board (PPECB)
+https://www.ppecb.com/
+https://www.ppecb.com/tenders/
+Yes
+Active
+101
+Pongola-Umfolozi Catchment Management Agency
+https://www.pucma.co.za/
+Tenders / SCM section
+Yes
+RFQs
+102
+Ports Regulator of South Africa
+https://www.portsregulator.org/
+https://www.portsregulator.org/tenders/
+Yes
+Active
+103
+Private Security Industry Regulatory Authority (PSIRA)
+https://www.psira.co.za/
+https://www.psira.co.za/tenders/
+Yes
+Active
+104
+Productivity SA
+https://www.productivitysa.co.za/
+SCM / Tenders section
+Yes
+Occasional
+105
+Property Practitioners Regulatory Authority (PPRA)
+https://www.ppra.org.za/
+https://www.ppra.org.za/tenders/
+Yes
+Active
+106
+Public Service Sector Education and Training Authority (PSETA)
+https://www.pseta.org.za/
+https://www.pseta.org.za/tenders/
+Yes
+Active RFQs
+107
+Quality Council for Trades and Occupations (QCTO)
+https://www.qcto.org.za/
+SCM / Tenders section
+Yes
+Occasional
+108
+Railway Safety Regulator (RSR)
+https://www.rsr.org.za/
+https://www.rsr.org.za/tenders/
+Yes
+Active
+109
+Road Accident Fund (RAF)
+https://www.raf.co.za/
+https://www.raf.co.za/tenders/
+Yes
+High volume
+110
+Road Traffic Infringement Agency (RTIA)
+https://www.rtia.co.za/
+SCM / Tenders section
+Yes
+Occasional
+111
+Road Traffic Management Corporation (RTMC)
+https://www.rtmc.co.za/
+https://www.rtmc.co.za/tenders/
+Yes
+Active
+112
+Robben Island Museum
+https://www.robben-island.org.za/
+Tenders / SCM section
+Yes
+Occasional
+113
+Rural Housing Loan Fund
+https://www.rhlf.co.za/
+SCM / Tenders section
+Yes
+RFQs
+114
+Safety and Security Education and Training Authority (SASSETA)
+https://www.sasseta.org.za/
+https://www.sasseta.org.za/tenders/
+Yes
+Active
+115
+Servcon Housing Solutions (Pty) Ltd
+Limited public site
+Tenders via eTenders or parent entity
+Limited
+Rare
+116
+Services Sector Education and Training Authority (SERVSETA)
+https://www.servseta.org.za/
+https://www.servseta.org.za/supply-chain/
+Yes
+Current bids
+117
+South African Civil Aviation Authority (SACAA)
+https://www.caa.co.za/
+https://www.caa.co.za/tenders/
+Yes
+Active
+118
+South African Council for Educators (SACE)
+https://www.sace.org.za/
+https://www.sace.org.za/tenders/
+Yes
+Active
+119
+South African Diamond and Precious Metals Regulator
+https://www.sadpmr.org.za/
+SCM / Tenders section
+Yes
+Occasional
+120
+South African Health Products Regulatory Authority (SAHPRA)
+https://www.sahpra.org.za/
+https://www.sahpra.org.za/tenders/
+Yes
+Active
+121
+South African Heritage Resources Agency (SAHRA)
+https://www.sahra.org.za/
+Tenders / Procurement section
+Yes
+RFQs
+122
+South African Institute for Drug-Free Sport
+https://www.drugfreesport.org.za/
+SCM / Tenders section
+Yes
+Occasional
+123
+South African Library for the Blind
+https://www.salb.co.za/
+Tenders / SCM section
+Yes
+Occasional
+124
+South African Maritime Safety Authority (SAMSA)
+https://www.samsa.org.za/
+https://www.samsa.org.za/tenders/
+Yes
+Active
+125
+South African Medical Research Council (SAMRC)
+https://www.samrc.ac.za/
+https://www.samrc.ac.za/tenders/
+Yes
+Active
+126
+South African National Accreditation System (SANAS)
+https://www.sanas.co.za/
+SCM / Tenders section
+Yes
+Occasional
+127
+South African National Biodiversity Institute (SANBI)
+https://www.sanbi.org/
+https://www.sanbi.org/tenders/
+Yes
+Active
+128
+South African National Energy Development Institute (SANEDI)
+https://www.sanedi.org.za/
+Tenders / SCM section
+Yes
+RFQs
+129
+South African National Parks (SANParks)
+https://www.sanparks.org/
+https://www.sanparks.org/tenders/
+Yes
+High volume
+130
+South African National Space Agency (SANSA)
+https://www.sansa.org.za/
+https://www.sansa.org.za/tenders/
+Yes
+Active
+131
+South African Qualifications Authority (SAQA)
+https://www.saqa.org.za/
+https://www.saqa.org.za/tenders-advertised
+Yes
+Active
+132
+South African Revenue Service (SARS)
+https://www.sars.gov.za/
+https://www.sars.gov.za/tenders/
+Yes
+High volume
+133
+South African Social Security Agency (SASSA)
+https://www.sassa.gov.za/
+https://www.sassa.gov.za/tenders/
+Yes
+Active
+134
+South African Tourism Board
+https://www.southafrica.net/
+Tenders / SCM section
+Yes
+Occasional
+135
+Special Investigating Unit (SIU)
+https://www.siu.org.za/
+https://www.siu.org.za/tenders/
+Yes
+Active
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

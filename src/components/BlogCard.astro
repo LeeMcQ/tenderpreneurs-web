@@ -1,0 +1,93 @@
+---
+/**
+ * BlogCard.astro
+ * src/components/BlogCard.astro
+ *
+ * Reusable card for blog article listings.
+ *
+ * Props:
+ *   href      — link destination
+ *   tag       — category label (e.g. 'Beginners', 'Compliance')
+ *   tagVariant — 'gold' | 'teal' (default: 'teal')
+ *   emoji     — thumbnail emoji / icon
+ *   thumbBg   — CSS gradient string for thumbnail background
+ *   title     — article title
+ *   excerpt   — short description (2 lines max)
+ *   readTime  — e.g. '8 min read'
+ *   date      — formatted date string e.g. '12 Mar 2026'
+ */
+
+interface Props {
+  href:        string;
+  tag:         string;
+  tagVariant?: 'gold' | 'teal';
+  emoji?:      string;
+  thumbBg?:    string;
+  title:       string;
+  excerpt:     string;
+  readTime:    string;
+  date:        string;
+}
+
+const {
+  href,
+  tag,
+  tagVariant = 'teal',
+  emoji      = '📄',
+  thumbBg    = 'linear-gradient(135deg, #0F2140, #152B52)',
+  title,
+  excerpt,
+  readTime,
+  date,
+} = Astro.props;
+---
+
+<a href={href} class="blog-card content-card" aria-label={title}>
+  <!-- Thumbnail -->
+  <div class="card-thumb" style={`background: ${thumbBg}`} aria-hidden="true">
+    {emoji}
+  </div>
+
+  <!-- Body -->
+  <div class="card-body">
+    <span class={`tag tag-${tagVariant}`}>{tag}</span>
+    <h3 class="blog-title">{title}</h3>
+    <p class="blog-excerpt text-xs txt-secondary">{excerpt}</p>
+    <div class="blog-footer mono">
+      <span>{readTime}</span>
+      <span>{date}</span>
+    </div>
+  </div>
+</a>
+
+<style>
+.blog-card { cursor: pointer; }
+
+.blog-title {
+  font-size:     0.9375rem;
+  font-weight:   600;
+  line-height:   1.35;
+  color:         var(--txt-primary);
+  margin-bottom: var(--sp-2);
+}
+
+.blog-excerpt {
+  flex:               1;
+  margin-bottom:      var(--sp-3);
+  display:            -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow:           hidden;
+  line-height:        1.65;
+}
+
+.blog-footer {
+  display:         flex;
+  justify-content: space-between;
+  font-size:       10px;
+  color:           var(--txt-tertiary);
+}
+
+/* Tag sits above title */
+.tag { margin-bottom: var(--sp-2); }
+</style>

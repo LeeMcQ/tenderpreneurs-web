@@ -1,0 +1,77 @@
+---
+/**
+ * TestimonialCard.astro
+ * src/components/TestimonialCard.astro
+ *
+ * Props:
+ *   quote    — testimonial text (no surrounding quotes needed)
+ *   initials — 1–2 letter avatar initials
+ *   name     — reviewer full name
+ *   business — business name and city
+ *   stars    — 1–5 (default: 5)
+ */
+
+interface Props {
+  quote:    string;
+  initials: string;
+  name:     string;
+  business: string;
+  stars?:   number;
+}
+
+const { quote, initials, name, business, stars = 5 } = Astro.props;
+const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+---
+
+<div class="testi-card card">
+  <div class="testi-stars" aria-label={`${stars} out of 5 stars`}>
+    {starStr}
+  </div>
+  <blockquote class="testi-quote text-sm txt-secondary">
+    "{quote}"
+  </blockquote>
+  <div class="testi-author">
+    <div class="testi-av" aria-hidden="true">{initials}</div>
+    <div>
+      <div class="testi-name text-xs">{name}</div>
+      <div class="testi-biz" style="font-size:.75rem;color:var(--txt-tertiary)">{business}</div>
+    </div>
+  </div>
+</div>
+
+<style>
+.testi-stars {
+  color:         var(--clr-gold);
+  letter-spacing: 3px;
+  font-size:     0.875rem;
+  margin-bottom: var(--sp-3);
+}
+
+.testi-quote {
+  font-style:    italic;
+  line-height:   1.75;
+  margin-bottom: var(--sp-4);
+}
+
+.testi-author {
+  display:     flex;
+  align-items: center;
+  gap:         var(--sp-3);
+}
+
+.testi-av {
+  width:           36px;
+  height:          36px;
+  flex-shrink:     0;
+  border-radius:   50%;
+  background:      var(--clr-navy-3);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       0.875rem;
+  font-weight:     700;
+  color:           var(--clr-gold);
+}
+
+.testi-name { font-weight: 600; }
+</style>

@@ -1,234 +1,112 @@
 ---
 /**
- * /blog index page
+ * blog/index.astro
+ * src/pages/blog/index.astro
  *
- * Fixes applied:
- *  - Sort by publishedDate (not pubDate or date)
- *  - Filter out draft: true posts
- *  - Use BaseLayout (consistent dark theme)
- *  - Null-safe date formatting
+ * Blog listing page — shows all articles.
+ * In production, replace the static `posts` array with:
+ *   const posts = await getCollection('blog');
  */
-import { getCollection } from 'astro:content';
+
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogCard   from '../../components/BlogCard.astro';
+import CtaBanner  from '../../components/CtaBanner.astro';
 
-const allPosts = await getCollection('blog', ({ data }) => {
-  // In production, hide drafts. In dev, show everything.
-  return import.meta.env.PROD ? !data.draft : true;
-});
-
-// Sort newest first
-const posts = allPosts.sort(
-  (a, b) =>
-    new Date(b.data.publishedDate).getTime() -
-    new Date(a.data.publishedDate).getTime()
-);
-
-function formatDate(d: Date | string): string {
-  const date = d instanceof Date ? d : new Date(d);
-  return date.toLocaleDateString('en-ZA', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+type TagVariant = 'teal' | 'gold';
+interface BlogPost {
+  href: string; tag: string; tagVariant: TagVariant; emoji: string;
+  thumbBg: string; title: string; excerpt: string; readTime: string; date: string;
 }
+
+const posts: BlogPost[] = [
+  {
+    href:       '/blog/how-to-win-your-first-government-tender',
+    tag:        'Beginners',
+    tagVariant: 'gold',
+    emoji:      '🏆',
+    thumbBg:    'linear-gradient(135deg,#0F2140,#1C3566)',
+    title:      'How to Win Your First Government Tender in South Africa',
+    excerpt:    'A step-by-step guide for newcomers, covering everything from finding the right opportunities to submitting a compliant bid that survives evaluation.',
+    readTime:   '8 min read',
+    date:       '12 Mar 2026',
+  },
+  {
+    href:       '/blog/understanding-bbbee-requirements',
+    tag:        'Compliance',
+    tagVariant: 'teal',
+    emoji:      '📊',
+    thumbBg:    'linear-gradient(135deg,#0F2140,#0A1E30)',
+    title:      'Understanding B-BBEE Requirements for Tenders',
+    excerpt:    'Learn how your B-BBEE scorecard affects your tender competitiveness and what documentation you need to submit with your bid.',
+    readTime:   '6 min read',
+    date:       '10 Mar 2026',
+  },
+  {
+    href:       '/blog/central-supplier-database-registration',
+    tag:        'Compliance',
+    tagVariant: 'teal',
+    emoji:      '🗂️',
+    thumbBg:    'linear-gradient(135deg,#081525,#0F2140)',
+    title:      'Central Supplier Database Registration: A Complete Walkthrough',
+    excerpt:    'Everything you need to know to register on the CSD, from required documents to bank account verification and avoiding common mistakes that cause delays.',
+    readTime:   '10 min read',
+    date:       '10 Mar 2026',
+  },
+];
 ---
 
 <BaseLayout
-  title="Blog — Tenderpreneurs"
-  description="Government tender insights, guides, and procurement news for South African entrepreneurs."
+  title="Blog — Tenderpreneurs | Procurement Guides & Insights"
+  description="Expert advice for winning more government contracts. Guides on tendering, B-BBEE, CSD registration, PFMA compliance and more."
+  ogImage="/og-blog.png"
 >
-  <main class="blog-index">
-    <header class="blog-header">
-      <h1>Procurement <span class="accent">Insights</span></h1>
-      <p class="subtitle">
-        Guides, news, and strategies to help you win South African government tenders.
-      </p>
-    </header>
 
-    {posts.length === 0 ? (
-      <div class="empty-state">
-        <p>No articles published yet — check back soon.</p>
+  <!-- Page header -->
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="eyebrow">Resources</div>
+      <h1 class="page-title">Procurement guides<br>&amp; insights</h1>
+      <p class="txt-secondary page-sub">
+        Expert advice for winning more government contracts.
+      </p>
+    </div>
+  </section>
+
+  <!-- Posts grid -->
+  <section class="section-sm">
+    <div class="wrap">
+      <div class="grid-3">
+        {posts.map(p => <BlogCard {...p} />)}
       </div>
-    ) : (
-      <div class="post-grid">
-        {posts.map((post) => (
-          <article class={`post-card${post.data.featured ? ' featured' : ''}`}>
-            <div class="post-meta">
-              <span class="category">{post.data.category}</span>
-              <time datetime={new Date(post.data.publishedDate).toISOString()}>
-                {formatDate(post.data.publishedDate)}
-              </time>
-            </div>
-            <h2>
-              <a href={`/blog/${post.slug}`}>{post.data.title}</a>
-            </h2>
-            <p class="description">{post.data.description}</p>
-            <div class="post-footer">
-              <span class="author">{post.data.author}</span>
-              {post.data.tags.length > 0 && (
-                <div class="tags">
-                  {post.data.tags.slice(0, 3).map((tag) => (
-                    <span class="tag">{tag}</span>
-                  ))}
-                </div>
-              )}
-              <a href={`/blog/${post.slug}`} class="read-more">
-                Read article →
-              </a>
-            </div>
-          </article>
-        ))}
-      </div>
-    )}
-  </main>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <CtaBanner
+    eyebrow="Put it into practice"
+    heading='Browse <span class="txt-gold">live tenders</span> right now'
+    body="7,841+ government tenders from all 9 provinces, updated every 4 hours. Free to browse — sign in to save and get alerts."
+    primaryLabel="Browse Live Tenders"
+    primaryHref="/tenders"
+    secondLabel="Get Started Free"
+    secondHref="https://app.tenderpreneurs.co.za/register"
+  />
+
 </BaseLayout>
 
 <style>
-  .blog-index {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 3rem 1.5rem 5rem;
-  }
-
-  .blog-header {
-    text-align: center;
-    margin-bottom: 3rem;
-  }
-
-  .blog-header h1 {
-    font-size: clamp(2rem, 5vw, 3rem);
-    color: var(--color-text, #e2e8f0);
-    margin-bottom: 0.75rem;
-  }
-
-  .accent {
-    color: var(--color-amber, #f59e0b);
-  }
-
-  .subtitle {
-    color: var(--color-muted, #94a3b8);
-    font-size: 1.1rem;
-  }
-
-  .post-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.75rem;
-  }
-
-  .post-card {
-    background: var(--color-card-bg, #1e2a3a);
-    border: 1px solid var(--color-border, #2d3f55);
-    border-radius: 12px;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-
-  .post-card:hover {
-    border-color: var(--color-amber, #f59e0b);
-    transform: translateY(-2px);
-  }
-
-  .post-card.featured {
-    border-color: var(--color-amber, #f59e0b);
-    grid-column: span 2;
-  }
-
-  @media (max-width: 700px) {
-    .post-card.featured {
-      grid-column: span 1;
-    }
-  }
-
-  .post-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.82rem;
-    color: var(--color-muted, #94a3b8);
-  }
-
-  .category {
-    background: rgba(245, 158, 11, 0.15);
-    color: var(--color-amber, #f59e0b);
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .post-card h2 {
-    font-size: 1.15rem;
-    line-height: 1.4;
-    margin: 0;
-  }
-
-  .post-card h2 a {
-    color: var(--color-text, #e2e8f0);
-    text-decoration: none;
-  }
-
-  .post-card h2 a:hover {
-    color: var(--color-amber, #f59e0b);
-  }
-
-  .description {
-    color: var(--color-muted, #94a3b8);
-    font-size: 0.92rem;
-    line-height: 1.6;
-    flex: 1;
-  }
-
-  .post-footer {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: auto;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--color-border, #2d3f55);
-    font-size: 0.82rem;
-  }
-
-  .author {
-    color: var(--color-muted, #94a3b8);
-    flex: 1;
-  }
-
-  .tags {
-    display: flex;
-    gap: 0.35rem;
-    flex-wrap: wrap;
-  }
-
-  .tag {
-    background: var(--color-surface, #0f1923);
-    color: var(--color-muted, #94a3b8);
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-  }
-
-  .read-more {
-    margin-left: auto;
-    color: var(--color-amber, #f59e0b);
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .read-more:hover {
-    text-decoration: underline;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    color: var(--color-muted, #94a3b8);
-    font-size: 1.1rem;
-  }
+.page-hero {
+  padding: calc(var(--nav-h) + var(--safe-t) + var(--sp-12)) 0 var(--sp-10);
+  border-bottom: 1px solid var(--brd);
+}
+.page-title {
+  font-size:     clamp(1.75rem, 5vw, 2.75rem);
+  margin-bottom: var(--sp-3);
+  line-height:   1.15;
+}
+.page-sub {
+  font-size:  1rem;
+  max-width:  480px;
+  line-height: 1.7;
+}
 </style>

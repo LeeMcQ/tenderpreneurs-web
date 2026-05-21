@@ -1,0 +1,176 @@
+---
+/**
+ * LiveFeedCard.astro
+ * src/components/LiveFeedCard.astro
+ *
+ * The live tender feed card displayed in the hero section.
+ * In production, pass tenders via props from your data layer.
+ *
+ * Props:
+ *   tenders — array of sample tender objects (optional; shows defaults)
+ */
+
+interface Tender {
+  name:     string;
+  meta:     string;
+  score:    number; /* 0–100 */
+}
+
+interface Props {
+  tenders?: Tender[];
+}
+
+const { tenders = [
+  { name: 'PPE Equipment — KZN Dept. of Health',  meta: 'R500K–R2M · 14 days left · KwaZulu-Natal', score: 78 },
+  { name: 'IT Infrastructure Refresh — SARS',     meta: 'R1M–R5M · 7 days left · National',         score: 61 },
+  { name: 'RDP Housing Construction — GP DHS',    meta: 'R10M+ · 3 days left · Gauteng',             score: 43 },
+] } = Astro.props;
+---
+
+<div class="feed-card" role="complementary" aria-label="Live tender feed">
+
+  <!-- Header -->
+  <div class="feed-head">
+    <span class="feed-title">Live Tender Feed</span>
+    <span class="live-badge" aria-label="Live data">LIVE</span>
+  </div>
+
+  <!-- Stats grid -->
+  <div class="feed-stats" role="list" aria-label="Platform statistics">
+    <div class="stat-box" role="listitem">
+      <div class="stat-val">7,841+</div>
+      <div class="stat-lab">Open Tenders</div>
+    </div>
+    <div class="stat-box" role="listitem">
+      <div class="stat-val">R2.4B+</div>
+      <div class="stat-lab">Total Value</div>
+    </div>
+    <div class="stat-box" role="listitem">
+      <div class="stat-val">9</div>
+      <div class="stat-lab">Provinces</div>
+    </div>
+    <div class="stat-box" role="listitem">
+      <div class="stat-val">4hr</div>
+      <div class="stat-lab">Refresh</div>
+    </div>
+  </div>
+
+  <!-- Tender rows -->
+  <ul class="tender-list list-none" aria-label="Sample tenders">
+    {tenders.map(t => (
+      <li class="tender-row card-tappable" tabindex="0" role="button">
+        <div class="tr-info">
+          <div class="tr-name">{t.name}</div>
+          <div class="tr-meta mono">{t.meta}</div>
+        </div>
+        <div class="tr-score" aria-label={`Win probability ${t.score}%`}>
+          <span class="score-pct mono">{t.score}%</span>
+          <div class="score-bar" role="img" aria-hidden="true">
+            <div class="score-fill" style={`width:${t.score}%`}></div>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ul>
+
+  <p class="feed-foot mono">Powered by etenders.gov.za + AI win-probability scoring</p>
+</div>
+
+<style>
+.feed-card {
+  background:    var(--srf-1);
+  border:        1px solid var(--brd-2);
+  border-radius: var(--r-xl);
+  padding:       var(--sp-5);
+  position:      relative;
+  overflow:      hidden;
+}
+/* Gradient top bar */
+.feed-card::before {
+  content:       '';
+  position:      absolute;
+  top: 0; left: 0; right: 0;
+  height:        2px;
+  background:    linear-gradient(90deg, var(--clr-teal), var(--clr-gold));
+}
+
+.feed-head {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  margin-bottom:   var(--sp-4);
+}
+.feed-title {
+  font-size:   0.9375rem;
+  font-weight: 600;
+}
+
+.feed-stats {
+  display:               grid;
+  grid-template-columns: 1fr 1fr;
+  gap:                   var(--sp-2);
+  margin-bottom:         var(--sp-3);
+}
+
+.tender-list {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--sp-2);
+}
+
+.tender-row {
+  background:    rgba(255,255,255,.03);
+  border:        1px solid var(--brd);
+  border-radius: var(--r-sm);
+  padding:       var(--sp-3);
+  display:       flex;
+  justify-content: space-between;
+  align-items:   center;
+  gap:           var(--sp-3);
+  transition:    background 0.15s, border-color 0.15s;
+}
+.tender-row:hover {
+  background:   rgba(255,255,255,.07);
+  border-color: var(--brd-2);
+}
+.tender-row:focus-visible {
+  outline:        2px solid var(--clr-gold);
+  outline-offset: 2px;
+}
+
+.tr-info { flex: 1; min-width: 0; }
+
+.tr-name {
+  font-size:     0.8125rem;
+  font-weight:   600;
+  line-height:   1.3;
+  margin-bottom: 2px;
+  /* Truncate on very small screens */
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+.tr-meta {
+  font-size: 10px;
+  color:     var(--txt-tertiary);
+}
+
+.tr-score {
+  flex-shrink: 0;
+  text-align:  right;
+}
+.score-pct {
+  display:       block;
+  font-size:     0.75rem;
+  font-weight:   500;
+  color:         var(--clr-gold);
+  margin-bottom: 4px;
+}
+
+.feed-foot {
+  font-size:  10px;
+  color:      var(--txt-tertiary);
+  text-align: center;
+  margin-top: var(--sp-3);
+}
+</style>

@@ -1,256 +1,743 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import HeroSection from '@/components/HeroSection.astro';
-import FeatureGrid from '@/components/FeatureGrid.astro';
+/**
+ * index.astro
+ * src/pages/index.astro
+ *
+ * Homepage — assembles all hero sections using Astro components.
+ */
 
-// Province + sector data is now centralised so we can render
-// the homepage tiles AND keep the JSON-LD/sitemap in sync later.
-const provinces = [
-  { name: 'Eastern Cape',   slug: 'eastern-cape' },
-  { name: 'Free State',     slug: 'free-state' },
-  { name: 'Gauteng',        slug: 'gauteng' },
-  { name: 'KwaZulu-Natal',  slug: 'kwazulu-natal' },
-  { name: 'Limpopo',        slug: 'limpopo' },
-  { name: 'Mpumalanga',     slug: 'mpumalanga' },
-  { name: 'Northern Cape',  slug: 'northern-cape' },
-  { name: 'North West',     slug: 'north-west' },
-  { name: 'Western Cape',   slug: 'western-cape' },
-];
+import BaseLayout       from '../layouts/BaseLayout.astro';
+import LiveFeedCard     from '../components/LiveFeedCard.astro';
+import FeatureCard      from '../components/FeatureCard.astro';
+import BlogCard         from '../components/BlogCard.astro';
+import TestimonialCard  from '../components/TestimonialCard.astro';
+import FaqAccordion     from '../components/FaqAccordion.astro';
+import PricingCard      from '../components/PricingCard.astro';
+import CtaBanner        from '../components/CtaBanner.astro';
 
-const sectors = [
-  { name: 'Construction',  slug: 'construction',  icon: '🏗️' },
-  { name: 'ICT',           slug: 'ict',           icon: '💻' },
-  { name: 'Health',        slug: 'health',        icon: '🏥' },
-  { name: 'Education',     slug: 'education',     icon: '🎓' },
-  { name: 'Transport',     slug: 'transport',     icon: '🚛' },
-  { name: 'Agriculture',   slug: 'agriculture',   icon: '🌾' },
-  { name: 'Energy',        slug: 'energy',        icon: '⚡' },
-  { name: 'Security',      slug: 'security',      icon: '🛡️' },
-  { name: 'Consulting',    slug: 'consulting',    icon: '💼' },
-  { name: 'Cleaning',      slug: 'cleaning',      icon: '🧹' },
-  { name: 'Catering',      slug: 'catering',      icon: '🍽️' },
-  { name: 'Legal',         slug: 'legal',         icon: '⚖️' },
-];
+type IconVariant = 'teal' | 'gold' | 'blue';
+type TagVariant  = 'teal' | 'gold';
 
-const featuredPosts = [
-  {
-    slug: 'how-to-win-your-first-government-tender',
-    title: 'How to Win Your First Government Tender in South Africa',
-    excerpt: 'A step-by-step guide for newcomers, covering everything from finding the right opportunities to submitting a compliant bid.',
-    readingTime: '8 min read',
-    category: 'Beginners',
-  },
-  {
-    slug: 'understanding-bbbee-requirements',
-    title: 'Understanding B-BBEE Requirements for Tenders',
-    excerpt: 'Learn how your B-BBEE scorecard affects your tender competitiveness and what documentation you need to submit.',
-    readingTime: '6 min read',
-    category: 'Compliance',
-  },
-  {
-    slug: 'central-supplier-database-registration',
-    title: 'Central Supplier Database Registration: A Complete Walkthrough',
-    excerpt: 'Everything you need to know to register on the CSD, from required documents to avoiding common mistakes.',
-    readingTime: '10 min read',
-    category: 'Compliance',
-  },
-];
+interface FeatureItem {
+  icon: string; iconVariant: IconVariant; title: string;
+  description: string; checks: string[]; linkHref: string; linkLabel: string;
+}
+interface BlogPost {
+  href: string; tag: string; tagVariant: TagVariant; emoji: string;
+  thumbBg: string; title: string; excerpt: string; readTime: string; date: string;
+}
 
-const faqs = [
+const features: FeatureItem[] = [
   {
-    q: 'How do I find government tenders in South Africa?',
-    a: 'Government tenders are published on the eTender Publication Portal, departmental websites, and various tender notice boards. You can also use aggregated platforms like Tenderpreneurs to monitor opportunities across all provinces and sectors.',
+    icon:        '🔍',
+    iconVariant: 'teal',
+    title:       'Browse All Tenders',
+    description: '7,841+ tenders from etenders.gov.za updated every 4 hours. Filter by province, sector, value, B-BBEE level, and closing date.',
+    checks:      ['All 9 provinces covered', '12 industry sectors', 'Real-time updates'],
+    linkHref:    '/tenders',
+    linkLabel:   'Browse Tenders',
   },
   {
-    q: 'What is eTenders and how does it work?',
-    a: 'eTenders is the South African government\u2019s official electronic tender portal where public sector contracts are advertised. Suppliers can search for tenders, download bid documents, and sometimes submit bids online.',
+    icon:        '🎯',
+    iconVariant: 'gold',
+    title:       'Win Probability Score',
+    description: 'AI scores your chances across 6 dimensions: B-BBEE, CSD status, technical experience, financial capacity, and pricing. Know before you bid.',
+    checks:      ['6-dimension AI scoring', 'B-BBEE competitive analysis', 'Bid / no-bid guidance'],
+    linkHref:    'https://app.tenderpreneurs.co.za',
+    linkLabel:   'Try AI Scoring',
   },
   {
-    q: 'How do I register on the Central Supplier Database?',
-    a: 'Visit the CSD website, complete the online registration form, upload the required supporting documents (such as tax clearance certificate, B-BBEE certificate, and bank confirmation letter), and submit for verification.',
-  },
-  {
-    q: 'What is PFMA compliance?',
-    a: 'PFMA stands for the Public Finance Management Act. It sets out the financial management and procurement rules that government entities must follow to ensure transparency, fairness, and value for money in tender processes.',
-  },
-  {
-    q: 'How are B-BBEE points calculated for tenders?',
-    a: 'B-BBEE points are awarded based on your verified scorecard. Typically, 10 or 20 points are allocated to B-BBEE status level in the total tender evaluation, with higher levels earning more points. The exact calculation depends on the specific tender\u2019s Preferential Procurement regulations.',
+    icon:        '📚',
+    iconVariant: 'blue',
+    title:       'PFMA Assistant',
+    description: 'Ask anything about PFMA, PPPFA, B-BBEE, or Treasury Regs. Instant answers with legislative citations. Always free.',
+    checks:      ['Instant answers with citations', 'PFMA, MFMA & B-BBEE covered', 'Always free'],
+    linkHref:    '/pfma',
+    linkLabel:   'Explore PFMA Guide',
   },
 ];
 
-const faqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: faqs.map(({ q, a }) => ({
-    '@type': 'Question',
-    name: q,
-    acceptedAnswer: { '@type': 'Answer', text: a },
-  })),
-};
+const testimonials = [
+  {
+    quote:    'The win probability score alone saved us from wasting three weeks on a bid we had no chance on. We pivoted to a better opportunity and won it.',
+    initials: 'NM',
+    name:     'Nomsa Mkhize',
+    business: 'Director, Khulisa Facilities · Durban',
+  },
+  {
+    quote:    'Before Tenderpreneurs I was checking five different websites every morning. Now one dashboard with everything filtered and scored.',
+    initials: 'PT',
+    name:     'Pieter Theron',
+    business: 'Owner, Theron IT Solutions · Cape Town',
+  },
+  {
+    quote:    'The PFMA Assistant answered a Treasury Reg question in 30 seconds that my consultant charged R800 to look up. Absolute game changer.',
+    initials: 'ZS',
+    name:     'Zanele Sithole',
+    business: 'MD, Ukwanda Cleaning Services · Johannesburg',
+  },
+];
+
+const blogPosts: BlogPost[] = [
+  {
+    href:       '/blog/how-to-win-your-first-government-tender',
+    tag:        'Beginners',
+    tagVariant: 'gold',
+    emoji:      '🏆',
+    thumbBg:    'linear-gradient(135deg,#0F2140,#1C3566)',
+    title:      'How to Win Your First Government Tender in South Africa',
+    excerpt:    'A step-by-step guide for newcomers covering everything from finding opportunities to submitting a compliant bid.',
+    readTime:   '8 min read',
+    date:       '12 Mar 2026',
+  },
+  {
+    href:       '/blog/understanding-bbbee-requirements',
+    tag:        'Compliance',
+    tagVariant: 'teal',
+    emoji:      '📊',
+    thumbBg:    'linear-gradient(135deg,#0F2140,#0A1E30)',
+    title:      'Understanding B-BBEE Requirements for Tenders',
+    excerpt:    'Learn how your B-BBEE scorecard affects competitiveness and what documentation you need to submit.',
+    readTime:   '6 min read',
+    date:       '10 Mar 2026',
+  },
+  {
+    href:       '/blog/central-supplier-database-registration',
+    tag:        'Compliance',
+    tagVariant: 'teal',
+    emoji:      '🗂️',
+    thumbBg:    'linear-gradient(135deg,#081525,#0F2140)',
+    title:      'CSD Registration: A Complete Walkthrough',
+    excerpt:    'Everything you need to know to register on the CSD — from required documents to avoiding common mistakes.',
+    readTime:   '10 min read',
+    date:       '10 Mar 2026',
+  },
+];
+
+const faqItems = [
+  {
+    question: 'How do I find government tenders in South Africa?',
+    answer:   'Tenders are published across etenders.gov.za, 9 provincial portals, and 257+ municipal websites. Tenderpreneurs aggregates all of them into one searchable dashboard, refreshed every 4 hours — so you never need to check multiple sites again.',
+  },
+  {
+    question: 'What is the win probability score?',
+    answer:   'Our AI analyses each tender across 6 dimensions — B-BBEE level, CSD compliance, technical experience, financial capacity, pricing, and deadline proximity — and returns a 0–100 score to help you decide whether to bid before committing resources.',
+  },
+  {
+    question: 'Do I need to register on the CSD before bidding?',
+    answer:   'Yes — a "Compliant" CSD status is mandatory for any government tender. Read our full CSD registration walkthrough in the blog for a complete step-by-step guide including bank verification and B-BBEE document requirements.',
+  },
+  {
+    question: 'Is the PFMA Assistant really free?',
+    answer:   'Yes — completely free with no account required. Ask anything about the PFMA, PPPFA, B-BBEE regulations, or National Treasury circulars and get instant answers with the exact legislative citations.',
+  },
+  {
+    question: 'Can I cancel my Professional subscription?',
+    answer:   'Yes, cancel anytime from your account settings. No cancellation fees — your subscription stays active until the end of the billing period. NPOs and agricultural co-operatives qualify for a 50% discount; email hello@tenderpreneurs.co.za with your registration number.',
+  },
+];
 ---
 
 <BaseLayout
-  title="Tenderpreneurs — Win More South African Government Tenders"
-  description="Browse 7,841+ live SA government tenders, score your win probability with AI, and get instant PFMA, PPPFA and B-BBEE answers. Built for South African SMMEs."
-  schema={faqSchema}
+  title="Tenderpreneurs — Win More Government Tenders with AI"
+  description="AI-powered tender discovery, win-probability scoring, and PFMA guidance for South African SMMEs. Free to start."
+  ogImage="/og-home.png"
 >
-  <!-- 1. Hero (lives in the component, includes its own scoped CSS) -->
-  <HeroSection />
 
-  <!-- 2. Feature grid: Tenders / AI score / PFMA assistant -->
-  <FeatureGrid />
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <section class="hero" aria-label="Hero">
 
-  <!-- 3. Province grid -->
-  <section class="section bg-[var(--color-surface)]" id="provinces" aria-labelledby="provinces-heading">
-    <div class="container">
-      <div class="text-center mb-10">
-        <span class="eyebrow">By Province</span>
-        <h2 id="provinces-heading" class="text-3xl md:text-4xl font-bold text-balance">
-          Browse tenders <span class="text-gradient-civic">across all 9 provinces</span>
-        </h2>
-        <p class="mt-3 text-[var(--color-text-muted)] max-w-2xl mx-auto">
-          From the Western Cape to Limpopo — every open opportunity, refreshed every 4 hours.
-        </p>
-      </div>
-
-      <ul role="list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 md:gap-4">
-        {provinces.map((p) => (
-          <li>
-            <a href={`/tenders/${p.slug}`} class="tile" aria-label={`Browse ${p.name} tenders`}>
-              <span class="tile-title">{p.name}</span>
-              <svg class="tile-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M5 10h10m-4-4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </a>
-          </li>
-        ))}
-      </ul>
+    <!-- Atmospheric background -->
+    <div class="hero-bg" aria-hidden="true">
+      <div class="hero-grid"></div>
+      <div class="hero-glow-l"></div>
+      <div class="hero-glow-r"></div>
     </div>
-  </section>
 
-  <!-- 4. Sector grid -->
-  <section class="section bg-[var(--color-surface-2)]" id="sectors" aria-labelledby="sectors-heading">
-    <div class="container">
-      <div class="text-center mb-10">
-        <span class="eyebrow">By Sector</span>
-        <h2 id="sectors-heading" class="text-3xl md:text-4xl font-bold text-balance">
-          Find tenders in <span class="text-gradient-gold">your industry</span>
-        </h2>
-        <p class="mt-3 text-[var(--color-text-muted)] max-w-2xl mx-auto">
-          Twelve sectors covered, with filters for value, B-BBEE level and closing date inside each.
-        </p>
-      </div>
+    <div class="hero-inner wrap">
 
-      <ul role="list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
-        {sectors.map((s) => (
-          <li>
-            <a href={`/tenders/${s.slug}`} class="tile" aria-label={`Browse ${s.name} tenders`}>
-              <span class="flex items-center gap-3">
-                <span class="text-xl" aria-hidden="true">{s.icon}</span>
-                <span class="tile-title">{s.name}</span>
-              </span>
-              <svg class="tile-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M5 10h10m-4-4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-  </section>
-
-  <!-- 5. Featured blog posts -->
-  <section class="section bg-[var(--color-surface)]" id="resources" aria-labelledby="resources-heading">
-    <div class="container">
-      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
-        <div>
-          <span class="eyebrow">Resources</span>
-          <h2 id="resources-heading" class="text-3xl md:text-4xl font-bold text-balance">
-            Procurement guides &amp; insights
-          </h2>
-          <p class="mt-3 text-[var(--color-text-muted)] max-w-2xl">
-            Expert advice for winning more government contracts.
-          </p>
+      <!-- Left: copy -->
+      <div class="hero-copy">
+        <div class="hero-pill" aria-label="Platform status">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          🇿🇦 Built for SA SMMEs · Live tender data
         </div>
-        <a href="/blog" class="btn-ghost">
-          View all articles
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
+
+        <h1>
+          Win More<br>Government Tenders
+          <em class="txt-gold txt-italic">with AI Intelligence</em>
+        </h1>
+
+        <p class="hero-sub txt-secondary">
+          AI-powered tender discovery, win-probability scoring, and PFMA guidance —
+          so South African SMMEs can compete and win public sector contracts.
+        </p>
+
+        <div class="hero-actions">
+          <a href="https://app.tenderpreneurs.co.za" class="btn btn-gold btn-lg">
+            Get Started Free
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+          </a>
+          <a href="/tenders" class="btn btn-ghost btn-lg">Browse Live Tenders</a>
+        </div>
+
+        <div class="trust-strip" role="list">
+          <div class="trust-item" role="listitem">
+            <span class="trust-check" aria-hidden="true">✓</span> Free to start
+          </div>
+          <div class="trust-item" role="listitem">
+            <span class="trust-check" aria-hidden="true">✓</span> No credit card
+          </div>
+          <div class="trust-item" role="listitem">
+            <span class="trust-check" aria-hidden="true">✓</span> POPIA compliant
+          </div>
+        </div>
       </div>
 
-      <div class="grid gap-6 md:grid-cols-3">
-        {featuredPosts.map((post) => (
-          <article class="card overflow-hidden flex flex-col">
-            <div class="gradient-sky h-32 flex items-end p-4">
-              <span class="badge-civic">{post.category}</span>
-            </div>
-            <div class="p-6 flex flex-col flex-1">
-              <h3 class="text-xl font-bold mb-2 leading-snug">
-                <a href={`/blog/${post.slug}`} class="hover:text-[var(--color-civic)] transition-colors">
-                  {post.title}
-                </a>
-              </h3>
-              <p class="text-[var(--color-text-muted)] line-clamp-3 mb-4">{post.excerpt}</p>
-              <div class="mt-auto flex items-center justify-between text-sm">
-                <span class="text-[var(--color-text-muted)]">{post.readingTime}</span>
-                <a
-                  href={`/blog/${post.slug}`}
-                  class="text-[var(--color-civic)] font-semibold hover:underline"
-                  aria-label={`Read: ${post.title}`}
-                >
-                  Read more →
-                </a>
-              </div>
-            </div>
-          </article>
-        ))}
+      <!-- Right: live feed card -->
+      <LiveFeedCard />
+
+    </div>
+  </section>
+
+  <!-- ═══════════════ STATS STRIP ═══════════════ -->
+  <div class="stats-strip" aria-label="Platform statistics">
+    <div class="wrap">
+      <div class="stats-inner" role="list">
+        <div class="stat-strip-item" role="listitem">
+          <span class="stat-strip-num mono">7,841+</span>
+          <span class="stat-strip-label txt-secondary">Live tenders</span>
+        </div>
+        <div class="stat-strip-sep" aria-hidden="true"></div>
+        <div class="stat-strip-item" role="listitem">
+          <span class="stat-strip-num mono">9</span>
+          <span class="stat-strip-label txt-secondary">Provinces covered</span>
+        </div>
+        <div class="stat-strip-sep" aria-hidden="true"></div>
+        <div class="stat-strip-item" role="listitem">
+          <span class="stat-strip-num mono">12</span>
+          <span class="stat-strip-label txt-secondary">Industry sectors</span>
+        </div>
+        <div class="stat-strip-sep" aria-hidden="true"></div>
+        <div class="stat-strip-item" role="listitem">
+          <span class="stat-strip-num mono">4hr</span>
+          <span class="stat-strip-label txt-secondary">Data refresh</span>
+        </div>
+        <div class="stat-strip-sep" aria-hidden="true"></div>
+        <div class="stat-strip-item" role="listitem">
+          <span class="stat-strip-num mono">R0</span>
+          <span class="stat-strip-label txt-secondary">To get started</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ WITHOUT / WITH ═══════════════ -->
+  <section class="section">
+    <div class="wrap">
+      <div class="eyebrow">The difference</div>
+      <h2>Stop losing tenders to<br><span class="txt-gold">avoidable inefficiency</span></h2>
+
+      <div class="compare-grid">
+
+        <div class="cmp-card cmp-bad">
+          <div class="cmp-title" aria-hidden="true">✗ Without Tenderpreneurs</div>
+          <ul class="cmp-list list-none">
+            {[
+              'Checking 9 provincial portals every morning',
+              "No way to know if you're competitive before bidding",
+              'Missing deadlines — heard about the tender too late',
+              'Guessing your B-BBEE edge vs. the competition',
+              'Scrambling for PFMA answers mid-submission',
+            ].map(text => (
+              <li class="cmp-item text-sm txt-secondary">
+                <span class="cmp-icon cmp-icon-bad" aria-hidden="true">✗</span>
+                {text}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="cmp-card cmp-good">
+          <div class="cmp-title" aria-hidden="true">✓ With Tenderpreneurs</div>
+          <ul class="cmp-list list-none">
+            {[
+              'One live dashboard — all 9 provinces, every 4 hours',
+              'AI win-probability score before committing a single day',
+              'Email alerts the moment matching tenders are published',
+              'B-BBEE analysis built into every score — know your edge',
+              'Instant PFMA answers with legislative citations, free',
+            ].map(text => (
+              <li class="cmp-item text-sm txt-secondary">
+                <span class="cmp-icon cmp-icon-good" aria-hidden="true">✓</span>
+                {text}
+              </li>
+            ))}
+          </ul>
+        </div>
+
       </div>
     </div>
   </section>
 
-  <!-- 6. FAQ -->
-  <section class="section bg-[var(--color-surface-2)]" id="faq" aria-labelledby="faq-heading">
-    <div class="container max-w-4xl">
-      <div class="text-center mb-10">
-        <span class="eyebrow">FAQ</span>
-        <h2 id="faq-heading" class="text-3xl md:text-4xl font-bold text-balance">
-          Frequently asked questions
-        </h2>
-        <p class="mt-3 text-[var(--color-text-muted)]">
-          Short answers to the questions South African suppliers ask us most.
+  <div class="divider"></div>
+
+  <!-- ═══════════════ FEATURES ═══════════════ -->
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="eyebrow">Platform Features</div>
+      <h2>Everything you need to<br><span class="txt-teal">win government tenders</span></h2>
+      <p class="txt-secondary mt-4" style="max-width:500px;font-size:.9375rem;line-height:1.7">
+        From discovery to submission — Tenderpreneurs gives SA SMMEs the tools
+        and intelligence to compete.
+      </p>
+
+      <div class="grid-3 mt-10">
+        {features.map(f => <FeatureCard {...f} />)}
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════ BROWSE PROVINCES & SECTORS ═══════════════ -->
+  <section class="section">
+    <div class="wrap">
+      <div class="browse-cols">
+
+        <!-- Provinces -->
+        <div>
+          <div class="eyebrow">By Province</div>
+          <h2>Browse across<br><span class="txt-gold">all 9 provinces</span></h2>
+          <p class="txt-secondary mt-4" style="font-size:.875rem;line-height:1.7">
+            Every open opportunity from the Western Cape to Limpopo, refreshed every 4 hours.
+          </p>
+          <div class="pill-wrap">
+            {[
+              { label: 'Eastern Cape',  href: '/tenders/eastern-cape',  count: '218' },
+              { label: 'Free State',    href: '/tenders/free-state',    count: '87' },
+              { label: 'Gauteng',       href: '/tenders/gauteng',       count: '1,203' },
+              { label: 'KwaZulu-Natal', href: '/tenders/kwazulu-natal', count: '412' },
+              { label: 'Limpopo',       href: '/tenders/limpopo',       count: '156' },
+              { label: 'Mpumalanga',    href: '/tenders/mpumalanga',    count: '98' },
+              { label: 'Northern Cape', href: '/tenders/northern-cape', count: '63' },
+              { label: 'North West',    href: '/tenders/north-west',    count: '112' },
+              { label: 'Western Cape',  href: '/tenders/western-cape',  count: '534' },
+            ].map(p => (
+              <a href={p.href} class="pill">
+                {p.label}
+                <span class="pill-count mono">{p.count}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <!-- Sectors -->
+        <div>
+          <div class="eyebrow">By Sector</div>
+          <h2>Find tenders in<br><span class="txt-teal">your industry</span></h2>
+          <p class="txt-secondary mt-4" style="font-size:.875rem;line-height:1.7">
+            12 sectors covered, with sub-filters for value, B-BBEE level, and closing date.
+          </p>
+          <div class="pill-wrap">
+            {[
+              { emoji: '🏗️', label: 'Construction', href: '/tenders/construction' },
+              { emoji: '💻', label: 'ICT',          href: '/tenders/ict' },
+              { emoji: '🏥', label: 'Health',        href: '/tenders/health' },
+              { emoji: '🎓', label: 'Education',     href: '/tenders/education' },
+              { emoji: '🚛', label: 'Transport',     href: '/tenders/transport' },
+              { emoji: '🌾', label: 'Agriculture',   href: '/tenders/agriculture' },
+              { emoji: '⚡', label: 'Energy',        href: '/tenders/energy' },
+              { emoji: '🛡️', label: 'Security',      href: '/tenders/security' },
+              { emoji: '💼', label: 'Consulting',    href: '/tenders/consulting' },
+              { emoji: '🧹', label: 'Cleaning',      href: '/tenders/cleaning' },
+              { emoji: '🍽️', label: 'Catering',      href: '/tenders/catering' },
+              { emoji: '⚖️', label: 'Legal',         href: '/tenders/legal' },
+            ].map(s => (
+              <a href={s.href} class="pill">{s.emoji} {s.label}</a>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════ TESTIMONIALS ═══════════════ -->
+  <section class="section">
+    <div class="wrap">
+      <div class="eyebrow">Testimonials</div>
+      <h2>Trusted by SA businesses<br><span class="txt-gold">winning public sector work</span></h2>
+      <div class="grid-3 mt-10">
+        {testimonials.map(t => <TestimonialCard {...t} />)}
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════ BLOG ═══════════════ -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Resources</div>
+          <h2>Procurement guides &amp; insights</h2>
+        </div>
+        <a href="/blog" class="see-all">View all →</a>
+      </div>
+      <div class="grid-3 mt-8">
+        {blogPosts.map(p => <BlogCard {...p} />)}
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════ PRICING ═══════════════ -->
+  <section class="section" id="pricing">
+    <div class="wrap">
+      <div class="text-center">
+        <div class="eyebrow eyebrow-center">Pricing</div>
+        <h2>Simple, transparent pricing</h2>
+        <p class="txt-secondary mt-4" style="font-size:.9375rem;max-width:400px;margin:12px auto 0;line-height:1.7">
+          Start free. Upgrade when you're ready to track live tenders.
         </p>
       </div>
 
-      <div class="space-y-3">
-        {faqs.map((item) => (
-          <details class="card group p-0 overflow-hidden">
-            <summary class="flex justify-between items-center gap-4 font-semibold p-5 cursor-pointer list-none text-[var(--color-navy)] dark:text-white">
-              <span>{item.q}</span>
-              <span class="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--color-sky)] dark:bg-slate-800 flex items-center justify-center transition-transform duration-200 group-open:rotate-180">
-                <svg class="w-4 h-4 text-[var(--color-civic)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                </svg>
-              </span>
-            </summary>
-            <div class="px-5 pb-5 text-[var(--color-text-muted)] dark:text-slate-300 leading-relaxed">
-              {item.a}
-            </div>
-          </details>
-        ))}
+      <div class="grid-3 mt-10">
+        <PricingCard
+          plan="Free"
+          price="R0"
+          period="forever free"
+          features={[
+            'PFMA knowledge base (11 topics)',
+            'SBD form library',
+            'Compliance checklist',
+            'PFMA AI Assistant (basic)',
+            'CSD registration guide',
+          ]}
+          ctaLabel="Create free account"
+          ctaHref="https://app.tenderpreneurs.co.za/register"
+          ctaVariant="ghost"
+        />
+        <PricingCard
+          plan="Professional"
+          price="R299"
+          period="per month"
+          features={[
+            'Everything in Free',
+            'Live tender feed (7,841+ tenders)',
+            'Province & sector filters',
+            'Save searches + email alerts',
+            'AI win-probability scoring',
+            'B-BBEE preference calculator',
+            'Tender document downloads',
+            'Unlimited AI assistant queries',
+          ]}
+          ctaLabel="Start 14-day free trial"
+          ctaHref="https://app.tenderpreneurs.co.za/register?plan=pro"
+          ctaVariant="teal"
+          featured={true}
+          badge="Most Popular"
+        />
+        <PricingCard
+          plan="Enterprise"
+          price="Custom"
+          period="contact us"
+          features={[
+            'Everything in Professional',
+            'Team seats (unlimited)',
+            'API access',
+            'Dedicated account manager',
+            'Custom alert rules',
+            'SLA & priority support',
+            'Invoice billing',
+          ]}
+          ctaLabel="Contact sales"
+          ctaHref="mailto:sales@tenderpreneurs.co.za"
+          ctaVariant="ghost"
+        />
       </div>
 
-      <div class="mt-12 text-center">
-        <p class="text-[var(--color-text-muted)] mb-4">Still have questions?</p>
-        <a href="/pfma" class="btn-secondary">
-          Ask the PFMA Assistant
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
+      <p class="txt-secondary text-center mt-6 text-xs">
+        Payments via <strong class="txt-primary">PayFast</strong> ·
+        Cancel anytime · No lock-in contracts
+      </p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════ FAQ ═══════════════ -->
+  <section class="section">
+    <div class="wrap">
+      <div class="faq-layout">
+
+        <div>
+          <div class="eyebrow">FAQ</div>
+          <h2>Frequently asked<br>questions</h2>
+          <p class="txt-secondary mt-4" style="font-size:.875rem;line-height:1.7">
+            Short answers to what South African suppliers ask us most.
+          </p>
+          <a href="/pfma" class="btn btn-ghost mt-6">
+            Ask the PFMA Assistant
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+          </a>
+        </div>
+
+        <FaqAccordion items={faqItems} />
+
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════ CTA BANNER ═══════════════ -->
+  <CtaBanner
+    eyebrow="Get started today"
+    heading='Ready to win more<br><span class="txt-gold">government contracts?</span>'
+    body="Join SA SMMEs using Tenderpreneurs to find, score, and win public sector bids. Free to start — no credit card required."
+    primaryLabel="Get Started Free"
+    primaryHref="https://app.tenderpreneurs.co.za"
+    secondLabel="Browse Live Tenders"
+    secondHref="/tenders"
+  />
+
 </BaseLayout>
+
+<!-- ═══════════════ PAGE-SCOPED STYLES ═══════════════ -->
+<style>
+/* Hero */
+.hero {
+  min-height:   100svh;
+  display:      flex;
+  align-items:  center;
+  padding-top:  calc(var(--nav-h) + var(--safe-t));
+  position:     relative;
+  overflow:     hidden;
+}
+
+.hero-bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.hero-grid {
+  position:    absolute;
+  inset:       0;
+  background-image:  radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size:   32px 32px;
+  mask-image:  radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 100%);
+}
+.hero-glow-l {
+  position:   absolute;
+  top:        -15%;
+  left:       -10%;
+  width:      min(700px, 120vw);
+  height:     min(700px, 120vw);
+  background: radial-gradient(ellipse, rgba(16,201,168,.06), transparent 65%);
+}
+.hero-glow-r {
+  position:   absolute;
+  bottom:     -10%;
+  right:      -10%;
+  width:      min(600px, 100vw);
+  height:     min(600px, 100vw);
+  background: radial-gradient(ellipse, rgba(245,166,35,.06), transparent 65%);
+}
+
+.hero-inner {
+  position: relative;
+  z-index:  1;
+  display:  grid;
+  grid-template-columns: 1fr;
+  gap:      var(--sp-10);
+  padding:  var(--sp-12) var(--sp-4) var(--sp-16);
+  width:    100%;
+}
+@media (min-width: 640px) {
+  .hero-inner { padding: var(--sp-16) var(--sp-6); }
+}
+@media (min-width: 1024px) {
+  .hero-inner {
+    grid-template-columns: 1fr 420px;
+    gap:      var(--sp-16);
+    padding:  var(--sp-20) var(--sp-8);
+    align-items: center;
+  }
+}
+
+.hero-pill {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           var(--sp-2);
+  background:    rgba(16,201,168,.1);
+  border:        1px solid rgba(16,201,168,.2);
+  border-radius: var(--r-full);
+  padding:       5px 12px;
+  font-size:     .75rem;
+  font-weight:   600;
+  color:         var(--clr-teal);
+  margin-bottom: var(--sp-5);
+  width:         fit-content;
+}
+
+h1 em { display: block; }
+
+.hero-sub {
+  font-size:     1.0625rem;
+  max-width:     460px;
+  line-height:   1.7;
+  margin-bottom: var(--sp-8);
+}
+
+.hero-actions {
+  display:       flex;
+  flex-wrap:     wrap;
+  gap:           var(--sp-3);
+  margin-bottom: var(--sp-8);
+}
+
+.trust-strip {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       var(--sp-4);
+}
+
+/* Stats strip */
+.stats-strip {
+  background:    var(--srf-1);
+  border-top:    1px solid var(--brd);
+  border-bottom: 1px solid var(--brd);
+  padding:       var(--sp-5) 0;
+}
+.stats-inner {
+  display:         flex;
+  flex-wrap:       wrap;
+  gap:             var(--sp-3);
+  align-items:     center;
+  justify-content: center;
+}
+@media (min-width: 640px) { .stats-inner { gap: 0; } }
+
+.stat-strip-item {
+  display:         flex;
+  align-items:     center;
+  gap:             var(--sp-3);
+  padding:         var(--sp-3) var(--sp-5);
+  flex:            1;
+  min-width:       130px;
+  justify-content: center;
+}
+.stat-strip-num   { font-size: 1.125rem; font-weight: 500; }
+.stat-strip-label { font-size: .8125rem; }
+.stat-strip-sep {
+  width:      1px;
+  height:     32px;
+  background: var(--brd);
+  display:    none;
+}
+@media (min-width: 640px) { .stat-strip-sep { display: block; } }
+
+/* Compare section */
+.compare-grid {
+  display:               grid;
+  grid-template-columns: 1fr;
+  gap:                   var(--sp-4);
+  margin-top:            var(--sp-10);
+}
+@media (min-width: 640px) {
+  .compare-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.cmp-card {
+  border-radius: var(--r-lg);
+  padding:       var(--sp-6);
+  border:        1px solid var(--brd);
+}
+.cmp-bad  { background: rgba(255,94,94,.04); border-color: rgba(255,100,100,.16); }
+.cmp-good { background: rgba(16,201,168,.04); border-color: rgba(16,201,168,.18); }
+
+.cmp-title {
+  font-size:      .8125rem;
+  font-weight:    700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom:  var(--sp-5);
+}
+.cmp-bad  .cmp-title { color: #FF7575; }
+.cmp-good .cmp-title { color: var(--clr-teal); }
+
+.cmp-list {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--sp-3);
+}
+.cmp-item {
+  display:     flex;
+  align-items: flex-start;
+  gap:         var(--sp-2);
+  line-height: 1.55;
+}
+.cmp-icon {
+  flex-shrink:     0;
+  width:           18px;
+  height:          18px;
+  margin-top:      1px;
+  border-radius:   50%;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       9px;
+}
+.cmp-icon-bad  { background: rgba(255,94,94,.14); color: #FF7575; }
+.cmp-icon-good { background: rgba(16,201,168,.14); color: var(--clr-teal); }
+
+/* Browse */
+.browse-cols {
+  display:               grid;
+  grid-template-columns: 1fr;
+  gap:                   var(--sp-12);
+}
+@media (min-width: 768px) {
+  .browse-cols { grid-template-columns: 1fr 1fr; gap: var(--sp-16); }
+}
+
+.pill-wrap {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       var(--sp-2);
+  margin-top: var(--sp-5);
+}
+
+/* Blog section header */
+.section-head {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     flex-end;
+  flex-wrap:       wrap;
+  gap:             var(--sp-4);
+}
+.see-all {
+  font-size:   .875rem;
+  font-weight: 600;
+  color:       var(--clr-gold);
+  min-height:  var(--touch);
+  display:     inline-flex;
+  align-items: center;
+  transition:  color .15s;
+}
+.see-all:hover { color: var(--clr-gold-2); }
+
+/* FAQ layout */
+.faq-layout {
+  display:               grid;
+  grid-template-columns: 1fr;
+  gap:                   var(--sp-10);
+}
+@media (min-width: 768px) {
+  .faq-layout { grid-template-columns: 1fr 1fr; gap: var(--sp-16); align-items: start; }
+}
+</style>

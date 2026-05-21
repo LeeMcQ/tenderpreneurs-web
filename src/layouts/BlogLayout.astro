@@ -1,482 +1,165 @@
 ---
-import BaseLayout from './BaseLayout.astro';
-import { getCollection } from 'astro:content';
+/**
+ * BlogLayout.astro
+ * src/layouts/BlogLayout.astro
+ *
+ * Layout wrapper for individual blog/article pages.
+ *
+ * Props — passed from MDX/Markdown frontmatter:
+ *   title      — article title
+ *   description — meta description / excerpt
+ *   tag        — category label ('Beginners' | 'Compliance' | 'Bidding' | …)
+ *   tagVariant — 'gold' | 'teal'
+ *   date       — publication date string e.g. '12 March 2026'
+ *   readTime   — e.g. '8 min read'
+ *   author     — author name (default: 'Tenderpreneurs Team')
+ *   ogImage    — og image path (optional)
+ */
 
-export interface Props {
-  title: string;
+import BaseLayout from './BaseLayout.astro';
+import CtaBanner  from '../components/CtaBanner.astro';
+
+interface Props {
+  title:       string;
   description: string;
-  publishedDate: Date;
-  modifiedDate?: Date;
-  author?: string;
-  tags?: string[];
-  category?: string;
-  slug: string;
-  ogImage?: string;
-  readingTime?: number;
-  relatedSlugs?: string[];
+  tag:         string;
+  tagVariant?: 'gold' | 'teal';
+  date:        string;
+  readTime:    string;
+  author?:     string;
+  ogImage?:    string;
 }
 
 const {
   title,
   description,
-  publishedDate,
-  modifiedDate,
-  author = 'Tenderpreneurs Editorial',
-  tags = [],
-  category = 'Procurement',
-  slug,
+  tag,
+  tagVariant = 'teal',
+  date,
+  readTime,
+  author   = 'Tenderpreneurs Team',
   ogImage,
-  readingTime,
-  relatedSlugs = [],
 } = Astro.props;
-
-const canonicalUrl = `https://tenderpreneurs.co.za/blog/${slug}`;
-const formattedDate = publishedDate.toLocaleDateString('en-ZA', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
-const isoDate = publishedDate.toISOString();
-const isoModified = (modifiedDate ?? publishedDate).toISOString();
-
-// Fetch related posts
-let relatedPosts: any[] = [];
-try {
-  const allPosts = await getCollection('blog');
-  if (relatedSlugs.length > 0) {
-    relatedPosts = allPosts.filter((p) => relatedSlugs.includes(p.slug)).slice(0, 3);
-  } else {
-    relatedPosts = allPosts
-      .filter((p) => p.slug !== slug)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-  }
-} catch (e) {
-  relatedPosts = [];
-}
-
-const blogPostingSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'BlogPosting',
-  headline: title,
-  description,
-  url: canonicalUrl,
-  datePublished: isoDate,
-  dateModified: isoModified,
-  author: {
-    '@type': 'Organization',
-    name: author,
-    url: 'https://tenderpreneurs.co.za',
-  },
-  publisher: {
-    '@type': 'Organization',
-    name: 'Tenderpreneurs',
-    url: 'https://tenderpreneurs.co.za',
-    logo: {
-      '@type': 'ImageObject',
-      url: 'https://tenderpreneurs.co.za/logo.png',
-    },
-  },
-  image: ogImage ?? 'https://tenderpreneurs.co.za/og-default.jpg',
-  articleSection: category,
-  keywords: tags.join(', '),
-  inLanguage: 'en-ZA',
-};
-
-const breadcrumbSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tenderpreneurs.co.za' },
-    { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://tenderpreneurs.co.za/blog' },
-    { '@type': 'ListItem', position: 3, name: title, item: canonicalUrl },
-  ],
-};
 ---
 
-<BaseLayout
-  title={title}
-  description={description}
-  canonical={canonicalUrl}
-  ogImage={ogImage}
-  ogType="article"
-  publishedTime={isoDate}
-  modifiedTime={isoModified}
-  author={author}
-  section={category}
-  schema={[blogPostingSchema, breadcrumbSchema]}
->
-  <div class="blog-layout">
-    <div class="container">
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb py-4" aria-label="Breadcrumb">
+<BaseLayout {title} {description} ogImage={ogImage ?? '/og-blog.png'}>
+
+  <!-- Article header -->
+  <header class="post-header">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="/">Home</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span aria-hidden="true">›</span>
         <a href="/blog">Blog</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span aria-hidden="true">›</span>
         <span aria-current="page">{title}</span>
       </nav>
 
-      <div class="blog-content-grid">
-        <!-- Main article -->
-        <article class="blog-article" itemscope itemtype="https://schema.org/BlogPosting">
-          <header class="blog-header">
-            {category && (
-              <div class="blog-category">
-                <span class="badge badge-civic">{category}</span>
-              </div>
-            )}
+      <span class={`tag tag-${tagVariant} post-tag`}>{tag}</span>
+      <h1 class="post-title">{title}</h1>
+      <p class="txt-secondary post-desc">{description}</p>
 
-            <h1 class="blog-title" itemprop="headline">{title}</h1>
-            <p class="blog-description">{description}</p>
-
-            <div class="blog-meta">
-              <div class="blog-meta-author">
-                <div class="author-avatar" aria-hidden="true">
-                  {author.charAt(0)}
-                </div>
-                <div>
-                  <div class="author-name" itemprop="author">{author}</div>
-                  <div class="blog-date">
-                    <time datetime={isoDate} itemprop="datePublished">{formattedDate}</time>
-                    {readingTime && <span>· {readingTime} min read</span>}
-                  </div>
-                </div>
-              </div>
-              {tags.length > 0 && (
-                <div class="blog-tags">
-                  {tags.map((tag) => (
-                    <span class="blog-tag">{tag}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </header>
-
-          <div class="prose-tp blog-body" itemprop="articleBody">
-            <slot />
-          </div>
-
-          <!-- Email Signup CTA -->
-          <aside class="blog-cta" aria-label="Newsletter signup">
-            <div class="blog-cta-inner">
-              <div class="blog-cta-icon" aria-hidden="true">📬</div>
-              <div>
-                <h3 class="blog-cta-title">Get tender alerts to your inbox</h3>
-                <p class="blog-cta-text">Stay ahead of closing dates. Free for South African SMMEs.</p>
-              </div>
-            </div>
-            <form class="blog-cta-form" action="/auth/login" method="GET" novalidate>
-              <label for="email-cta" class="sr-only">Email address</label>
-              <input
-                id="email-cta"
-                type="email"
-                name="email"
-                placeholder="you@company.co.za"
-                class="blog-cta-input"
-                autocomplete="email"
-                required
-              />
-              <button type="submit" class="btn btn-primary">Get Started Free</button>
-            </form>
-          </aside>
-        </article>
-
-        <!-- Sidebar -->
-        <aside class="blog-sidebar" aria-label="Related articles">
-          <div class="sidebar-sticky">
-            <h3 class="sidebar-heading">Related Articles</h3>
-            {relatedPosts.length > 0 ? (
-              <ul class="sidebar-list" role="list">
-                {relatedPosts.map((post) => (
-                  <li class="sidebar-item">
-                    <a href={`/blog/${post.slug}`} class="sidebar-link">
-                      <span class="sidebar-link-title">{post.data.title}</span>
-                      <span class="sidebar-link-date">
-                        {post.data.publishedDate?.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p class="text-sm text-gray-500">No related articles yet.</p>
-            )}
-
-            <div class="sidebar-pfma-box">
-              <h4 class="sidebar-pfma-title">📚 PFMA Reference Guide</h4>
-              <p class="sidebar-pfma-text">Navigate PFMA, Treasury Regs, B-BBEE and SCM with our comprehensive guides.</p>
-              <a href="/pfma" class="btn btn-outline text-sm mt-3 w-full">Explore PFMA Guides</a>
-            </div>
-          </div>
-        </aside>
+      <div class="post-meta mono txt-tertiary">
+        <span>{author}</span>
+        <span class="meta-sep" aria-hidden="true">·</span>
+        <time datetime={date}>{date}</time>
+        <span class="meta-sep" aria-hidden="true">·</span>
+        <span>{readTime}</span>
       </div>
     </div>
-  </div>
+  </header>
+
+  <div class="divider"></div>
+
+  <!-- Article body -->
+  <article class="post-body">
+    <div class="wrap">
+      <div class="prose prose-constrained">
+        <slot />
+      </div>
+
+      <!-- Back link -->
+      <a href="/blog" class="back-link">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M13 8H3M7 4l-4 4 4 4"/>
+        </svg>
+        Back to all articles
+      </a>
+    </div>
+  </article>
+
+  <!-- CTA -->
+  <CtaBanner
+    eyebrow="Ready to apply this?"
+    heading='Find relevant tenders<br><span class="txt-gold">right now</span>'
+    body="Browse 7,841+ live government tenders — filtered, scored, and updated every 4 hours. Free to start."
+    primaryLabel="Browse Live Tenders"
+    primaryHref="/tenders"
+    secondLabel="Get Started Free"
+    secondHref="https://app.tenderpreneurs.co.za/register"
+  />
+
 </BaseLayout>
 
 <style>
-  .blog-layout {
-    background: var(--color-surface-2, #F8FAFC);
-    padding-bottom: 4rem;
-  }
+.post-header {
+  padding: calc(var(--nav-h) + var(--safe-t) + var(--sp-10)) 0 var(--sp-10);
+}
 
-  .blog-content-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-    align-items: start;
-  }
+.breadcrumb {
+  display:       flex;
+  align-items:   center;
+  gap:           var(--sp-2);
+  flex-wrap:     wrap;
+  font-size:     .8125rem;
+  color:         var(--txt-secondary);
+  margin-bottom: var(--sp-5);
+}
+.breadcrumb a           { color: var(--clr-teal); transition: color .15s; }
+.breadcrumb a:hover     { color: var(--clr-teal-2); }
+.breadcrumb span[aria-hidden] { color: var(--txt-tertiary); }
 
-  @media (min-width: 1024px) {
-    .blog-content-grid {
-      grid-template-columns: 1fr 320px;
-    }
-  }
+.post-tag    { margin-bottom: var(--sp-4); display: inline-block; }
 
-  .blog-article {
-    background: var(--color-surface);
-    border-radius: 1rem;
-    padding: 2.5rem;
-    box-shadow: var(--shadow-card);
-  }
+.post-title {
+  font-size:     clamp(1.75rem, 5vw, 2.75rem);
+  margin-bottom: var(--sp-4);
+  max-width:     760px;
+}
 
-  @media (min-width: 640px) {
-    .blog-article {
-      padding: 3rem;
-    }
-  }
+.post-desc {
+  font-size:     1rem;
+  line-height:   1.7;
+  max-width:     640px;
+  margin-bottom: var(--sp-5);
+}
 
-  .blog-header {
-    margin-bottom: 2.5rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid var(--color-border);
-  }
+.post-meta {
+  display:     flex;
+  align-items: center;
+  flex-wrap:   wrap;
+  gap:         var(--sp-2);
+  font-size:   .8125rem;
+}
+.meta-sep { color: var(--txt-tertiary); }
 
-  .blog-category {
-    margin-bottom: 1rem;
-  }
+/* Article content */
+.post-body {
+  padding: var(--sp-12) 0;
+}
 
-  .blog-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
-    font-weight: 700;
-    color: var(--color-navy, #0C1B33);
-    line-height: 1.2;
-    margin-bottom: 0.875rem;
-  }
-
-  .blog-description {
-    font-size: 1.125rem;
-    color: var(--color-text-muted);
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-  }
-
-  .blog-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .blog-meta-author {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .author-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1B4F8A, #3B82F6);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.875rem;
-    flex-shrink: 0;
-  }
-
-  .author-name {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: var(--color-text);
-  }
-
-  .blog-date {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    display: flex;
-    gap: 0.25rem;
-  }
-
-  .blog-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.375rem;
-  }
-
-  .blog-tag {
-    padding: 0.25rem 0.75rem;
-    background: var(--color-sky, #DBEAFE);
-    color: #1B4F8A;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-
-  .blog-body {
-    min-height: 400px;
-  }
-
-  .blog-cta {
-    margin-top: 3rem;
-    background: linear-gradient(135deg, #0C1B33, #1B4F8A);
-    border-radius: 1rem;
-    padding: 2rem;
-    color: white;
-  }
-
-  .blog-cta-inner {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .blog-cta-icon {
-    font-size: 2rem;
-    flex-shrink: 0;
-  }
-
-  .blog-cta-title {
-    font-weight: 700;
-    font-size: 1.125rem;
-    margin-bottom: 0.375rem;
-  }
-
-  .blog-cta-text {
-    font-size: 0.875rem;
-    color: rgba(219, 234, 254, 0.8);
-  }
-
-  .blog-cta-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.625rem;
-  }
-
-  .blog-cta-input {
-    flex: 1;
-    min-width: 200px;
-    padding: 0.625rem 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.08);
-    color: white;
-    font-size: 0.875rem;
-    outline: none;
-    transition: border-color 0.15s, background 0.15s;
-  }
-
-  .blog-cta-input::placeholder {
-    color: rgba(219, 234, 254, 0.5);
-  }
-
-  .blog-cta-input:focus {
-    border-color: rgba(217, 119, 6, 0.6);
-    background: rgba(255,255,255,0.12);
-  }
-
-  /* Sidebar */
-  .blog-sidebar {
-    display: none;
-  }
-
-  @media (min-width: 1024px) {
-    .blog-sidebar {
-      display: block;
-    }
-  }
-
-  .sidebar-sticky {
-    position: sticky;
-    top: 88px;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  .sidebar-heading {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-text-muted);
-    margin-bottom: 0;
-  }
-
-  .sidebar-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .sidebar-item {
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .sidebar-link {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.875rem 0;
-    text-decoration: none;
-    transition: color 0.15s;
-  }
-
-  .sidebar-link:hover .sidebar-link-title {
-    color: #1B4F8A;
-  }
-
-  .sidebar-link-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-text);
-    line-height: 1.4;
-    transition: color 0.15s;
-  }
-
-  .sidebar-link-date {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-  }
-
-  .sidebar-pfma-box {
-    background: linear-gradient(135deg, #0C1B33, #1B4F8A);
-    border-radius: 0.875rem;
-    padding: 1.25rem;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .sidebar-pfma-title {
-    font-weight: 700;
-    font-size: 0.9375rem;
-  }
-
-  .sidebar-pfma-text {
-    font-size: 0.8125rem;
-    color: rgba(219, 234, 254, 0.8);
-    line-height: 1.5;
-  }
+/* Back link */
+.back-link {
+  display:     inline-flex;
+  align-items: center;
+  gap:         var(--sp-2);
+  margin-top:  var(--sp-12);
+  font-size:   .875rem;
+  font-weight: 600;
+  color:       var(--clr-teal);
+  min-height:  var(--touch);
+  transition:  color .15s, gap .15s;
+}
+.back-link:hover { color: var(--clr-teal-2); gap: var(--sp-3); }
+.back-link svg { width: 14px; height: 14px; }
 </style>

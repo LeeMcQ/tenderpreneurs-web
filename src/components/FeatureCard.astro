@@ -1,0 +1,131 @@
+---
+/**
+ * FeatureCard.astro
+ * src/components/FeatureCard.astro
+ *
+ * Props:
+ *   icon        — emoji for the icon box
+ *   iconVariant — 'teal' | 'gold' | 'blue'
+ *   title       — feature name
+ *   description — short paragraph
+ *   checks      — string[] list of bullet points
+ *   linkHref    — CTA link destination
+ *   linkLabel   — CTA link text
+ */
+
+interface Props {
+  icon:         string;
+  iconVariant?: 'teal' | 'gold' | 'blue';
+  title:        string;
+  description:  string;
+  checks:       string[];
+  linkHref:     string;
+  linkLabel:    string;
+}
+
+const {
+  icon,
+  iconVariant = 'teal',
+  title,
+  description,
+  checks,
+  linkHref,
+  linkLabel,
+} = Astro.props;
+---
+
+<div class="feat-card card card-hover">
+  <div class={`feat-icon feat-icon-${iconVariant}`} aria-hidden="true">{icon}</div>
+  <h3 class="feat-title">{title}</h3>
+  <p class="feat-desc text-sm txt-secondary">{description}</p>
+
+  <ul class="feat-checks list-none" aria-label="Includes">
+    {checks.map(c => (
+      <li class="feat-check-item text-xs txt-secondary">{c}</li>
+    ))}
+  </ul>
+
+  <a href={linkHref} class="feat-link">
+    {linkLabel}
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M3 8h10M9 4l4 4-4 4"/>
+    </svg>
+  </a>
+</div>
+
+<style>
+.feat-card {
+  display:        flex;
+  flex-direction: column;
+  padding:        var(--sp-6);
+}
+
+.feat-icon {
+  width:           46px;
+  height:          46px;
+  border-radius:   var(--r-sm);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       1.25rem;
+  margin-bottom:   var(--sp-4);
+  flex-shrink:     0;
+}
+.feat-icon-teal { background: var(--clr-teal-muted); }
+.feat-icon-gold { background: var(--clr-gold-muted); }
+.feat-icon-blue { background: rgba(99,155,255,.1); }
+
+.feat-title {
+  font-size:     0.9375rem;
+  font-weight:   700;
+  margin-bottom: var(--sp-2);
+}
+
+.feat-desc {
+  flex:          1;
+  margin-bottom: var(--sp-4);
+  line-height:   1.7;
+}
+
+.feat-checks {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--sp-2);
+  margin-bottom:  var(--sp-5);
+}
+.feat-check-item {
+  display:     flex;
+  align-items: center;
+  gap:         var(--sp-2);
+  line-height: 1.5;
+}
+.feat-check-item::before {
+  content:       '';
+  display:       block;
+  width:         4px;
+  height:        4px;
+  background:    var(--clr-teal);
+  border-radius: 50%;
+  flex-shrink:   0;
+}
+
+.feat-link {
+  display:     inline-flex;
+  align-items: center;
+  gap:         var(--sp-1);
+  font-size:   0.8125rem;
+  font-weight: 700;
+  color:       var(--clr-gold);
+  min-height:  var(--touch);
+  margin-top:  auto;
+  transition:  gap 0.15s, color 0.15s;
+}
+.feat-link:hover {
+  gap:   var(--sp-2);
+  color: var(--clr-gold-2);
+}
+.feat-link svg {
+  width:  12px;
+  height: 12px;
+}
+</style>
