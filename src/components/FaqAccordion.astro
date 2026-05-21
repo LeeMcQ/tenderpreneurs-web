@@ -1,0 +1,117 @@
+---
+/**
+ * FaqAccordion.astro
+ * src/components/FaqAccordion.astro
+ *
+ * Accessible accordion. First item is open by default.
+ *
+ * Props:
+ *   items — { question: string; answer: string }[]
+ */
+
+interface FaqItem {
+  question: string;
+  answer:   string;
+}
+
+interface Props {
+  items: FaqItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="faq-list" role="list">
+  {items.map((item, i) => (
+    <div class={`faq-item${i === 0 ? ' open' : ''}`} role="listitem">
+      <button
+        class="faq-trigger"
+        aria-expanded={i === 0 ? 'true' : 'false'}
+        onclick="tpToggleFaq(this)"
+      >
+        {item.question}
+        <span class="faq-icon" aria-hidden="true">+</span>
+      </button>
+      <div class="faq-answer text-sm txt-secondary">
+        {item.answer}
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+.faq-item { border-bottom: 1px solid var(--brd); }
+
+.faq-trigger {
+  width:           100%;
+  background:      none;
+  border:          none;
+  cursor:          pointer;
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  gap:             var(--sp-4);
+  padding:         var(--sp-4) 0;
+  min-height:      var(--touch);
+  font-family:     var(--font-sans);
+  font-size:       0.9375rem;
+  font-weight:     500;
+  color:           var(--txt-primary);
+  text-align:      left;
+  transition:      color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.faq-trigger:hover { color: var(--clr-gold); }
+.faq-trigger:focus-visible {
+  outline:        2px solid var(--clr-gold);
+  outline-offset: 2px;
+  border-radius:  var(--r-xs);
+}
+
+.faq-icon {
+  flex-shrink:     0;
+  width:           22px;
+  height:          22px;
+  background:      rgba(255,255,255,.07);
+  border-radius:   50%;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       14px;
+  color:           var(--txt-secondary);
+  transition:      transform 0.25s ease, background 0.15s, color 0.15s;
+}
+.faq-item.open .faq-icon {
+  transform:  rotate(45deg);
+  background: var(--clr-gold-muted);
+  color:      var(--clr-gold);
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow:   hidden;
+  line-height: 1.75;
+  transition: max-height 0.35s ease, padding 0.3s ease;
+}
+.faq-item.open .faq-answer {
+  max-height: 300px;
+  padding-bottom: var(--sp-4);
+}
+</style>
+
+<script is:inline>
+  function tpToggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const open = item.classList.contains('open');
+    /* Close all */
+    document.querySelectorAll('.faq-item.open').forEach(el => {
+      el.classList.remove('open');
+      el.querySelector('.faq-trigger').setAttribute('aria-expanded', 'false');
+    });
+    /* Open this one (if it was closed) */
+    if (!open) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  }
+</script>

@@ -2,18 +2,18 @@
 // Single source of truth for CTAs, app URLs, and feature status flags.
 // Import this anywhere instead of hardcoding URLs or "Live/Beta" labels.
 
-export const APP_URL = "https://app.tenderpreneurs.co.za";
+export const APP_URL = "";  // app.* subdomain removed — everything lives on this domain
 
 export const CTA = {
   // Marketing → app conversion CTAs (signup funnel)
-  signup: `${APP_URL}/register`,
-  signupPro: `${APP_URL}/register?plan=pro`,
+  signup: `/auth/login`,
+  signupPro: `/auth/login?plan=pro_monthly`,
   signupEnterprise: "mailto:sales@tenderpreneurs.co.za",
 
   // Product feature deep-links (live in app)
-  scoring: `${APP_URL}/scoring`,
-  assistant: `${APP_URL}/assistant`,
-  tenderFeed: `${APP_URL}/tenders`,
+  scoring: `/tenders`,
+  assistant: `/tenders`,
+  tenderFeed: `/tenders`,
 
   // Marketing pages (this site)
   pfmaGuide: "/pfma",

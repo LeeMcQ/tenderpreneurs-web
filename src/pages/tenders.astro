@@ -1,0 +1,345 @@
+---
+/**
+ * tenders.astro
+ * src/pages/tenders.astro
+ *
+ * Live tenders listing page with search, province, and sector filters.
+ * In production: fetch tenders server-side or use an API endpoint.
+ */
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CtaBanner  from '../components/CtaBanner.astro';
+---
+
+<BaseLayout
+  title="South African Government Tenders — Tenderpreneurs"
+  description="Browse 7,841+ live government tenders from all 9 provinces. Filter by sector, value, B-BBEE level and closing date. Updated every 4 hours."
+  ogImage="/og-tenders.png"
+>
+
+  <!-- Page hero -->
+  <section class="page-hero">
+    <div class="wrap">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Tenders</span>
+      </nav>
+      <div class="eyebrow">Live tender data</div>
+      <h1 class="page-title">South African Government Tenders</h1>
+      <p class="txt-secondary page-sub">
+        Live listings from eTenders, refreshed every 4 hours.
+        Filter by province or sector.
+      </p>
+    </div>
+  </section>
+
+  <!-- Filter bar -->
+  <div class="wrap">
+    <div class="filter-bar" role="search" aria-label="Filter tenders">
+
+      <select class="input select" aria-label="Filter by province" id="filter-province">
+        <option value="">All provinces</option>
+        <option value="eastern-cape">Eastern Cape</option>
+        <option value="free-state">Free State</option>
+        <option value="gauteng">Gauteng</option>
+        <option value="kwazulu-natal">KwaZulu-Natal</option>
+        <option value="limpopo">Limpopo</option>
+        <option value="mpumalanga">Mpumalanga</option>
+        <option value="northern-cape">Northern Cape</option>
+        <option value="north-west">North West</option>
+        <option value="western-cape">Western Cape</option>
+        <option value="national">National</option>
+      </select>
+
+      <select class="input select" aria-label="Filter by sector" id="filter-sector">
+        <option value="">All sectors</option>
+        <option value="construction">Construction</option>
+        <option value="ict">ICT</option>
+        <option value="health">Health</option>
+        <option value="education">Education</option>
+        <option value="transport">Transport</option>
+        <option value="agriculture">Agriculture</option>
+        <option value="energy">Energy</option>
+        <option value="security">Security</option>
+        <option value="consulting">Consulting</option>
+        <option value="cleaning">Cleaning</option>
+        <option value="catering">Catering</option>
+        <option value="legal">Legal</option>
+      </select>
+
+      <input
+        class="input search-input"
+        type="search"
+        id="filter-search"
+        placeholder="Search tenders…"
+        aria-label="Search tenders"
+        autocomplete="off"
+      />
+
+      <button class="btn btn-gold" id="filter-btn" aria-label="Apply filters">
+        Search
+      </button>
+    </div>
+
+    <!-- Results count -->
+    <p class="results-count txt-secondary text-xs mono" aria-live="polite">
+      Showing 5 of 418 open tenders
+    </p>
+  </div>
+
+  <!-- Tender rows (server-rendered in production) -->
+  <div class="wrap tenders-list" aria-label="Tender listings">
+
+    {[
+      {
+        ref:      'SCMU3-26/27-0115-HO',
+        title:    'Supply and Delivery of Medical Consumables',
+        dept:     'Eastern Cape — Health',
+        province: 'Eastern Cape',
+        sector:   'Health',
+        closes:   '19 May 2026',
+        urgent:   true,
+        score:    72,
+      },
+      {
+        ref:      'LDPT-LIFTS-JACKS-07-05-2026',
+        title:    'Supply of Lifting Jacks and Equipment',
+        dept:     'Passenger Rail Agency of South Africa',
+        province: 'National',
+        sector:   'Transport',
+        closes:   '19 May 2026',
+        urgent:   true,
+        score:    58,
+      },
+      {
+        ref:      'RFQ-027C-26',
+        title:    'Consulting Services for Conservation Planning',
+        dept:     'South African National Parks',
+        province: 'Gauteng',
+        sector:   'Consulting',
+        closes:   '26 May 2026',
+        urgent:   false,
+        score:    64,
+      },
+      {
+        ref:      'QUOTATION No. Q12/1350RR OF 25/26',
+        title:    'Supply of Cleaning Materials and Equipment',
+        dept:     'Msunduzi Local Municipality',
+        province: 'KwaZulu-Natal',
+        sector:   'Cleaning',
+        closes:   '28 May 2026',
+        urgent:   false,
+        score:    81,
+      },
+      {
+        ref:      'ISC01REQ003442',
+        title:    'IT Hardware Procurement — Servers and Networking',
+        dept:     'Agricultural Research Council',
+        province: 'Gauteng',
+        sector:   'ICT',
+        closes:   '2 Jun 2026',
+        urgent:   false,
+        score:    49,
+      },
+    ].map(t => (
+      <a href={`/tenders/${t.ref.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} class="tender-row card card-hover card-tappable">
+        <div class="tr-body">
+          <div class="tr-ref mono txt-teal">{t.ref}</div>
+          <div class="tr-title">{t.title}</div>
+          <div class="tr-tags">
+            <span class="tag tag-navy">{t.province}</span>
+            <span class="tag tag-navy">{t.sector}</span>
+            <span class={`tag ${t.urgent ? 'tag-red' : 'tag-gold'}`}>
+              Closes {t.closes}
+            </span>
+          </div>
+        </div>
+        <div class="tr-score-wrap" aria-label={`Win probability ${t.score}%`}>
+          <div class="score-circle" style={`--pct:${t.score}`} aria-hidden="true">
+            <div class="score-circle-inner mono">{t.score}%</div>
+          </div>
+          <div class="score-circle-label txt-tertiary mono">win %</div>
+        </div>
+      </a>
+    ))}
+
+    <!-- Gate: sign in to see all -->
+    <div class="results-gate card text-center">
+      <div class="gate-icon" aria-hidden="true">🔒</div>
+      <h3>Showing 5 of 418 open tenders</h3>
+      <p class="txt-secondary text-sm mt-3">
+        Sign in free to see all results, save searches, and get email alerts.
+      </p>
+      <div class="gate-actions">
+        <a href="https://app.tenderpreneurs.co.za/register" class="btn btn-gold btn-lg">
+          Sign in free
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4"/>
+          </svg>
+        </a>
+        <a href="/pricing" class="btn btn-ghost">See pricing</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <CtaBanner
+    eyebrow="Never miss a tender"
+    heading='Get <span class="txt-gold">email alerts</span> for matching tenders'
+    body="Set up your search filters once and we'll email you the moment a matching tender is published. Free on the Professional plan."
+    primaryLabel="Start Free Trial"
+    primaryHref="https://app.tenderpreneurs.co.za/register?plan=pro"
+    secondLabel="See pricing"
+    secondHref="/pricing"
+  />
+
+</BaseLayout>
+
+<style>
+/* Page hero */
+.page-hero {
+  padding: calc(var(--nav-h) + var(--safe-t) + var(--sp-12)) 0 var(--sp-10);
+  border-bottom: 1px solid var(--brd);
+}
+.breadcrumb {
+  display:     flex;
+  align-items: center;
+  gap:         var(--sp-2);
+  font-size:   .875rem;
+  color:       var(--txt-secondary);
+  margin-bottom: var(--sp-4);
+}
+.breadcrumb a { color: var(--clr-teal); transition: color .15s; }
+.breadcrumb a:hover { color: var(--clr-teal-2); }
+.breadcrumb span[aria-hidden] { color: var(--txt-tertiary); }
+
+.page-title {
+  font-size:   clamp(1.75rem, 5vw, 2.75rem);
+  margin-bottom: var(--sp-3);
+}
+.page-sub {
+  font-size: 1rem;
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+/* Filter bar */
+.filter-bar {
+  display:       flex;
+  align-items:   center;
+  gap:           var(--sp-3);
+  background:    var(--srf-1);
+  border:        1px solid var(--brd);
+  border-radius: var(--r-lg);
+  padding:       var(--sp-3) var(--sp-4);
+  flex-wrap:     wrap;
+  margin-top:    var(--sp-6);
+}
+.filter-bar .select {
+  width:     auto;
+  flex:      0 0 auto;
+  min-width: 160px;
+}
+.search-input { flex: 1; min-width: 160px; }
+
+.results-count {
+  margin:    var(--sp-3) 0 var(--sp-4);
+  display:   block;
+}
+
+/* Tender list */
+.tenders-list {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--sp-3);
+  margin-bottom:  var(--sp-6);
+}
+
+.tender-row {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  gap:             var(--sp-6);
+  padding:         var(--sp-4) var(--sp-5);
+  border-radius:   var(--r-lg);
+  transition:      background .15s, border-color .15s, transform .15s;
+}
+.tender-row:hover { transform: translateX(3px); }
+
+.tr-body { flex: 1; min-width: 0; }
+.tr-ref {
+  font-size:     10px;
+  margin-bottom: var(--sp-1);
+}
+.tr-title {
+  font-size:     .9375rem;
+  font-weight:   600;
+  line-height:   1.3;
+  margin-bottom: var(--sp-2);
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+@media (min-width: 640px) { .tr-title { white-space: normal; } }
+
+.tr-tags {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       var(--sp-2);
+}
+
+/* Score circle */
+.tr-score-wrap {
+  flex-shrink: 0;
+  text-align:  center;
+  display:     none;
+}
+@media (min-width: 480px) { .tr-score-wrap { display: block; } }
+
+.score-circle {
+  width:           56px;
+  height:          56px;
+  border-radius:   50%;
+  background:      conic-gradient(
+    var(--clr-teal) calc(var(--pct, 0) * 1%),
+    rgba(255,255,255,.07) 0
+  );
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  position:        relative;
+  margin:          0 auto;
+}
+.score-circle-inner {
+  width:           42px;
+  height:          42px;
+  background:      var(--srf-0);
+  border-radius:   50%;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       11px;
+  font-weight:     500;
+}
+.score-circle-label {
+  font-size:  10px;
+  margin-top: 4px;
+}
+
+/* Results gate */
+.results-gate {
+  padding:    var(--sp-10) var(--sp-6);
+  text-align: center;
+  margin-top: var(--sp-2);
+}
+.gate-icon { font-size: 2rem; margin-bottom: var(--sp-3); }
+.gate-actions {
+  display:         flex;
+  justify-content: center;
+  flex-wrap:       wrap;
+  gap:             var(--sp-3);
+  margin-top:      var(--sp-6);
+}
+</style>

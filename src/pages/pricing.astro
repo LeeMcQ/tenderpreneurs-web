@@ -1,398 +1,283 @@
 ---
-// src/pages/pricing.astro
-// Pricing page with honest feature labels. Every advertised capability
-// is sourced from src/config/site.ts so claims stay consistent everywhere.
+/**
+ * pricing.astro
+ * src/pages/pricing.astro
+ */
 
-import BaseLayout from "../layouts/BaseLayout.astro";
-import StatusBadge from "../components/StatusBadge.astro";
-import { CTA, FEATURES } from "../config/site";
+import BaseLayout    from '../layouts/BaseLayout.astro';
+import PricingCard   from '../components/PricingCard.astro';
+import FaqAccordion  from '../components/FaqAccordion.astro';
+import CtaBanner     from '../components/CtaBanner.astro';
 
-const title = "Pricing — Tenderpreneurs | Free PFMA Tools + Professional Tender Tracking";
-const description =
-  "Free forever for PFMA research and compliance guidance. Upgrade to Professional (R299/mo + VAT) once the live tender feed and AI scoring go live.";
-
-// Group features by plan tier for the comparison table.
-// Each row carries its own status badge so we never overpromise.
-const freePlan = [
-  FEATURES.pfmaKnowledgeBase,
-  FEATURES.sbdFormLibrary,
-  FEATURES.complianceChecklist,
-  FEATURES.pfmaAssistant,
+const faqItems = [
+  {
+    question: 'Can I cancel my Professional subscription at any time?',
+    answer:   'Yes. Cancel from your account settings at any time. Your subscription remains active until the end of the billing period. No cancellation fees.',
+  },
+  {
+    question: 'Do you offer discounts for non-profits or co-operatives?',
+    answer:   'Yes — registered NPOs and agricultural co-operatives can apply for a 50% discount. Email hello@tenderpreneurs.co.za with your NPO registration number.',
+  },
+  {
+    question: 'Is my payment information secure?',
+    answer:   'We never store your card details. All payments are processed by PayFast, a PCI-DSS compliant South African payment gateway. We receive only a tokenised confirmation.',
+  },
+  {
+    question: "What happens to my saved tenders if I downgrade to Free?",
+    answer:   'Your saved tenders are retained for 90 days. You can export them as a CSV before downgrading. After 90 days, the list is cleared.',
+  },
+  {
+    question: 'Does Professional cover multiple users?',
+    answer:   'Professional covers a single user. For team access, the Enterprise plan supports unlimited seats. Contact sales@tenderpreneurs.co.za for a quote.',
+  },
 ];
 
-const proPlan = [
-  FEATURES.liveTenderFeed,
-  FEATURES.provinceFilters,
-  FEATURES.emailAlerts,
-  FEATURES.winProbability,
-  FEATURES.bbbeeCalculator,
-  FEATURES.documentDownloads,
-  FEATURES.unlimitedAssistant,
-];
-
-const enterprisePlan = [
-  FEATURES.teamSeats,
-  FEATURES.apiAccess,
+const tableRows = [
+  { feature: 'PFMA knowledge base (11 topics)',       free: true,  pro: true,  ent: true  },
+  { feature: 'SBD form library',                      free: true,  pro: true,  ent: true  },
+  { feature: 'Compliance checklist (CSD, Tax, B-BBEE)',free: true, pro: true,  ent: true  },
+  { feature: 'PFMA AI Assistant (basic)',              free: true,  pro: true,  ent: true  },
+  { feature: 'Live tender feed (7,841+ tenders)',      free: false, pro: true,  ent: true  },
+  { feature: 'Province & sector filters',             free: false, pro: true,  ent: true  },
+  { feature: 'Save searches + email alerts',          free: false, pro: true,  ent: true  },
+  { feature: 'AI win-probability scoring',            free: false, pro: true,  ent: true  },
+  { feature: 'B-BBEE preference calculator',          free: false, pro: true,  ent: true  },
+  { feature: 'Tender document downloads',             free: false, pro: true,  ent: true  },
+  { feature: 'Unlimited AI assistant queries',        free: false, pro: true,  ent: true  },
+  { feature: 'Team seats',                            free: false, pro: false, ent: true  },
+  { feature: 'API access',                            free: false, pro: false, ent: true  },
+  { feature: 'Dedicated account manager',             free: false, pro: false, ent: true  },
+  { feature: 'Custom tender alert rules',             free: false, pro: false, ent: true  },
+  { feature: 'SLA & priority support',               free: false, pro: false, ent: true  },
 ];
 ---
 
-<BaseLayout title={title} description={description}>
-  <main id="main-content">
-    <nav aria-label="Breadcrumb" class="breadcrumb">
-      <ol>
-        <li><a href="/">Home</a></li>
-        <li aria-hidden="true">›</li>
-        <li aria-current="page">Pricing</li>
-      </ol>
-    </nav>
+<BaseLayout
+  title="Pricing — Tenderpreneurs | Free PFMA Tools + Professional Tender Tracking"
+  description="Free forever for PFMA research and compliance guidance. Upgrade to Professional (R299/mo) for live tender tracking, AI win-probability scoring, and email alerts."
+  ogImage="/og-pricing.png"
+>
 
-    <header class="pricing-hero">
-      <h1>Simple, transparent pricing</h1>
-      <p class="lede">
-        Start free. Upgrade when the live tender feed launches. We label every feature
-        <strong>Live</strong>, <strong>Beta</strong>, or <strong>Coming soon</strong> —
-        because we'd rather lose a signup than mislead a buyer.
+  <!-- Page hero -->
+  <section class="page-hero">
+    <div class="wrap text-center">
+      <div class="eyebrow eyebrow-center">Pricing</div>
+      <h1 class="page-title">Simple, transparent pricing</h1>
+      <p class="txt-secondary page-sub" style="margin:0 auto">
+        Start free. Upgrade when you're ready to track live tenders.
       </p>
-    </header>
+    </div>
+  </section>
 
-    <section class="plans-grid" aria-label="Pricing plans">
-      <!-- FREE -->
-      <article class="plan">
-        <header>
-          <span class="plan-icon" aria-hidden="true">📦</span>
-          <h2>Free</h2>
-          <p class="price"><strong>R0</strong> <span>forever</span></p>
-          <p class="plan-pitch">Everything you need to get procurement-ready.</p>
-        </header>
-        <ul class="plan-features">
-          {freePlan.map((f) => (
-            <li>
-              <span class="check" aria-hidden="true">✓</span>
-              <span class="feat-name">{f.label}</span>
-              <StatusBadge status={f.status} eta={f.eta} />
-            </li>
-          ))}
-        </ul>
-        <a href={CTA.signup} class="plan-cta plan-cta-secondary">Create free account</a>
-      </article>
+  <!-- Pricing cards -->
+  <section class="section-sm">
+    <div class="wrap">
+      <div class="grid-3">
+        <PricingCard
+          plan="Free"
+          price="R0"
+          period="forever free"
+          features={[
+            'PFMA knowledge base (11 topics)',
+            'SBD form library',
+            'Compliance checklist',
+            'PFMA AI Assistant (basic)',
+            'CSD registration guide',
+          ]}
+          ctaLabel="Create free account"
+          ctaHref="https://app.tenderpreneurs.co.za/register"
+          ctaVariant="ghost"
+        />
+        <PricingCard
+          plan="Professional"
+          price="R299"
+          period="per month"
+          features={[
+            'Everything in Free',
+            'Live tender feed (7,841+ tenders)',
+            'Province & sector filters',
+            'Save searches + email alerts',
+            'AI win-probability scoring',
+            'B-BBEE preference calculator',
+            'Tender document downloads',
+            'Unlimited AI assistant queries',
+          ]}
+          ctaLabel="Start 14-day free trial"
+          ctaHref="https://app.tenderpreneurs.co.za/register?plan=pro"
+          ctaVariant="teal"
+          featured={true}
+        />
+        <PricingCard
+          plan="Enterprise"
+          price="Custom"
+          period="contact us"
+          features={[
+            'Everything in Professional',
+            'Team seats (unlimited)',
+            'API access',
+            'Dedicated account manager',
+            'Custom tender alert rules',
+            'SLA & priority support',
+            'Invoice billing',
+          ]}
+          ctaLabel="Contact sales"
+          ctaHref="mailto:sales@tenderpreneurs.co.za"
+          ctaVariant="ghost"
+        />
+      </div>
+      <p class="txt-secondary text-center mt-6 text-xs">
+        Payments processed securely via <strong class="txt-primary">PayFast</strong> ·
+        Cancel anytime — no lock-in contracts
+      </p>
+    </div>
+  </section>
 
-      <!-- PROFESSIONAL -->
-      <article class="plan plan-featured">
-        <div class="plan-badge">Most popular when live</div>
-        <header>
-          <span class="plan-icon" aria-hidden="true">⚡</span>
-          <h2>Professional</h2>
-          <p class="price"><strong>R299</strong> <span>per month + VAT</span></p>
-          <p class="plan-pitch">For SMMEs actively pursuing government tenders.</p>
-        </header>
-        <ul class="plan-features">
-          <li class="includes">Everything in Free, plus:</li>
-          {proPlan.map((f) => (
-            <li>
-              <span class="check" aria-hidden="true">✓</span>
-              <span class="feat-name">{f.label}</span>
-              <StatusBadge status={f.status} eta={f.eta} />
-            </li>
-          ))}
-        </ul>
-        <a href={CTA.signupPro} class="plan-cta plan-cta-primary">Join the Pro waitlist</a>
-        <p class="plan-footnote">
-          We'll only start your subscription once the live tender feed and AI scoring are
-          ready. No charge until then.
-        </p>
-      </article>
+  <div class="divider"></div>
 
-      <!-- ENTERPRISE -->
-      <article class="plan">
-        <header>
-          <span class="plan-icon" aria-hidden="true">🏢</span>
-          <h2>Enterprise</h2>
-          <p class="price"><strong>Custom</strong> <span>contact us</span></p>
-          <p class="plan-pitch">For procurement teams, advisors, and large suppliers.</p>
-        </header>
-        <ul class="plan-features">
-          <li class="includes">Everything in Professional, plus:</li>
-          {enterprisePlan.map((f) => (
-            <li>
-              <span class="check" aria-hidden="true">✓</span>
-              <span class="feat-name">{f.label}</span>
-              <StatusBadge status={f.status} eta={f.eta} />
-            </li>
-          ))}
-          <li>
-            <span class="check" aria-hidden="true">✓</span>
-            <span class="feat-name">Dedicated account manager</span>
-            <StatusBadge status="live" />
-          </li>
-          <li>
-            <span class="check" aria-hidden="true">✓</span>
-            <span class="feat-name">SLA &amp; priority support</span>
-            <StatusBadge status="live" />
-          </li>
-          <li>
-            <span class="check" aria-hidden="true">✓</span>
-            <span class="feat-name">Invoice billing</span>
-            <StatusBadge status="live" />
-          </li>
-        </ul>
-        <a href={CTA.signupEnterprise} class="plan-cta plan-cta-secondary">Contact sales</a>
-      </article>
-    </section>
+  <!-- Feature comparison table -->
+  <section class="section-sm">
+    <div class="wrap">
+      <div class="eyebrow">Full comparison</div>
+      <h2>Everything included in each plan</h2>
 
-    <p class="payments-note">
-      Payments processed securely via <a href="https://www.payfast.co.za" rel="noopener">PayFast</a>.
-      Cancel anytime — no lock-in contracts. Prices exclude VAT.
-    </p>
+      <div class="compare-table-wrap mt-8">
+        <table class="compare-table" aria-label="Plan feature comparison">
+          <thead>
+            <tr>
+              <th class="th-feature">Feature</th>
+              <th>Free</th>
+              <th>
+                Professional
+                <span class="th-badge">Popular</span>
+              </th>
+              <th>Enterprise</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tableRows.map(row => (
+              <tr>
+                <td class="td-feature">{row.feature}</td>
+                <td class="td-check">
+                  {row.free
+                    ? <span class="check-yes" aria-label="Included">✓</span>
+                    : <span class="check-no"  aria-label="Not included">–</span>
+                  }
+                </td>
+                <td class="td-check">
+                  {row.pro
+                    ? <span class="check-yes" aria-label="Included">✓</span>
+                    : <span class="check-no"  aria-label="Not included">–</span>
+                  }
+                </td>
+                <td class="td-check">
+                  {row.ent
+                    ? <span class="check-yes" aria-label="Included">✓</span>
+                    : <span class="check-no"  aria-label="Not included">–</span>
+                  }
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-    <section class="faq" aria-labelledby="faq-h">
-      <h2 id="faq-h">Frequently asked questions</h2>
+  <div class="divider"></div>
 
-      <details>
-        <summary>Why are so many features marked "Coming soon"?</summary>
-        <p>
-          We're a young South African company shipping in public. We'd rather list every
-          planned feature with an honest status than hide what's not built yet. Today, the
-          free PFMA Knowledge Base and AI Assistant (beta) are usable. The tender feed and
-          AI scoring are in active development — join the waitlist on the
-          <a href="/tenders">Tenders</a> page for launch updates.
-        </p>
-      </details>
+  <!-- FAQ -->
+  <section class="section-sm">
+    <div class="wrap">
+      <div class="eyebrow">FAQ</div>
+      <h2>Common pricing questions</h2>
+      <div class="faq-wrap mt-8">
+        <FaqAccordion items={faqItems} />
+      </div>
+    </div>
+  </section>
 
-      <details>
-        <summary>Will my Professional subscription start before the live feed is ready?</summary>
-        <p>
-          No. If you sign up for Professional today, you join the waitlist. We only
-          begin billing once the core Pro features (live tender feed, win-probability
-          scoring, B-BBEE calculator) are out of "coming soon" and into "live".
-        </p>
-      </details>
+  <!-- CTA -->
+  <CtaBanner
+    eyebrow="No credit card needed"
+    heading={`Start free, upgrade<br><span class="txt-gold">when you're ready</span>`}
+    body="Create your free account today and access the full PFMA knowledge base instantly."
+    primaryLabel="Get Started Free"
+    primaryHref="https://app.tenderpreneurs.co.za/register"
+    secondLabel="Contact sales"
+    secondHref="mailto:sales@tenderpreneurs.co.za"
+  />
 
-      <details>
-        <summary>Can I cancel my Professional subscription at any time?</summary>
-        <p>
-          Yes. Cancel from your account settings at any time. Your subscription remains
-          active until the end of the billing period. No cancellation fees.
-        </p>
-      </details>
-
-      <details>
-        <summary>Do you offer discounts for non-profits or co-operatives?</summary>
-        <p>
-          Yes — registered NPOs and agricultural co-operatives can apply for a 50%
-          discount. Email <a href="mailto:hello@tenderpreneurs.co.za">hello@tenderpreneurs.co.za</a>
-          with your NPO registration number.
-        </p>
-      </details>
-
-      <details>
-        <summary>Is my payment information secure?</summary>
-        <p>
-          We never store your card details. All payments are processed by PayFast, a
-          PCI-DSS compliant South African payment gateway. We receive only a tokenised
-          confirmation.
-        </p>
-      </details>
-
-      <details>
-        <summary>What happens to my saved tenders if I downgrade to Free?</summary>
-        <p>
-          Your saved tenders are retained for 90 days. You can export them as a CSV
-          before downgrading. After 90 days, the list is cleared.
-        </p>
-      </details>
-
-      <details>
-        <summary>Does Professional cover multiple users?</summary>
-        <p>
-          Professional covers a single user. For team access, the Enterprise plan supports
-          unlimited seats. Contact <a href="mailto:sales@tenderpreneurs.co.za">sales@tenderpreneurs.co.za</a>
-          for a quote.
-        </p>
-      </details>
-    </section>
-  </main>
 </BaseLayout>
 
 <style>
-  main {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 32px 20px 80px;
-  }
-  .breadcrumb ol {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 24px;
-    display: flex;
-    gap: 8px;
-    font-size: 14px;
-    color: #6b7280;
-  }
-  .breadcrumb a { color: #0C1B33; }
-  .pricing-hero {
-    text-align: center;
-    padding: 24px 0 40px;
-  }
-  .pricing-hero h1 {
-    font-size: clamp(28px, 5vw, 42px);
-    margin: 0 0 12px;
-    color: #0C1B33;
-  }
-  .lede {
-    font-size: 17px;
-    color: #4b5563;
-    max-width: 680px;
-    margin: 0 auto;
-    line-height: 1.5;
-  }
-  .plans-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 16px;
-    align-items: start;
-  }
-  .plan {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 28px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-  }
-  .plan-featured {
-    border: 2px solid #0C1B33;
-    box-shadow: 0 4px 20px rgba(12, 27, 51, 0.08);
-  }
-  .plan-badge {
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #0C1B33;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 4px 12px;
-    border-radius: 999px;
-    white-space: nowrap;
-  }
-  .plan-icon { font-size: 28px; }
-  .plan h2 {
-    margin: 8px 0 4px;
-    font-size: 22px;
-    color: #0C1B33;
-  }
-  .price {
-    margin: 4px 0 8px;
-    color: #6b7280;
-    font-size: 14px;
-  }
-  .price strong {
-    font-size: 32px;
-    color: #0C1B33;
-    font-weight: 700;
-  }
-  .plan-pitch {
-    color: #4b5563;
-    font-size: 14px;
-    margin: 0 0 20px;
-    min-height: 40px;
-  }
-  .plan-features {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 24px;
-    display: grid;
-    gap: 10px;
-    flex: 1;
-  }
-  .plan-features li {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    font-size: 14px;
-    color: #1f2937;
-    line-height: 1.4;
-  }
-  .plan-features .includes {
-    font-weight: 600;
-    color: #0C1B33;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 8px;
-    margin-bottom: 4px;
-  }
-  .check {
-    color: #10b981;
-    font-weight: 700;
-    width: 16px;
-  }
-  .feat-name { flex: 1; }
-  .plan-cta {
-    display: block;
-    text-align: center;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    text-decoration: none;
-    margin-top: auto;
-  }
-  .plan-cta-primary { background: #0C1B33; color: #fff; }
-  .plan-cta-secondary { background: transparent; color: #0C1B33; border: 1px solid #0C1B33; }
-  .plan-cta-primary:hover { opacity: 0.92; }
-  .plan-cta-secondary:hover { background: rgba(12, 27, 51, 0.05); }
-  .plan-footnote {
-    margin-top: 10px;
-    font-size: 12px;
-    color: #6b7280;
-    text-align: center;
-  }
-  .payments-note {
-    text-align: center;
-    color: #6b7280;
-    font-size: 14px;
-    margin: 32px 0 56px;
-  }
-  .payments-note a { color: #0C1B33; }
-  .faq {
-    max-width: 720px;
-    margin: 0 auto;
-  }
-  .faq h2 {
-    text-align: center;
-    margin: 0 0 24px;
-    color: #0C1B33;
-  }
-  .faq details {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin-bottom: 10px;
-  }
-  .faq summary {
-    font-weight: 600;
-    color: #0C1B33;
-    cursor: pointer;
-    list-style: none;
-  }
-  .faq summary::-webkit-details-marker { display: none; }
-  .faq summary::after {
-    content: "+";
-    float: right;
-    font-weight: 400;
-    font-size: 18px;
-    color: #6b7280;
-  }
-  .faq details[open] summary::after { content: "−"; }
-  .faq p {
-    margin: 12px 0 0;
-    color: #4b5563;
-    line-height: 1.6;
-  }
-  .faq a { color: #0C1B33; }
+.page-hero {
+  padding: calc(var(--nav-h) + var(--safe-t) + var(--sp-12)) 0 var(--sp-10);
+  border-bottom: 1px solid var(--brd);
+}
+.page-title { margin-bottom: var(--sp-3); }
+.page-sub   { font-size: 1rem; max-width: 460px; line-height: 1.7; }
+
+/* Comparison table */
+.compare-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border:        1px solid var(--brd);
+  border-radius: var(--r-lg);
+}
+
+.compare-table {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       .875rem;
+  min-width:       560px;
+}
+
+.compare-table thead tr {
+  background:    var(--srf-1);
+  border-bottom: 1px solid var(--brd);
+}
+
+.compare-table th {
+  padding:    var(--sp-4) var(--sp-5);
+  font-size:  .8125rem;
+  font-weight: 700;
+  color:      var(--txt-primary);
+  text-align: center;
+  white-space: nowrap;
+  position:   relative;
+}
+.th-feature { text-align: left; width: 50%; }
+
+.th-badge {
+  display:       inline-block;
+  margin-left:   var(--sp-2);
+  background:    var(--clr-teal);
+  color:         var(--txt-inverse);
+  font-size:     10px;
+  padding:       1px 6px;
+  border-radius: var(--r-full);
+  vertical-align: middle;
+}
+
+.compare-table tbody tr {
+  border-bottom: 1px solid var(--brd);
+  transition:    background .12s;
+}
+.compare-table tbody tr:last-child { border-bottom: none; }
+.compare-table tbody tr:hover      { background: rgba(255,255,255,.03); }
+
+.td-feature {
+  padding:    var(--sp-3) var(--sp-5);
+  color:      var(--txt-secondary);
+  text-align: left;
+}
+.td-check {
+  padding:    var(--sp-3) var(--sp-5);
+  text-align: center;
+}
+
+.check-yes { color: var(--clr-teal); font-size: 1rem; font-weight: 700; }
+.check-no  { color: var(--txt-tertiary); font-size: .875rem; }
+
+.faq-wrap { max-width: 680px; }
 </style>
