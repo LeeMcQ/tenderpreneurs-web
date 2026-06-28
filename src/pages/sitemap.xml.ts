@@ -66,7 +66,12 @@ export const GET: APIRoute = async () => {
     console.warn('[sitemap] Could not load pfma collection:', e);
   }
 
-  const allUrls = [...staticUrls, ...blogUrls, ...pfmaUrls].join('\n');
+  // Province + sector landing pages (these static routes exist under /tenders/*)
+  const PROVINCES = ['eastern-cape','free-state','gauteng','kwazulu-natal','limpopo','mpumalanga','north-west','northern-cape','western-cape'];
+  const SECTORS = ['agriculture','catering','cleaning','construction','consulting','education','energy','health','ict','legal','security','transport'];
+  const landingUrls = [...PROVINCES, ...SECTORS].map((slug) => url(`/tenders/${slug}`, today, '0.8', 'daily'));
+
+  const allUrls = [...staticUrls, ...landingUrls, ...blogUrls, ...pfmaUrls].join('\n');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

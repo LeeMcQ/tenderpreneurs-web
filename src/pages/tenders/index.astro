@@ -2,16 +2,90 @@
 /**
  * src/pages/tenders/index.astro
  *
- * Live tender listing — queries /api/tenders/search on the client.
- * Falls back gracefully to waitlist CTA if no tenders are available yet.
- *
- * Uses FEATURES/CTA/TENDER_STATS from config/site.ts (all correctly exported).
+ * Live tender listing. Phase 1+2:
+ *  - SSR the first page (SEO + fast LCP); client hydrates filters/search/load-more.
+ *  - Win-readiness ring on every card (locked teaser → real score on the detail page).
+ *  - Decision fields (value, CIDB, B-BBEE) + closing-soon urgency pill.
+ *  - Mobile filter bottom-sheet + active-filter chips; 44px controls.
+ *  - Skeleton loading; debounced live search.
+ *  - Uses canonical design tokens (--clr, --srf, --txt).
  */
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { TENDER_STATS, FEATURES, CTA } from "../../config/site";
+import { TENDER_STATS } from "../../config/site";
+import { getEnv } from "../../lib/db";
+import { getSessionUser } from "../../lib/auth/magic-link";
+
+export const prerender = false;
 
 const title = "Browse Government Tenders | Tenderpreneurs";
 const description = `Browse South African government tenders from eTenders, filtered by province, sector, and closing date.`;
+
+const PROVINCE_LABELS: Record<string, string> = {
+  'eastern-cape': 'Eastern Cape', 'free-state': 'Free State', 'gauteng': 'Gauteng',
+  'kwazulu-natal': 'KwaZulu-Natal', 'limpopo': 'Limpopo', 'mpumalanga': 'Mpumalanga',
+  'north-west': 'North West', 'northern-cape': 'Northern Cape', 'western-cape': 'Western Cape',
+  'national': 'National',
+};
+
+// ── SSR: fetch the first page so crawlers + first paint get real cards ──
+let ssrTenders: any[] = [];
+let ssrTotal = 0;
+let ssrGated = false;
+let ssrOk = false;
+try {
+  const env = getEnv(Astro);
+  let user: any = null;
+  try { user = await getSessionUser(env.DB, Astro.request.headers.get('cookie')); } catch {}
+  const limit = user ? 20 : 5;
+  const rows = await env.DB.prepare(
+    `SELECT id, title, procuring_entity, province, sector,
+            closing_date, closing_time, cidb_grade, estimated_value, bbbee_required
+     FROM tenders
+     WHERE status = 'open' AND canonical_ref IS NULL
+       AND (closing_date IS NULL OR closing_date >= date('now','-1 day'))
+     ORDER BY COALESCE(closing_date,'9999-12-31') ASC, first_seen_at DESC
+     LIMIT ?`
+  ).bind(limit).all();
+  const totalRow = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM tenders
+     WHERE status='open' AND canonical_ref IS NULL
+       AND (closing_date IS NULL OR closing_date >= date('now','-1 day'))`
+  ).first();
+  ssrTenders = (rows as any).results ?? [];
+  ssrTotal = (totalRow as any)?.n ?? ssrTenders.length;
+  ssrGated = !user && ssrTotal > 5;
+  ssrOk = true;
+} catch (e) {
+  // SSR DB not available (falls back to client fetch)
+  ssrOk = false;
+}
+
+function fmtDate(iso: string | null): string {
+  if (!iso) return '';
+  return new Date(iso + 'T00:00:00').toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function fmtValue(cents: number | null): string {
+  if (!cents) return '';
+  const z = cents / 100;
+  if (z >= 1_000_000) return `R${(z / 1_000_000).toFixed(1)}M`;
+  if (z >= 1_000) return `R${Math.round(z / 1_000)}K`;
+  return `R${Math.round(z).toLocaleString()}`;
+}
+function daysTo(iso: string | null): number | null {
+  if (!iso) return null;
+  const d = Math.round((Date.parse(iso + 'T00:00:00Z') - Date.parse(new Date().toISOString().slice(0, 10) + 'T00:00:00Z')) / 86400000);
+  return Number.isNaN(d) ? null : d;
+}
+// urgency → { text, cls }
+function urgency(iso: string | null) {
+  const d = daysTo(iso);
+  if (d === null) return { text: 'No closing date', cls: 'u-none' };
+  if (d < 0) return { text: 'Closed', cls: 'u-none' };
+  if (d === 0) return { text: 'Closes today', cls: 'u-red' };
+  if (d <= 3) return { text: `Closes in ${d} day${d > 1 ? 's' : ''}`, cls: 'u-red' };
+  if (d <= 7) return { text: `Closes in ${d} days`, cls: 'u-amber' };
+  return { text: `Closes ${fmtDate(iso)}`, cls: 'u-neutral' };
+}
 ---
 
 <BaseLayout title={title} description={description}>
@@ -26,12 +100,19 @@ const description = `Browse South African government tenders from eTenders, filt
 
     <header class="tenders-hero">
       <h1>South African Government Tenders</h1>
-      <p class="lede">Live tender listings from eTenders, refreshed every 6 hours. Filter by province or sector.</p>
+      <p class="lede">Live tender listings from eTenders, refreshed every {TENDER_STATS.refreshHours} hours. Filter by province or sector.</p>
     </header>
 
-    <!-- Filters -->
-    <div class="filters" id="filters">
-      <select id="province-filter" aria-label="Filter by province">
+    <!-- Mobile: filters trigger -->
+    <button id="filters-toggle" class="filters-toggle" aria-expanded="false" aria-controls="filters-sheet">
+      <span>Filters</span>
+      <span id="filters-count" class="filters-count" hidden>0</span>
+    </button>
+
+    <!-- Filters (inline on desktop, bottom-sheet on mobile) -->
+    <div class="filters" id="filters-sheet" role="group" aria-label="Tender filters">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <select id="province-filter" class="control" aria-label="Filter by province">
         <option value="">All provinces</option>
         <option value="eastern-cape">Eastern Cape</option>
         <option value="free-state">Free State</option>
@@ -44,8 +125,7 @@ const description = `Browse South African government tenders from eTenders, filt
         <option value="western-cape">Western Cape</option>
         <option value="national">National</option>
       </select>
-
-      <select id="sector-filter" aria-label="Filter by sector">
+      <select id="sector-filter" class="control" aria-label="Filter by sector">
         <option value="">All sectors</option>
         <option value="agriculture">Agriculture</option>
         <option value="catering">Catering</option>
@@ -60,36 +140,49 @@ const description = `Browse South African government tenders from eTenders, filt
         <option value="security">Security</option>
         <option value="transport">Transport</option>
       </select>
-
-      <input
-        type="search"
-        id="search-input"
-        placeholder="Search tenders…"
-        aria-label="Search tender titles"
-        autocomplete="off"
-      />
-
+      <input type="search" id="search-input" class="control" placeholder="Search tenders…" aria-label="Search tender titles" autocomplete="off" />
       <button id="search-btn" class="btn-search">Search</button>
+      <button id="sheet-apply" class="btn-search sheet-only">Apply</button>
     </div>
+
+    <!-- Active filter chips -->
+    <div id="chips" class="chips" aria-live="polite"></div>
 
     <!-- Stats bar -->
     <div class="stats-bar" id="stats-bar" aria-live="polite">
-      Loading tenders…
+      {ssrOk ? `Showing ${ssrTenders.length} of ${ssrTotal.toLocaleString()} open tenders` : 'Loading tenders…'}
     </div>
 
-    <!-- Results -->
-    <div id="tender-list" class="tender-list" aria-live="polite">
-      <div class="loading-state">
-        <div class="spinner" aria-hidden="true"></div>
-        <p>Loading tenders…</p>
-      </div>
+    <!-- Results (SSR-rendered first page; client hydrates) -->
+    <div id="tender-list" class="tender-list" aria-live="polite" data-ssr={ssrOk && ssrTenders.length ? '1' : '0'} data-count={ssrTenders.length}>
+      {ssrOk && ssrTenders.length ? ssrTenders.map((t) => {
+        const u = urgency(t.closing_date);
+        return (
+          <a href={`/tenders/t/${t.id}`} class="tender-card">
+            <div class="tc-ring" aria-hidden="true"><span class="tc-lock">🔒</span></div>
+            <div class="tc-body">
+              <h2 class="tender-title">{t.title ?? 'Untitled tender'}</h2>
+              <p class="tender-entity">{[t.procuring_entity, t.province ? PROVINCE_LABELS[t.province] ?? t.province : null].filter(Boolean).join(' · ')}</p>
+              <div class="tender-tags">
+                <span class={`tag ${u.cls}`}>{u.text}</span>
+                {t.estimated_value ? <span class="tag tag-value">{fmtValue(t.estimated_value)}</span> : null}
+                {t.cidb_grade ? <span class="tag tag-cidb">CIDB {t.cidb_grade}</span> : null}
+                {t.bbbee_required ? <span class="tag tag-bbbee">B-BBEE L{t.bbbee_required}</span> : null}
+                {t.sector ? <span class="tag tag-sector">{t.sector}</span> : null}
+              </div>
+            </div>
+          </a>
+        );
+      }) : (
+        <div class="loading-state"><div class="spinner" aria-hidden="true"></div><p>Loading tenders…</p></div>
+      )}
     </div>
 
-    <!-- Auth gate banner (shown when anon hits the 5-result cap) -->
-    <div id="gate-banner" class="gate-banner hidden" role="alert">
+    <!-- Auth gate banner -->
+    <div id="gate-banner" class={`gate-banner ${ssrGated ? '' : 'hidden'}`} role="alert">
       <div class="gate-inner">
-        <strong>Showing 5 of many tenders</strong>
-        <p>Sign in free to see all results, save searches, and get email alerts.</p>
+        <strong>Sign in to see every tender</strong>
+        <p>Create a free account to unlock all results, your win-probability score, saved searches, and email alerts.</p>
         <a href="/auth/login" class="btn-primary">Sign in free</a>
       </div>
     </div>
@@ -102,334 +195,271 @@ const description = `Browse South African government tenders from eTenders, filt
 </BaseLayout>
 
 <style>
-  .tenders-main {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 28px 20px 80px;
-  }
-  .breadcrumb ol {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 20px;
-    display: flex;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--color-muted, #94a3b8);
-  }
-  .breadcrumb a { color: var(--color-amber, #f59e0b); text-decoration: none; }
-  .tenders-hero {
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--color-border, #2d3f55);
-  }
-  .tenders-hero h1 {
-    font-size: clamp(1.5rem, 4vw, 2.2rem);
-    color: var(--color-text, #e2e8f0);
-    margin: 0 0 8px;
-  }
-  .lede { color: var(--color-muted, #94a3b8); font-size: 1rem; margin: 0; }
+  .tenders-main { max-width: 960px; margin: 0 auto; padding: 28px 20px 80px; }
+  .breadcrumb ol { list-style: none; padding: 0; margin: 0 0 20px; display: flex; gap: 8px; font-size: 13px; color: var(--txt-secondary); }
+  .breadcrumb a { color: var(--clr-gold); text-decoration: none; }
+  .tenders-hero { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--brd); }
+  .tenders-hero h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); color: var(--txt-primary); margin: 0 0 8px; }
+  .lede { color: var(--txt-secondary); font-size: 1rem; margin: 0; }
 
-  /* Filters */
-  .filters {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
+  /* Controls — 44px touch targets */
+  .control {
+    background: var(--srf-1); border: 1px solid var(--brd); color: var(--txt-primary);
+    border-radius: 10px; padding: 0 12px; font-size: 15px; min-height: 44px;
   }
-  .filters select,
-  .filters input {
-    background: var(--color-card-bg, #1e2a3a);
-    border: 1px solid var(--color-border, #2d3f55);
-    color: var(--color-text, #e2e8f0);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 14px;
-    min-width: 160px;
-    flex: 1;
-  }
-  .filters input { max-width: 260px; }
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+  .filters .control { flex: 1; min-width: 150px; }
+  #search-input { flex: 2; }
   .btn-search {
-    background: var(--color-amber, #f59e0b);
-    color: #0f1923;
-    font-weight: 700;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 20px;
-    cursor: pointer;
-    font-size: 14px;
-    white-space: nowrap;
+    background: var(--clr-gold); color: var(--txt-inverse); font-weight: 700; border: none;
+    border-radius: 10px; padding: 0 22px; min-height: 44px; cursor: pointer; font-size: 15px; white-space: nowrap;
   }
-  .btn-search:hover { background: #d97706; }
+  .btn-search:hover { background: var(--clr-gold-2); }
+  .sheet-handle, .sheet-only, .filters-toggle { display: none; }
 
-  /* Stats bar */
-  .stats-bar {
-    font-size: 13px;
-    color: var(--color-muted, #94a3b8);
-    margin-bottom: 16px;
-    min-height: 20px;
+  /* Active-filter chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--clr-gold-muted);
+    color: var(--clr-gold); border: 1px solid var(--clr-gold); border-radius: 999px;
+    padding: 5px 10px; font-size: 13px; min-height: 32px;
   }
+  .chip button { background: none; border: none; color: inherit; cursor: pointer; font-size: 15px; line-height: 1; padding: 0; }
 
-  /* Tender cards */
+  .stats-bar { font-size: 13px; color: var(--txt-secondary); margin-bottom: 14px; min-height: 18px; }
+
+  /* Cards */
   .tender-list { display: flex; flex-direction: column; gap: 12px; }
-
   .tender-card {
-    background: var(--color-card-bg, #1e2a3a);
-    border: 1px solid var(--color-border, #2d3f55);
-    border-radius: 12px;
-    padding: 16px 20px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px 16px;
-    transition: border-color 0.15s;
-    text-decoration: none;
+    background: var(--srf-1); border: 1px solid var(--brd); border-radius: 14px; padding: 16px;
+    display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start;
+    text-decoration: none; transition: border-color .15s;
   }
-  .tender-card:hover { border-color: var(--color-amber, #f59e0b); }
+  .tender-card:hover { border-color: var(--clr-gold); }
+  .tc-ring {
+    width: 48px; height: 48px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center;
+    background: conic-gradient(var(--clr-teal) 0 65%, rgba(255,255,255,.08) 0);
+    position: relative; filter: saturate(.5) opacity(.65);
+  }
+  .tc-ring::after { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: var(--srf-0); }
+  .tc-lock { position: relative; z-index: 1; font-size: 14px; }
+  .tc-body { min-width: 0; }
+  .tender-title { font-size: 1rem; font-weight: 600; color: var(--txt-primary); margin: 0 0 4px; }
+  .tender-entity { font-size: .85rem; color: var(--txt-secondary); margin: 0 0 8px; }
+  .tender-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: .72rem; padding: 3px 9px; border-radius: 999px; font-weight: 600; text-transform: capitalize; white-space: nowrap; }
+  .tag-sector { background: var(--clr-gold-muted); color: var(--clr-gold); }
+  .tag-value  { background: var(--clr-teal-muted); color: var(--clr-teal); }
+  .tag-cidb   { background: rgba(99,179,237,.12); color: #63b3ed; }
+  .tag-bbbee  { background: rgba(168,187,207,.14); color: var(--txt-secondary); }
+  .u-red    { background: var(--clr-red-muted); color: var(--clr-red); }
+  .u-amber  { background: var(--clr-gold-muted); color: var(--clr-gold); }
+  .u-neutral{ background: var(--srf-3); color: var(--txt-secondary); }
+  .u-none   { background: var(--srf-3); color: var(--txt-tertiary); }
 
-  .tender-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-text, #e2e8f0);
-    grid-column: 1 / -1;
-    margin: 0 0 4px;
-  }
-  .tender-entity {
-    font-size: 0.85rem;
-    color: var(--color-muted, #94a3b8);
-    grid-column: 1;
-  }
-  .tender-closing {
-    font-size: 0.82rem;
-    color: var(--color-amber, #f59e0b);
-    font-weight: 600;
-    white-space: nowrap;
-    grid-column: 2;
-    text-align: right;
-  }
-  .tender-tags {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-top: 4px;
-  }
-  .tag {
-    font-size: 0.72rem;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-weight: 500;
-    text-transform: capitalize;
-  }
-  .tag-province { background: rgba(99,179,237,0.12); color: #63b3ed; }
-  .tag-sector   { background: rgba(245,158,11,0.12); color: #f59e0b; }
-  .tag-value    { background: rgba(52,211,153,0.12); color: #34d399; }
-
-  /* Auth gate */
-  .gate-banner {
-    background: linear-gradient(135deg, #0f1923 0%, #1e2a3a 100%);
-    border: 1px solid var(--color-amber, #f59e0b);
-    border-radius: 12px;
-    padding: 24px;
-    text-align: center;
-    margin-top: 16px;
-  }
+  /* Gate */
+  .gate-banner { background: linear-gradient(135deg, var(--srf-0), var(--srf-1)); border: 1px solid var(--clr-gold); border-radius: 14px; padding: 24px; text-align: center; margin-top: 16px; }
   .gate-banner.hidden { display: none; }
-  .gate-inner strong { color: var(--color-text, #e2e8f0); font-size: 1.1rem; display: block; margin-bottom: 8px; }
-  .gate-inner p { color: var(--color-muted, #94a3b8); margin: 0 0 16px; }
-  .btn-primary {
-    background: var(--color-amber, #f59e0b);
-    color: #0f1923;
-    font-weight: 700;
-    padding: 10px 24px;
-    border-radius: 8px;
-    text-decoration: none;
-    display: inline-block;
-  }
+  .gate-inner strong { color: var(--txt-primary); font-size: 1.1rem; display: block; margin-bottom: 8px; }
+  .gate-inner p { color: var(--txt-secondary); margin: 0 0 16px; }
+  .btn-primary { background: var(--clr-gold); color: var(--txt-inverse); font-weight: 700; padding: 12px 24px; border-radius: 10px; text-decoration: none; display: inline-block; min-height: 44px; }
 
   /* Load more */
   .load-more-row { text-align: center; margin-top: 24px; }
-  .btn-load-more {
-    background: transparent;
-    border: 1px solid var(--color-border, #2d3f55);
-    color: var(--color-text, #e2e8f0);
-    border-radius: 8px;
-    padding: 10px 28px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: border-color 0.15s;
-  }
-  .btn-load-more:hover { border-color: var(--color-amber, #f59e0b); }
+  .btn-load-more { background: transparent; border: 1px solid var(--brd); color: var(--txt-primary); border-radius: 10px; padding: 0 28px; min-height: 44px; cursor: pointer; font-size: .9rem; }
+  .btn-load-more:hover { border-color: var(--clr-gold); }
 
-  /* Loading state */
-  .loading-state {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--color-muted, #94a3b8);
-  }
-  .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid var(--color-border, #2d3f55);
-    border-top-color: var(--color-amber, #f59e0b);
-    border-radius: 50%;
-    margin: 0 auto 12px;
-    animation: spin 0.8s linear infinite;
-  }
+  /* Loading + skeletons */
+  .loading-state { text-align: center; padding: 48px 20px; color: var(--txt-secondary); }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--brd); border-top-color: var(--clr-gold); border-radius: 50%; margin: 0 auto 12px; animation: spin .8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .skeleton-card { background: var(--srf-1); border: 1px solid var(--brd); border-radius: 14px; padding: 16px; display: grid; grid-template-columns: auto 1fr; gap: 14px; }
+  .sk-ring { width: 48px; height: 48px; border-radius: 50%; }
+  .sk-line { height: 12px; border-radius: 6px; margin-bottom: 8px; }
+  .sk, .sk-ring { background: linear-gradient(90deg, var(--srf-2) 25%, var(--srf-3) 37%, var(--srf-2) 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+  @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--txt-secondary); font-size: .95rem; }
+  .error-state { text-align: center; padding: 32px 20px; color: var(--clr-red); font-size: .9rem; }
 
-  .empty-state {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--color-muted, #94a3b8);
-    font-size: 0.95rem;
-  }
-  .error-state {
-    text-align: center;
-    padding: 32px 20px;
-    color: #f87171;
-    font-size: 0.9rem;
+  /* Mobile: filter bottom-sheet */
+  @media (max-width: 640px) {
+    .filters-toggle {
+      display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      min-height: 44px; border: 1px solid var(--brd); background: var(--srf-1); color: var(--txt-primary);
+      border-radius: 10px; font-size: 15px; font-weight: 600; margin-bottom: 12px; cursor: pointer;
+    }
+    .filters-count { background: var(--clr-gold); color: var(--txt-inverse); border-radius: 999px; min-width: 20px; height: 20px; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+    .filters {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0;
+      flex-direction: column; align-items: stretch; gap: 12px;
+      background: var(--srf-1); border-top: 1px solid var(--brd); border-radius: 18px 18px 0 0;
+      padding: 12px 16px 24px; transform: translateY(110%); transition: transform .25s ease;
+      box-shadow: 0 -10px 40px rgba(0,0,0,.4);
+    }
+    .filters.open { transform: translateY(0); }
+    .filters .control, #search-input { flex: none; width: 100%; }
+    .sheet-handle { display: block; width: 40px; height: 4px; border-radius: 999px; background: var(--brd-2); margin: 0 auto 4px; }
+    .sheet-only { display: block; }
+    #search-btn { display: none; }
   }
 </style>
 
 <script>
-  let offset = 0;
+  const PROVINCE_LABELS: Record<string, string> = {
+    'eastern-cape':'Eastern Cape','free-state':'Free State','gauteng':'Gauteng','kwazulu-natal':'KwaZulu-Natal',
+    'limpopo':'Limpopo','mpumalanga':'Mpumalanga','north-west':'North West','northern-cape':'Northern Cape',
+    'western-cape':'Western Cape','national':'National',
+  };
+  let offset = 0, currentTotal = 0, loading = false;
   const LIMIT = 20;
-  let currentTotal = 0;
-  let loading = false;
 
-  const list     = document.getElementById('tender-list')!;
-  const statsBar = document.getElementById('stats-bar')!;
-  const gateBanner = document.getElementById('gate-banner')!;
-  const loadMoreRow = document.getElementById('load-more-row')! as HTMLElement;
-  const loadMoreBtn = document.getElementById('load-more-btn')!;
+  const $ = (id: string) => document.getElementById(id)!;
+  const list = $('tender-list'), statsBar = $('stats-bar'), gateBanner = $('gate-banner');
+  const loadMoreRow = $('load-more-row') as HTMLElement, loadMoreBtn = $('load-more-btn');
+  const provinceSel = $('province-filter') as HTMLSelectElement;
+  const sectorSel = $('sector-filter') as HTMLSelectElement;
+  const searchInput = $('search-input') as HTMLInputElement;
+  const chipsEl = $('chips'), sheet = $('filters-sheet'), toggle = $('filters-toggle'), fcount = $('filters-count');
 
-  function provinceLabel(slug: string): string {
-    const map: Record<string, string> = {
-      'eastern-cape':'Eastern Cape','free-state':'Free State',
-      'gauteng':'Gauteng','kwazulu-natal':'KwaZulu-Natal',
-      'limpopo':'Limpopo','mpumalanga':'Mpumalanga',
-      'north-west':'North West','northern-cape':'Northern Cape',
-      'western-cape':'Western Cape','national':'National',
-    };
-    return map[slug] ?? slug;
-  }
-
-  function formatDate(iso: string | null): string {
+  function fmtDate(iso: string | null): string {
     if (!iso) return '';
-    const d = new Date(iso + 'T00:00:00');
-    return d.toLocaleDateString('en-ZA', { day:'numeric', month:'short', year:'numeric' });
+    return new Date(iso + 'T00:00:00').toLocaleDateString('en-ZA', { day:'numeric', month:'short', year:'numeric' });
   }
-
-  function formatValue(cents: number | null): string {
+  function fmtValue(cents: number | null): string {
     if (!cents) return '';
-    const zar = cents / 100;
-    if (zar >= 1_000_000) return `R${(zar/1_000_000).toFixed(1)}M`;
-    if (zar >= 1_000) return `R${Math.round(zar/1_000)}K`;
-    return `R${Math.round(zar).toLocaleString()}`;
+    const z = cents / 100;
+    if (z >= 1_000_000) return `R${(z/1_000_000).toFixed(1)}M`;
+    if (z >= 1_000) return `R${Math.round(z/1_000)}K`;
+    return `R${Math.round(z).toLocaleString()}`;
   }
+  function urgency(iso: string | null) {
+    if (!iso) return { text: 'No closing date', cls: 'u-none' };
+    const d = Math.round((Date.parse(iso+'T00:00:00Z') - Date.parse(new Date().toISOString().slice(0,10)+'T00:00:00Z'))/86400000);
+    if (Number.isNaN(d)) return { text: 'No closing date', cls: 'u-none' };
+    if (d < 0) return { text: 'Closed', cls: 'u-none' };
+    if (d === 0) return { text: 'Closes today', cls: 'u-red' };
+    if (d <= 3) return { text: `Closes in ${d} day${d>1?'s':''}`, cls: 'u-red' };
+    if (d <= 7) return { text: `Closes in ${d} days`, cls: 'u-amber' };
+    return { text: `Closes ${fmtDate(iso)}`, cls: 'u-neutral' };
+  }
+  function esc(s: any): string { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
 
   function renderCard(t: any): string {
-    const closing = t.closing_date
-      ? `<span class="tender-closing">Closes ${formatDate(t.closing_date)}</span>`
-      : `<span class="tender-closing" style="color:var(--color-muted)">No closing date</span>`;
-
+    const u = urgency(t.closing_date);
+    const cents = t.estimated_value ?? t.value_cents ?? null;
     const tags = [
-      t.province ? `<span class="tag tag-province">${provinceLabel(t.province)}</span>` : '',
-      t.sector   ? `<span class="tag tag-sector">${t.sector}</span>` : '',
-      t.value_cents ? `<span class="tag tag-value">${formatValue(t.value_cents)}</span>` : '',
+      `<span class="tag ${u.cls}">${u.text}</span>`,
+      cents ? `<span class="tag tag-value">${fmtValue(cents)}</span>` : '',
+      t.cidb_grade ? `<span class="tag tag-cidb">CIDB ${esc(t.cidb_grade)}</span>` : '',
+      t.bbbee_required ? `<span class="tag tag-bbbee">B-BBEE L${esc(t.bbbee_required)}</span>` : '',
+      t.sector ? `<span class="tag tag-sector">${esc(t.sector)}</span>` : '',
     ].filter(Boolean).join('');
+    const entity = [t.procuring_entity, t.province ? (PROVINCE_LABELS[t.province] ?? t.province) : null].filter(Boolean).map(esc).join(' · ');
+    return `<a href="/tenders/t/${t.id}" class="tender-card">
+        <div class="tc-ring" aria-hidden="true"><span class="tc-lock">🔒</span></div>
+        <div class="tc-body">
+          <h2 class="tender-title">${esc(t.title ?? 'Untitled tender')}</h2>
+          <p class="tender-entity">${entity}</p>
+          <div class="tender-tags">${tags}</div>
+        </div></a>`;
+  }
 
-    return `
-      <a href="/tenders/t/${t.id}" class="tender-card">
-        <h2 class="tender-title">${t.title ?? 'Untitled tender'}</h2>
-        <span class="tender-entity">${t.procuring_entity ?? ''}</span>
-        ${closing}
-        <div class="tender-tags">${tags}</div>
-      </a>`;
+  function skeletons(n = 6): string {
+    return Array.from({ length: n }, () => `
+      <div class="skeleton-card">
+        <div class="sk-ring"></div>
+        <div><div class="sk sk-line" style="width:70%"></div><div class="sk sk-line" style="width:45%"></div><div class="sk sk-line" style="width:60%"></div></div>
+      </div>`).join('');
+  }
+
+  function renderChips() {
+    const items: string[] = [];
+    if (provinceSel.value) items.push(`<span class="chip">${PROVINCE_LABELS[provinceSel.value] ?? provinceSel.value}<button data-clear="province" aria-label="Remove province filter">×</button></span>`);
+    if (sectorSel.value) items.push(`<span class="chip" style="text-transform:capitalize">${sectorSel.value}<button data-clear="sector" aria-label="Remove sector filter">×</button></span>`);
+    if (searchInput.value.trim()) items.push(`<span class="chip">"${esc(searchInput.value.trim())}"<button data-clear="q" aria-label="Clear search">×</button></span>`);
+    chipsEl.innerHTML = items.join('');
+    const count = items.length;
+    if (fcount) { (fcount as HTMLElement).hidden = count === 0; fcount.textContent = String(count); }
   }
 
   async function fetchTenders(append = false) {
-    if (loading) return;
-    loading = true;
-
-    const province = (document.getElementById('province-filter') as HTMLSelectElement).value;
-    const sector   = (document.getElementById('sector-filter')   as HTMLSelectElement).value;
-    const q        = (document.getElementById('search-input')    as HTMLInputElement).value.trim();
-
+    if (loading) return; loading = true;
     const params = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
-    if (province) params.set('province', province);
-    if (sector)   params.set('sector', sector);
-    if (q)        params.set('q', q);
+    if (provinceSel.value) params.set('province', provinceSel.value);
+    if (sectorSel.value) params.set('sector', sectorSel.value);
+    if (searchInput.value.trim()) params.set('q', searchInput.value.trim());
 
-    if (!append) {
-      list.innerHTML = `<div class="loading-state"><div class="spinner" aria-hidden="true"></div><p>Loading…</p></div>`;
-      statsBar.textContent = '';
-      gateBanner.classList.add('hidden');
-      loadMoreRow.style.display = 'none';
-    } else {
-      loadMoreBtn.textContent = 'Loading…';
-      loadMoreBtn.setAttribute('disabled', '');
-    }
+    if (!append) { list.innerHTML = skeletons(); statsBar.textContent = ''; gateBanner.classList.add('hidden'); loadMoreRow.style.display = 'none'; }
+    else { loadMoreBtn.textContent = 'Loading…'; loadMoreBtn.setAttribute('disabled',''); }
 
     try {
       const res = await fetch(`/api/tenders/search?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-
       if (!append) list.innerHTML = '';
-
       currentTotal = data.total ?? 0;
 
-      if (data.tenders?.length === 0 && !append) {
+      if ((data.tenders?.length ?? 0) === 0 && !append) {
         list.innerHTML = `<div class="empty-state">No open tenders found for those filters. Try broadening your search.</div>`;
         statsBar.textContent = 'No results';
       } else {
-        data.tenders?.forEach((t: any) => {
-          list.insertAdjacentHTML('beforeend', renderCard(t));
-        });
+        data.tenders?.forEach((t: any) => list.insertAdjacentHTML('beforeend', renderCard(t)));
         const showing = list.querySelectorAll('.tender-card').length;
         statsBar.textContent = `Showing ${showing} of ${currentTotal.toLocaleString()} open tenders`;
       }
 
-      // Gate banner
-      if (data.gated) {
-        gateBanner.classList.remove('hidden');
-        loadMoreRow.style.display = 'none';
-      } else {
+      if (data.gated) { gateBanner.classList.remove('hidden'); loadMoreRow.style.display = 'none'; }
+      else {
         gateBanner.classList.add('hidden');
         const shown = list.querySelectorAll('.tender-card').length;
-        if (shown < currentTotal) {
-          loadMoreRow.style.display = 'block';
-          loadMoreBtn.textContent = 'Load more tenders';
-          loadMoreBtn.removeAttribute('disabled');
-          offset += LIMIT;
-        } else {
-          loadMoreRow.style.display = 'none';
-        }
+        if (shown < currentTotal) { loadMoreRow.style.display = 'block'; loadMoreBtn.textContent = 'Load more tenders'; loadMoreBtn.removeAttribute('disabled'); offset += LIMIT; }
+        else loadMoreRow.style.display = 'none';
       }
-
     } catch (err) {
-      if (!append) {
-        list.innerHTML = `<div class="error-state">Failed to load tenders. Please try again.</div>`;
-      }
+      if (!append) list.innerHTML = `<div class="error-state">Failed to load tenders. Please try again.</div>`;
       console.error('[tenders] fetch error:', err);
-    } finally {
-      loading = false;
-    }
+    } finally { loading = false; }
   }
 
-  function resetAndFetch() {
-    offset = 0;
-    fetchTenders(false);
-  }
+  function resetAndFetch() { offset = 0; renderChips(); fetchTenders(false); }
 
-  // Event listeners
-  document.getElementById('search-btn')!.addEventListener('click', resetAndFetch);
-  document.getElementById('province-filter')!.addEventListener('change', resetAndFetch);
-  document.getElementById('sector-filter')!.addEventListener('change', resetAndFetch);
-  document.getElementById('search-input')!.addEventListener('keydown', (e) => {
-    if ((e as KeyboardEvent).key === 'Enter') resetAndFetch();
-  });
+  // Debounced live search
+  let t: any; searchInput.addEventListener('input', () => { clearTimeout(t); t = setTimeout(resetAndFetch, 300); });
+  $('search-btn').addEventListener('click', resetAndFetch);
+  $('sheet-apply').addEventListener('click', () => { sheet.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); resetAndFetch(); });
+  provinceSel.addEventListener('change', resetAndFetch);
+  sectorSel.addEventListener('change', resetAndFetch);
+  searchInput.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Enter') resetAndFetch(); });
   loadMoreBtn.addEventListener('click', () => fetchTenders(true));
 
-  // Initial load
-  fetchTenders(false);
+  // Bottom-sheet toggle
+  toggle.addEventListener('click', () => {
+    const open = sheet.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+
+  // Chip removal
+  chipsEl.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('button[data-clear]') as HTMLElement | null;
+    if (!btn) return;
+    const what = btn.getAttribute('data-clear');
+    if (what === 'province') provinceSel.value = '';
+    else if (what === 'sector') sectorSel.value = '';
+    else if (what === 'q') searchInput.value = '';
+    resetAndFetch();
+  });
+
+  // Hydration: if SSR already rendered the first page, continue from there;
+  // otherwise do an initial fetch.
+  const ssr = list.getAttribute('data-ssr') === '1';
+  const ssrCount = parseInt(list.getAttribute('data-count') ?? '0', 10) || 0;
+  if (ssr) {
+    offset = ssrCount;
+    currentTotal = ssrCount; // refined on next fetch
+    // show load-more if there may be more and not gated
+    if (!gateBanner.classList.contains('hidden')) loadMoreRow.style.display = 'none';
+    else loadMoreRow.style.display = 'block';
+  } else {
+    fetchTenders(false);
+  }
 </script>

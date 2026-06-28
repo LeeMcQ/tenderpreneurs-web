@@ -122,4 +122,5 @@ export const TENDER_STATS = {
   tracking: 7841,        // Total tenders we have ingested historically
   isLive: false,         // Flip to true once /api/tenders returns real data
   lastUpdated: "2026-01-15",
+  refreshHours: 6,       // single source of truth for the refresh cadence shown on the site
 };

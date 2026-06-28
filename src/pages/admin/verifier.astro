@@ -1,0 +1,99 @@
+---
+/**
+ * src/pages/admin/verifier.astro — Tender Verifier review queue (admin only).
+ * Lists draft/approved/published reports and lets the admin run, approve,
+ * publish, send (gated), reopen or discard. Server-rendered + tiny inline JS.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getEnv } from '../../lib/db';
+import { getSessionUser } from '../../lib/auth/magic-link';
+import { isAdminEmail } from '../../lib/admin';
+
+export const prerender = false;
+
+const env = getEnv(Astro);
+let user: any = null;
+try { user = await getSessionUser(env.DB, Astro.request.headers.get('cookie')); } catch {}
+const admin = isAdminEmail(user?.email, env);
+
+let rows: any[] = [];
+if (admin) {
+  const res = await env.DB.prepare(
+    `SELECT vr.id, vr.status, vr.health_score, vr.created_at,
+            t.title, t.source_ref, t.id AS tender_id
+     FROM verification_reports vr
+     JOIN tenders t ON t.id = vr.tender_id
+     WHERE vr.status IN ('draft','approved','published')
+     ORDER BY vr.created_at DESC LIMIT 100`
+  ).all<Record<string, any>>();
+  rows = res.results ?? [];
+}
+---
+
+<BaseLayout title="Verifier review queue" description="Admin review queue for tender verification reports.">
+  <main class="container mx-auto px-4 py-8 max-w-5xl">
+    {!admin ? (
+      <p class="text-slate-300">Admin access required.</p>
+    ) : (
+      <>
+        <h1 class="text-2xl font-bold text-white mb-4">Tender Verifier — review queue</h1>
+
+        <div class="mb-6 flex gap-2">
+          <input id="run-id" type="text" placeholder="Tender ID to verify…"
+            class="flex-1 rounded-md border border-slate-600 bg-slate-900 px-4 py-2.5 text-white placeholder-slate-500" />
+          <button id="run-btn" class="rounded-md bg-amber-500 px-5 py-2.5 font-semibold text-slate-900">Run verification</button>
+        </div>
+
+        <table class="w-full text-sm text-left text-slate-300">
+          <thead class="text-xs uppercase text-slate-400 border-b border-slate-700">
+            <tr><th class="py-2">Tender</th><th>Health</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr class="border-b border-slate-800" data-id={r.id}>
+                <td class="py-3">
+                  <a class="text-amber-400 hover:underline" href={`/tenders/t/${r.tender_id}`}>{r.title}</a>
+                  <div class="text-xs font-mono text-slate-500">{r.source_ref}</div>
+                </td>
+                <td class={r.health_score >= 80 ? 'text-emerald-400' : r.health_score >= 60 ? 'text-amber-400' : 'text-rose-400'}>{r.health_score}</td>
+                <td><span class="rounded-full bg-slate-700 px-2 py-0.5 text-xs">{r.status}</span></td>
+                <td class="space-x-2">
+                  {r.status === 'draft'    && <button class="act text-emerald-400" data-act="approve">Approve</button>}
+                  {r.status === 'approved' && <button class="act text-amber-400" data-act="publish">Publish</button>}
+                  {r.status === 'published'&& <button class="act text-sky-400" data-act="send">Send</button>}
+                  {r.status !== 'draft'    && <button class="act text-slate-400" data-act="reopen">Reopen</button>}
+                  {r.status !== 'published'&& <button class="act text-rose-400" data-act="discard">Discard</button>}
+                </td>
+              </tr>
+            ))}
+            {rows.length === 0 && <tr><td colspan="4" class="py-6 text-slate-500">No reports yet. Enter a tender ID above to run one.</td></tr>}
+          </tbody>
+        </table>
+      </>
+    )}
+  </main>
+</BaseLayout>
+
+<script>
+  const runBtn = document.getElementById('run-btn');
+  runBtn?.addEventListener('click', async () => {
+    const id = (document.getElementById('run-id') as HTMLInputElement).value.trim();
+    if (!id) return;
+    runBtn.textContent = 'Running…'; runBtn.setAttribute('disabled', '');
+    const r = await fetch('/api/admin/verify-run', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ tender_id: id }) });
+    const d = await r.json();
+    alert(d.ok ? `Draft created (health ${d.health_score}).` : `Error: ${d.error}`);
+    if (d.ok) location.reload(); else { runBtn.textContent = 'Run verification'; runBtn.removeAttribute('disabled'); }
+  });
+
+  document.querySelectorAll('.act').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const tr = btn.closest('tr'); const id = tr?.getAttribute('data-id');
+      const action = btn.getAttribute('data-act');
+      if (!id || !action) return;
+      const r = await fetch('/api/admin/report-action', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, action }) });
+      const d = await r.json();
+      if (d.ok) location.reload(); else alert(`Error: ${d.error}`);
+    });
+  });
+</script>

@@ -1,0 +1,82 @@
+---
+/**
+ * src/pages/verify-my-tenders.astro
+ * Public opt-in page: a procuring entity subscribes to receive free quality
+ * checks on tenders it publishes. This is the lawful PUSH path (consent here
+ * satisfies POPIA s69 before any email is sent).
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+export const prerender = false;
+---
+
+<BaseLayout title="Free tender quality checks for your organisation" description="Procuring entities can opt in to receive a free automated quality review of every tender they publish — flagging fixable issues before bids are received.">
+  <main class="container mx-auto px-4 py-12 max-w-xl">
+    <h1 class="text-2xl font-bold text-white mb-3">Get a free quality check on your tenders</h1>
+    <p class="text-slate-300 mb-6">
+      We automatically review newly published tenders against South African procurement
+      requirements and flag fixable issues — missing dates, unclear preference systems,
+      brand-specific specifications and more — <strong>before</strong> bids are received.
+      Opt in to receive a free report on tenders your organisation publishes.
+    </p>
+
+    <div id="form" class="space-y-4">
+      <div>
+        <label class="block text-sm text-slate-400 mb-1" for="entity">Organisation / procuring entity</label>
+        <input id="entity" type="text" placeholder="e.g. City of Cape Town — Supply Chain Management"
+          class="w-full rounded-md border border-slate-600 bg-slate-900 px-4 py-3 text-white placeholder-slate-500" />
+      </div>
+      <div>
+        <label class="block text-sm text-slate-400 mb-1" for="email">Work email</label>
+        <input id="email" type="email" placeholder="scm@yourentity.gov.za"
+          class="w-full rounded-md border border-slate-600 bg-slate-900 px-4 py-3 text-white placeholder-slate-500" />
+      </div>
+      <label class="flex items-start gap-3 text-sm text-slate-300">
+        <input id="consent" type="checkbox" class="mt-1" />
+        <span>I consent to receive automated tender quality reports from Tenderpreneurs at this
+          address. I can opt out at any time via the link in every email.</span>
+      </label>
+      <button id="submit" class="w-full rounded-md bg-amber-500 px-5 py-3 font-semibold text-slate-900">
+        Subscribe for free reports
+      </button>
+      <p class="text-xs text-slate-500">
+        Reports are guidance, not legal advice. We process only the contact details you provide and
+        the publicly available tender information. See our privacy policy for how we handle your data.
+      </p>
+    </div>
+
+    <div id="done" class="hidden rounded-lg border border-emerald-700 bg-emerald-900/20 p-6 text-emerald-200">
+      <p class="font-semibold mb-1">You're subscribed.</p>
+      <p class="text-sm">We'll send a quality report when we detect a tender published by your organisation.
+        Every email includes a one-click opt-out.</p>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  const btn = document.getElementById('submit');
+  btn?.addEventListener('click', async () => {
+    const entity = (document.getElementById('entity') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('email') as HTMLInputElement).value.trim();
+    const consent = (document.getElementById('consent') as HTMLInputElement).checked;
+    if (!entity || !email) return alert('Please enter your organisation and work email.');
+    if (!consent) return alert('Please tick the consent box to subscribe.');
+    btn.setAttribute('disabled', ''); btn.textContent = 'Subscribing…';
+    try {
+      const r = await fetch('/api/subscribe', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ procuring_entity: entity, contact_email: email, consent }),
+      });
+      const d = await r.json();
+      if (d.ok) {
+        document.getElementById('form')!.classList.add('hidden');
+        document.getElementById('done')!.classList.remove('hidden');
+      } else {
+        alert(`Could not subscribe: ${d.error}`);
+        btn.removeAttribute('disabled'); btn.textContent = 'Subscribe for free reports';
+      }
+    } catch {
+      alert('Network error — please try again.');
+      btn.removeAttribute('disabled'); btn.textContent = 'Subscribe for free reports';
+    }
+  });
+</script>

@@ -71,7 +71,7 @@ export const GET: APIRoute = async (ctx) => {
            province, sector, category,
            closing_date, closing_time,
            briefing_date, briefing_compulsory,
-           cidb_grade, estimated_value,
+           cidb_grade, estimated_value, bbbee_required,
            first_seen_at, last_seen_at
          FROM tenders
          WHERE ${where.join(' AND ')}

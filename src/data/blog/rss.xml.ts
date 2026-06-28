@@ -1,4 +1,3 @@
----
 // src/pages/blog/rss.xml.ts
 // Pure-vanilla RSS 2.0 feed, no @astrojs/rss dependency.
 //

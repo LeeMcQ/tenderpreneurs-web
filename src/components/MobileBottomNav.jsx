@@ -39,7 +39,7 @@ export default function MobileBottomNav({
             >
               {/* Top Active Indicator */}
               {active && (
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-[#1a5c38] rounded-b-full" />
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-[#F5A623] rounded-b-full" />
               )}
 
               <div className="relative p-1">
@@ -47,7 +47,7 @@ export default function MobileBottomNav({
                   size={24} 
                   strokeWidth={active ? 2.5 : 2}
                   className={`transition-colors duration-200 ${
-                    active ? 'text-[#1a5c38]' : 'text-gray-400 group-hover:text-gray-600'
+                    active ? 'text-[#F5A623]' : 'text-gray-400 group-hover:text-gray-600'
                   }`} 
                 />
                 
@@ -61,7 +61,7 @@ export default function MobileBottomNav({
 
               <span 
                 className={`text-[10px] mt-1 font-medium transition-colors duration-200 ${
-                  active ? 'text-[#1a5c38]' : 'text-gray-500 group-hover:text-gray-700'
+                  active ? 'text-[#F5A623]' : 'text-gray-500 group-hover:text-gray-700'
                 }`}
               >
                 {tab.label}

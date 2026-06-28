@@ -1,7 +1,9 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
+import StructuredData from "../../../components/StructuredData.astro";
 import { getEnv } from "../../../lib/db";
 import { getSessionUser } from "../../../lib/auth/magic-link";
+import { resolveWinScore } from "../../../lib/winscore-resolve";
 
 export const prerender = false;
 
@@ -10,6 +12,7 @@ let tender: any = null;
 let history: any[] = [];
 let documents: any[] = [];
 let authed = false;
+let winData: any = null;
 
 try {
   const env = getEnv(Astro);
@@ -28,6 +31,11 @@ try {
     history = h.results || [];
   }
 
+  // R8: resolve the win-score server-side so signed-in users see it on first
+  // paint (no client fetch waterfall). Anon/no-profile → locked teaser.
+  try { winData = await resolveWinScore(env, user?.id ?? null, id); }
+  catch { winData = null; }
+
   if (tender?.documents_json) {
     try { documents = JSON.parse(tender.documents_json); } catch {}
   }
@@ -44,9 +52,38 @@ const closing = tender.closing_date
   : null;
 
 const provinceLabel = tender.province?.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+const SITE = "https://tenderpreneurs.co.za";
+const tenderUrl = `${SITE}/tenders/t/${tender.id}`;
+const lastChecked = tender.last_seen_at
+  ? new Date(tender.last_seen_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })
+  : null;
+
+const breadcrumbs = [
+  { name: "Home", url: "/" },
+  { name: "Tenders", url: "/tenders" },
+  ...(tender.province ? [{ name: provinceLabel, url: `/tenders/${tender.province}` }] : []),
+  { name: tender.title, url: `/tenders/t/${tender.id}` },
+];
+
+// schema.org "Demand" = a public request for goods/services — the correct
+// semantic for a tender opportunity.
+const tenderLd = {
+  "@context": "https://schema.org",
+  "@type": "Demand",
+  name: tender.title,
+  ...(tender.description ? { description: String(tender.description).slice(0, 300) } : {}),
+  ...(tender.published_date ? { availabilityStarts: tender.published_date } : {}),
+  ...(tender.closing_date ? { availabilityEnds: tender.closing_date } : {}),
+  areaServed: provinceLabel || "South Africa",
+  ...(tender.procuring_entity ? { seller: { "@type": "GovernmentOrganization", name: tender.procuring_entity } } : {}),
+  ...(tender.source_ref ? { identifier: tender.source_ref } : {}),
+  url: tenderUrl,
+};
 ---
 
 <BaseLayout title={tender.title} description={tender.description?.slice(0, 160) || `Government tender ${tender.source_ref}`}>
+  <StructuredData breadcrumbs={breadcrumbs} extra={[tenderLd]} />
   <nav aria-label="Breadcrumb" class="container mx-auto px-4 pt-6 text-sm text-slate-400">
     <ol class="flex flex-wrap items-center gap-2">
       <li><a href="/" class="hover:text-amber-400 hover:underline">Home</a></li>
@@ -66,6 +103,13 @@ const provinceLabel = tender.province?.replace(/-/g, " ").replace(/\b\w/g, (c: s
       <p class="text-xs font-mono text-slate-400 mb-2">{tender.source_ref}</p>
       <h1 class="text-2xl md:text-3xl font-bold text-white mb-3">{tender.title}</h1>
       {tender.procuring_entity && <p class="text-lg text-slate-300">{tender.procuring_entity}</p>}
+      {lastChecked && (
+        <p class="text-xs text-slate-500 mt-2">
+          Source: {tender.source_url
+            ? <a href={tender.source_url} target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-amber-400 hover:underline">eTenders</a>
+            : "eTenders"} · last checked {lastChecked}
+        </p>
+      )}
     </header>
 
     <div class="grid md:grid-cols-3 gap-3 mb-8">
@@ -92,6 +136,16 @@ const provinceLabel = tender.province?.replace(/-/g, " ").replace(/\b\w/g, (c: s
         </div>
       )}
     </div>
+
+    <!-- Win Probability AI (v1) — fetched client-side from /api/tenders/:id/win-score -->
+    <section id="winscore" class="ws" data-tender-id={tender.id} aria-label="Win probability">
+      <div class="ws-loading">Estimating your win probability…</div>
+    </section>
+    {winData && <script id="win-data" type="application/json" set:html={JSON.stringify(winData)} />}
+
+    <section id="verify" class="vf" data-tender-id={tender.id} aria-label="Tender verifier">
+      <div class="vf-loading">Checking this tender for flaws…</div>
+    </section>
 
     {tender.description && (
       <section class="mb-8">
@@ -164,3 +218,159 @@ const provinceLabel = tender.province?.replace(/-/g, " ").replace(/\b\w/g, (c: s
     )}
   </article>
 </BaseLayout>
+
+<style>
+  .ws { margin: 0 0 2rem; }
+  .ws-loading { color: #94a3b8; font-size: .9rem; padding: 1rem 0; }
+  .ws-card {
+    border: 1px solid #2d3f55; background: #1e2a3a; border-radius: 14px;
+    padding: 20px; display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start;
+  }
+  @media (max-width: 480px) { .ws-card { grid-template-columns: 1fr; } }
+  .ws-ring {
+    width: 96px; height: 96px; border-radius: 50%; position: relative; margin: 0 auto;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ws-ring-inner {
+    width: 74px; height: 74px; border-radius: 50%; background: #0f1923;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .ws-pct { font-size: .8rem; font-weight: 600; color: var(--txt-secondary, #94a3b8); line-height: 1; font-family: ui-monospace, monospace; margin-top: 3px; }
+  .ws-band { font-size: .9rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; line-height: 1.05; }
+  .ws-head { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; margin: 0 0 8px; }
+  .ws-reasons { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .ws-reason { display: flex; gap: 8px; align-items: flex-start; font-size: .85rem; color: #cbd5e1; }
+  .ws-ic { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; font-weight: 700; }
+  .ws-pass { color: #10c9a8; } .ws-warn { color: #f59e0b; } .ws-fail { color: #ff5e5e; } .ws-info { color: #63b3ed; }
+  .ws-rlabel { color: #e2e8f0; font-weight: 600; }
+  .ws-disc { font-size: .72rem; color: #64748b; margin-top: 12px; }
+  .ws-locked { border: 1px dashed #2d3f55; border-radius: 14px; padding: 20px; text-align: center; color: #94a3b8; }
+  .ws-locked a { color: #f59e0b; font-weight: 600; text-decoration: none; }
+
+  /* Verifier */
+  .vf { margin: 0 0 2rem; }
+  .vf-loading { color: #94a3b8; font-size: .9rem; padding: .5rem 0 1rem; }
+  .vf-card { border: 1px solid #2d3f55; background: #1e2a3a; border-radius: 14px; padding: 20px; }
+  .vf-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .vf-score { font-size: 1.6rem; font-weight: 700; font-family: ui-monospace, monospace; }
+  .vf-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; }
+  .vf-flags { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .vf-flag { display: flex; gap: 10px; align-items: flex-start; font-size: .85rem; }
+  .vf-sev { flex: 0 0 auto; font-size: .62rem; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; margin-top: 1px; }
+  .vf-critical { background: rgba(255,94,94,.15); color: #ff5e5e; }
+  .vf-warning  { background: rgba(245,158,11,.15); color: #f59e0b; }
+  .vf-info     { background: rgba(99,179,237,.15); color: #63b3ed; }
+  .vf-msg { color: #e2e8f0; font-weight: 600; }
+  .vf-act { color: #94a3b8; }
+  .vf-disc { font-size: .72rem; color: #64748b; margin-top: 14px; border-top: 1px solid #2d3f55; padding-top: 10px; }
+</style>
+
+<script>
+  const BAND = {
+    high:   { color: '#10c9a8', label: 'Strong fit' },
+    medium: { color: '#f59e0b', label: 'Possible fit' },
+    low:    { color: '#ff5e5e', label: 'Weak fit' },
+    ineligible: { color: '#64748b', label: 'Likely ineligible' },
+  };
+  const ICON = { pass: '\u2713', warn: '!', fail: '\u2715', info: 'i' };
+  const SEVRANK = { critical: 0, warning: 1, info: 2 };
+  function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+  function renderLocked(el, reason) {
+    const msg = reason === 'profile'
+      ? 'Complete your supplier profile to see your win probability on every tender.'
+      : 'Sign in free and add your supplier profile to unlock your win probability.';
+    const cta = reason === 'profile'
+      ? '<a href="/dashboard/profile">Complete profile \u2192</a>'
+      : '<a href="/auth/login">Sign in free \u2192</a>';
+    el.innerHTML = `<div class="ws-locked"><strong style="color:#e2e8f0">Win Probability AI</strong>
+      <p style="margin:8px 0 12px">${msg}</p>${cta}</div>`;
+  }
+
+  function renderScore(el, win) {
+    const band = BAND[win.band] || BAND.low;
+    const score = Math.max(0, Math.min(100, Math.round(Number(win.score) || 0))); // R11 coerce
+    const reasons = (win.reasons || []).map(r => `
+      <li class="ws-reason">
+        <span class="ws-ic ws-${r.status}">${ICON[r.status] || 'i'}</span>
+        <span><span class="ws-rlabel">${esc(r.label)}</span> \u2014 ${esc(r.detail)}</span>
+      </li>`).join('');
+    // R2: band is the headline; the % is secondary. 4.3: ring is decorative (aria-hidden),
+    // the card carries an accessible label.
+    el.innerHTML = `
+      <div class="ws-card" role="group" aria-label="Win probability: ${esc(band.label)}, about ${score} out of 100">
+        <div>
+          <div class="ws-ring" aria-hidden="true" style="background:conic-gradient(${band.color} ${score}%, rgba(255,255,255,.07) 0)">
+            <div class="ws-ring-inner">
+              <span class="ws-band" style="color:${band.color}">${esc(band.label)}</span>
+              <span class="ws-pct">~${score}%</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="ws-head">Win Probability AI \u00b7 why this score</p>
+          <ul class="ws-reasons">${reasons}</ul>
+          <p class="ws-disc">${esc(win.disclaimer)}</p>
+        </div>
+      </div>`;
+  }
+
+  function applyWin(el, data) {
+    if (!data || data.ok === false || ('error' in data && data.error)) { el.innerHTML = ''; return; }
+    if (data.locked) return renderLocked(el, data.reason);
+    if (data.win) return renderScore(el, data.win);
+    el.innerHTML = '';
+  }
+
+  function vfColor(score) { return score >= 80 ? '#10c9a8' : score >= 60 ? '#f59e0b' : '#ff5e5e'; }
+
+  function renderVerify(vfEl, data) {
+    const flags = (data.flags || []).slice().sort((a, b) => (SEVRANK[a.severity] - SEVRANK[b.severity]));
+    const items = flags.length
+      ? flags.map(f => `
+          <li class="vf-flag">
+            <span class="vf-sev vf-${f.severity}">${f.severity}</span>
+            <span><span class="vf-msg">${esc(f.message)}</span><br><span class="vf-act">${esc(f.suggested_action)} <em style="color:#475569">(${esc(f.rule_ref)})</em></span></span>
+          </li>`).join('')
+      : `<li class="vf-flag"><span class="vf-sev vf-info">ok</span><span class="vf-msg">No obvious flaws detected by automated checks.</span></li>`;
+    const c = vfColor(data.health_score);
+    vfEl.innerHTML = `
+      <div class="vf-card">
+        <div class="vf-head">
+          <span class="vf-score" style="color:${c}">${data.health_score}<span style="font-size:.9rem;color:#64748b">/100</span></span>
+          <span><span class="vf-title">Tender health check</span>${data.reviewed ? ' <span style="background:rgba(16,201,168,.15);color:#10c9a8;font-size:.6rem;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:999px">Reviewed by Tenderpreneurs</span>' : ''}<br><span style="color:#94a3b8;font-size:.8rem">${flags.length} item(s) to review</span></span>
+        </div>
+        <ul class="vf-flags">${items}</ul>
+        <p class="vf-disc">${esc(data.disclaimer)}<br>Framework: ${esc(data.framework_version)}</p>
+      </div>`;
+  }
+
+  function initWinScore() {
+    const el = document.getElementById('winscore');
+    if (!el) return;
+    // R8: prefer the server-rendered win-data (no client fetch waterfall).
+    const inline = document.getElementById('win-data');
+    if (inline && inline.textContent) {
+      try { applyWin(el, JSON.parse(inline.textContent)); return; } catch {}
+    }
+    const id = el.getAttribute('data-tender-id');
+    if (!id) return;
+    fetch(`/api/tenders/${id}/win-score`).then(r => r.json()).then(d => applyWin(el, d)).catch(() => { el.innerHTML = ''; });
+  }
+
+  function initVerify() {
+    const vfEl = document.getElementById('verify');
+    if (!vfEl) return;
+    const vfId = vfEl.getAttribute('data-tender-id');
+    if (!vfId) return;
+    fetch(`/api/tenders/${vfId}/report`).then(r => r.json())
+      .then(rep => { if (rep && rep.ok && rep.published) { renderVerify(vfEl, rep); return null; } return fetch(`/api/tenders/${vfId}/verify`).then(r => r.json()); })
+      .then(data => { if (data) { if (data.ok === false) { vfEl.innerHTML = ''; return; } renderVerify(vfEl, data); } })
+      .catch(() => { vfEl.innerHTML = ''; });
+  }
+
+  function initTenderPanels() { initWinScore(); initVerify(); }
+
+  initTenderPanels();
+  document.addEventListener('astro:page-load', initTenderPanels); // R14: re-init under View Transitions
+</script>

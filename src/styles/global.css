@@ -39,7 +39,7 @@
   /* ── Text ── */
   --txt-primary:     #FFFFFF;
   --txt-secondary:   #A8BBCF;
-  --txt-tertiary:    #5E7A92;
+  --txt-tertiary:    #7E94A8;   /* lightened for WCAG AA contrast on navy */
   --txt-inverse:     #0C1B33;
 
   /* ── Surfaces ── */
@@ -51,6 +51,19 @@
   /* ── Borders ── */
   --brd:     rgba(255, 255, 255, 0.08);
   --brd-2:   rgba(255, 255, 255, 0.14);
+
+  /* ── Legacy aliases → canonical tokens (single source of truth) ──
+     Older code used --color-* names and an off-brand amber (#f59e0b).
+     These aliases snap all of it to the brand palette without a rewrite. */
+  --color-navy:    var(--clr-navy);
+  --color-gold:    var(--clr-gold);
+  --color-amber:   var(--clr-gold);
+  --color-civic:   #1B4F8A;
+  --color-text:    var(--txt-primary);
+  --color-muted:   var(--txt-secondary);
+  --color-border:  var(--brd);
+  --color-card-bg: var(--srf-1);
+  --color-elev:    var(--srf-2);
 
   /* ── Shadows ── */
   --shadow-sm:   0 2px 8px  rgba(0, 0, 0, 0.25);
@@ -1327,3 +1340,10 @@ article > h3 {
    min-width: 768px  = md  (nav, FAQ 2-col)
    min-width: 1024px = lg  (3-col, full nav)
 */
+/* ── Accessibility: visible keyboard focus (4.2) ──
+   Applies to all interactive elements; mouse users are unaffected (:focus-visible). */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--clr-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
