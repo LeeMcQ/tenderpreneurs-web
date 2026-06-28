@@ -1,22 +1,16 @@
-name: Deploy to GitHub Pages
+name: Deploy to Cloudflare Pages
 
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,18 +20,12 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
-          path: ./dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # The Pages project must already exist (create it once in the dashboard
+          # or run: wrangler pages project create tenderpreneurs).
+          # wrangler reads D1/R2 bindings + vars from wrangler.toml.
+          command: pages deploy dist --project-name=tenderpreneurs
