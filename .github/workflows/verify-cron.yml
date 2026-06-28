@@ -1,0 +1,24 @@
+name: Tender Verifier — auto-queue drafts
+# Runs the verifier on newly imported tenders and queues drafts for admin review.
+# Requires repo secrets: SITE_URL (e.g. https://tenderpreneurs.co.za) and CRON_SECRET.
+
+on:
+  schedule:
+    - cron: '30 */6 * * *'   # every 6 hours, offset from the scrapers
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max tenders to verify this run'
+        default: '10'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger verification cron
+        run: |
+          LIMIT="${{ github.event.inputs.limit || '10' }}"
+          curl -fsS -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/admin/verify-cron?limit=${LIMIT}" \
+            -w "\nHTTP %{http_code}\n"
