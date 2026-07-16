@@ -9,7 +9,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
-    "lint": "eslint . --ext .ts,.tsx,.astro"
+    "lint": "eslint . --ext .ts,.tsx,.astro",
+    "test:p0": "playwright test",
+    "test:perf": "lhci autorun"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^10.3.2",
