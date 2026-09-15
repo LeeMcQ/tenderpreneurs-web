@@ -41,7 +41,7 @@ export const GET: APIRoute = async (ctx) => {
   const where: string[] = [
     "status = 'open'",
     "canonical_ref IS NULL",
-    "(closing_date IS NULL OR closing_date >= date('now'))",
+    "(closing_date IS NULL OR date(closing_date) >= date('now'))",
   ];
   const binds: unknown[] = [];
 
