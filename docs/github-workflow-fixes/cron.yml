@@ -1,0 +1,61 @@
+name: Tenderpreneurs Cron
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours
+    - cron: '0 6 * * *'      # daily audit at 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which job to run'
+        default: 'ingest'
+        type: choice
+        options: [ingest, audit, both]
+
+jobs:
+  # ── Fetch from OCDS API (runs on GitHub, no time limit) ───────────────────
+  ingest:
+    name: Fetch & ingest tenders
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'schedule' ||
+      github.event.inputs.job == 'ingest' ||
+      github.event.inputs.job == 'both'
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Fetch eTenders OCDS + push to ingest endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: https://tenderpreneurs.co.za
+        run: node .github/scripts/fetch-etenders.js
+
+  # ── Daily audit ────────────────────────────────────────────────────────────
+  audit:
+    name: Daily audit
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'schedule' && github.event.schedule == '0 6 * * *') ||
+      github.event.inputs.job == 'audit' ||
+      github.event.inputs.job == 'both'
+    timeout-minutes: 2
+    steps:
+      - name: Trigger audit endpoint
+        run: |
+          HTTP=$(curl -s -o /tmp/body.txt -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            --max-time 30 \
+            "https://tenderpreneurs.co.za/api/cron/audit")
+          echo "HTTP $HTTP"; cat /tmp/body.txt
+          [ "$HTTP" -eq 200 ] || exit 1
+
+# ── Setup ──────────────────────────────────────────────────────────────────
+# Add CRON_SECRET secret at:
+# https://github.com/LeeMcQ/tenderpreneurs-web/settings/secrets/actions
+# Value = SESSION_SECRET from Cloudflare Pages environment variables

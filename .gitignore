@@ -47,3 +47,6 @@ yarn-error.log*
 # Test coverage
 coverage/
 .nyc_output/
+
+# Local secrets (never commit)
+.local-secrets.txt
