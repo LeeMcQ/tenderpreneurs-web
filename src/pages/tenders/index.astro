@@ -42,14 +42,14 @@ try {
             closing_date, closing_time, cidb_grade, estimated_value, bbbee_required
      FROM tenders
      WHERE status = 'open' AND canonical_ref IS NULL
-       AND (closing_date IS NULL OR closing_date >= date('now','-1 day'))
+       AND (closing_date IS NULL OR closing_date >= date('now'))
      ORDER BY COALESCE(closing_date,'9999-12-31') ASC, first_seen_at DESC
      LIMIT ?`
   ).bind(limit).all();
   const totalRow = await env.DB.prepare(
     `SELECT COUNT(*) AS n FROM tenders
      WHERE status='open' AND canonical_ref IS NULL
-       AND (closing_date IS NULL OR closing_date >= date('now','-1 day'))`
+       AND (closing_date IS NULL OR closing_date >= date('now'))`
   ).first();
   ssrTenders = (rows as any).results ?? [];
   ssrTotal = (totalRow as any)?.n ?? ssrTenders.length;
