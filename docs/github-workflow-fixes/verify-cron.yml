@@ -1,0 +1,40 @@
+name: Tender Verifier — auto-queue drafts
+# Runs the verifier on newly imported tenders and queues drafts for admin review.
+# Optional secret SITE_URL overrides the default production domain.
+# Requires repo secret: CRON_SECRET
+
+on:
+  schedule:
+    - cron: '30 */6 * * *'   # every 6 hours, offset from the scrapers
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max tenders to verify this run'
+        default: '10'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger verification cron
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          SITE_URL="${SITE_URL:-https://tenderpreneurs.co.za}"
+          LIMIT="${{ github.event.inputs.limit || '10' }}"
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "CRON_SECRET is not set in repo Actions secrets"
+            exit 1
+          fi
+          HTTP=$(curl -sS -o /tmp/body.txt -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${CRON_SECRET}" \
+            --max-time 60 \
+            "${SITE_URL}/api/admin/verify-cron?limit=${LIMIT}")
+          echo "SITE_URL=${SITE_URL}"
+          echo "HTTP ${HTTP}"
+          cat /tmp/body.txt
+          echo
+          [ "$HTTP" -eq 200 ]
