@@ -1,7 +1,5 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
-import SEO from '@components/SEO.astro';
-
 const seoData = {
   title: 'PFMA Knowledge Base — Master South African Government Procurement | Tenderpreneurs',
   description:
@@ -81,8 +79,12 @@ const topics = [
 ];
 ---
 
-<BaseLayout>
-  <SEO slot="head" {...seoData} />
+<BaseLayout
+  title={seoData.title}
+  description={seoData.description}
+  ogImage="/og-pfma.png"
+  canonical={seoData.canonical}
+>
 
   <!-- Page Hero -->
   <section class="bg-gradient-to-br from-navy-900 to-civic-800 py-20 text-white">
