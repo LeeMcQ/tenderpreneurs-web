@@ -49,7 +49,7 @@ try {
   const totalRow = await env.DB.prepare(
     `SELECT COUNT(*) AS n FROM tenders
      WHERE status='open' AND canonical_ref IS NULL
-       AND (closing_date IS NULL OR closing_date >= date('now'))`
+       AND (closing_date IS NULL OR closing_date >= date('now'))
   ).first();
   ssrTenders = (rows as any).results ?? [];
   ssrTotal = (totalRow as any)?.n ?? ssrTenders.length;
@@ -73,18 +73,19 @@ function fmtValue(cents: number | null): string {
 }
 function daysTo(iso: string | null): number | null {
   if (!iso) return null;
-  const d = Math.round((Date.parse(iso + 'T00:00:00Z') - Date.parse(new Date().toISOString().slice(0, 10) + 'T00:00:00Z')) / 86400000);
+  const todayZA = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const d = Math.round((Date.parse(iso.slice(0, 10) + 'T12:00:00Z') - Date.parse(todayZA + 'T12:00:00Z')) / 86400000);
   return Number.isNaN(d) ? null : d;
 }
 // urgency → { text, cls }
 function urgency(iso: string | null) {
   const d = daysTo(iso);
   if (d === null) return { text: 'No closing date', cls: 'u-none' };
-  if (d < 0) return { text: 'Closed', cls: 'u-none' };
+  if (d < 0) return { text: 'Deadline passed', cls: 'u-none' };
   if (d === 0) return { text: 'Closes today', cls: 'u-red' };
-  if (d <= 3) return { text: `Closes in ${d} day${d > 1 ? 's' : ''}`, cls: 'u-red' };
-  if (d <= 7) return { text: `Closes in ${d} days`, cls: 'u-amber' };
-  return { text: `Closes ${fmtDate(iso)}`, cls: 'u-neutral' };
+  if (d <= 3) return { text: 'Closes in ' + d + ' day' + (d > 1 ? 's' : ''), cls: 'u-red' };
+  if (d <= 7) return { text: 'Closes in ' + d + ' days', cls: 'u-amber' };
+  return { text: 'Closes ' + fmtDate(iso), cls: 'u-neutral' };
 }
 ---
 
@@ -334,13 +335,16 @@ function urgency(iso: string | null) {
   }
   function urgency(iso: string | null) {
     if (!iso) return { text: 'No closing date', cls: 'u-none' };
-    const d = Math.round((Date.parse(iso+'T00:00:00Z') - Date.parse(new Date().toISOString().slice(0,10)+'T00:00:00Z'))/86400000);
+    // Compare calendar dates in Africa/Johannesburg (site is en-ZA), not raw UTC slice quirks
+    const todayZA = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    const close = iso.slice(0, 10);
+    const d = Math.round((Date.parse(close + 'T12:00:00Z') - Date.parse(todayZA + 'T12:00:00Z')) / 86400000);
     if (Number.isNaN(d)) return { text: 'No closing date', cls: 'u-none' };
-    if (d < 0) return { text: 'Closed', cls: 'u-none' };
+    if (d < 0) return { text: 'Deadline passed', cls: 'u-none' };
     if (d === 0) return { text: 'Closes today', cls: 'u-red' };
-    if (d <= 3) return { text: `Closes in ${d} day${d>1?'s':''}`, cls: 'u-red' };
-    if (d <= 7) return { text: `Closes in ${d} days`, cls: 'u-amber' };
-    return { text: `Closes ${fmtDate(iso)}`, cls: 'u-neutral' };
+    if (d <= 3) return { text: 'Closes in ' + d + ' day' + (d > 1 ? 's' : ''), cls: 'u-red' };
+    if (d <= 7) return { text: 'Closes in ' + d + ' days', cls: 'u-amber' };
+    return { text: 'Closes ' + fmtDate(iso), cls: 'u-neutral' };
   }
   function esc(s: any): string { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
 
