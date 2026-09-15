@@ -67,9 +67,9 @@ function fmtDate(iso: string | null): string {
 function fmtValue(cents: number | null): string {
   if (!cents) return '';
   const z = cents / 100;
-  if (z >= 1_000_000) return `R${(z / 1_000_000).toFixed(1)}M`;
-  if (z >= 1_000) return `R${Math.round(z / 1_000)}K`;
-  return `R${Math.round(z).toLocaleString()}`;
+  if (z >= 1000000) return 'R' + (z / 1000000).toFixed(1) + 'M';
+  if (z >= 1000) return 'R' + Math.round(z / 1000) + 'K';
+  return 'R' + Math.round(z).toLocaleString();
 }
 function daysTo(iso: string | null): number | null {
   if (!iso) return null;
@@ -82,9 +82,9 @@ function urgency(iso: string | null) {
   if (d === null) return { text: 'No closing date', cls: 'u-none' };
   if (d < 0) return { text: 'Closed', cls: 'u-none' };
   if (d === 0) return { text: 'Closes today', cls: 'u-red' };
-  if (d <= 3) return { text: `Closes in ${d} day${d > 1 ? 's' : ''}`, cls: 'u-red' };
-  if (d <= 7) return { text: `Closes in ${d} days`, cls: 'u-amber' };
-  return { text: `Closes ${fmtDate(iso)}`, cls: 'u-neutral' };
+  if (d <= 3) return { text: 'Closes in ' + d + ' day' + (d > 1 ? 's' : ''), cls: 'u-red' };
+  if (d <= 7) return { text: 'Closes in ' + d + ' days', cls: 'u-amber' };
+  return { text: 'Closes ' + fmtDate(iso), cls: 'u-neutral' };
 }
 ---
 
@@ -195,8 +195,11 @@ function urgency(iso: string | null) {
 </BaseLayout>
 
 <style>
-  .tenders-main { max-width: 960px; margin: 0 auto; padding: 28px 20px 80px; }
-  .tenders-main { padding-top: calc(var(--nav-h, 64px) + var(--safe-t, 0px) + 12px); }
+  .tenders-main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: calc(var(--nav-h, 64px) + var(--safe-t, 0px) + 12px) 20px 80px;
+  }
   .breadcrumb ol { list-style: none; padding: 0; margin: 0 0 20px; display: flex; gap: 8px; font-size: 13px; color: var(--txt-secondary); }
   .breadcrumb a { color: var(--clr-gold); text-decoration: none; }
   .tenders-hero { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--brd); }
