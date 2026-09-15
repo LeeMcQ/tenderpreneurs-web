@@ -113,7 +113,7 @@ const topics = [
   </section>
 
   <!-- Topics Grid -->
-  <section class="bg-white py-16 dark:bg-navy-950" aria-labelledby="topics-heading">
+  <section class="py-16" aria-labelledby="topics-heading">
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
       <h2 id="topics-heading" class="sr-only">PFMA topics</h2>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -121,7 +121,7 @@ const topics = [
           topics.map((topic) => (
             <a
               href={`/pfma/${topic.slug}`}
-              class="card group flex flex-col transition hover:-translate-y-1 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-civic-500"
+              class="card card-hover group flex flex-col focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--clr-teal)]"
             >
               <div class="flex items-start justify-between">
                 <span class="text-3xl" role="img" aria-hidden="true">{topic.icon}</span>
@@ -129,13 +129,13 @@ const topics = [
                   <span class="badge badge-gold text-xs">{topic.badge}</span>
                 )}
               </div>
-              <h2 class="mt-3 font-display text-lg font-semibold text-navy-900 group-hover:text-civic-700 dark:text-white dark:group-hover:text-sky-400">
+              <h2 class="mt-3 font-display text-lg font-semibold text-white group-hover:text-[var(--clr-teal-2)]">
                 {topic.title}
               </h2>
-              <p class="mt-2 flex-1 text-sm text-gray-600 dark:text-gray-300">
+              <p class="mt-2 flex-1 text-sm txt-secondary">
                 {topic.description}
               </p>
-              <span class="mt-4 text-sm font-medium text-civic-600 dark:text-sky-400">
+              <span class="mt-4 text-sm font-medium txt-teal">
                 Read guide →
               </span>
             </a>
@@ -146,21 +146,21 @@ const topics = [
   </section>
 
   <!-- AI Assistant CTA -->
-  <section class="bg-sky-50 py-16 dark:bg-navy-900" aria-labelledby="assistant-cta">
+  <section class="py-16" aria-labelledby="assistant-cta">
     <div class="mx-auto max-w-4xl px-4 text-center sm:px-6">
       <h2
         id="assistant-cta"
-        class="font-display text-2xl font-bold text-navy-900 dark:text-white sm:text-3xl"
+        class="font-display text-2xl font-bold text-white sm:text-3xl"
       >
         Still have questions?
       </h2>
-      <p class="mx-auto mt-4 max-w-xl text-gray-600 dark:text-gray-300">
+      <p class="mx-auto mt-4 max-w-xl txt-secondary">
         The Tenderpreneurs PFMA Assistant answers your procurement questions instantly — with
         citations to the actual legislation. Free for all users.
       </p>
       <a
-        href="/tenders"
-        class="btn-primary mt-6 inline-flex"
+        href="/auth/login"
+        class="btn btn-gold mt-6 inline-flex"
       >
         Ask the PFMA Assistant
       </a>

@@ -132,6 +132,7 @@ const canonUrl = canonical
         ham.addEventListener('click', function () {
           var open = document.body.classList.toggle('nav-open');
           ham.setAttribute('aria-expanded', String(open));
+          ham.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
           document.body.style.overflow = open ? 'hidden' : '';
         });
         drawer.querySelectorAll('a').forEach(function (a) {
@@ -139,6 +140,7 @@ const canonUrl = canonical
             document.body.classList.remove('nav-open');
             document.body.style.overflow = '';
             ham.setAttribute('aria-expanded', 'false');
+            ham.setAttribute('aria-label', 'Open menu');
           });
         });
       }

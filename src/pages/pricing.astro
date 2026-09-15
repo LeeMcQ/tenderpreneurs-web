@@ -221,11 +221,14 @@ const tableRows = [
 .compare-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  margin-inline: calc(-1 * var(--sp-4, 1rem));
+  padding-inline: var(--sp-4, 1rem);
   border:        1px solid var(--brd);
   border-radius: var(--r-lg);
 }
 
 .compare-table {
+  min-width: 640px;
   width:           100%;
   border-collapse: collapse;
   font-size:       .875rem;
