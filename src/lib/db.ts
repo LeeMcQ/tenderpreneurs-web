@@ -18,6 +18,7 @@ export type Env = {
   RESEND_API_KEY: string;
   MAGIC_LINK_SECRET: string;
   SESSION_SECRET: string;
+  CRON_SECRET?: string;
 };
 
 /**
@@ -33,6 +34,19 @@ export function getEnv(astro: { locals: any }): Env {
     throw new Error("Cloudflare runtime env not available. Are you running on Pages?");
   }
   return env as Env;
+}
+
+/**
+ * GitHub Actions sends repo secret CRON_SECRET as x-cron-secret.
+ * Accept CRON_SECRET first (what /api/admin/verify-cron already uses),
+ * then SESSION_SECRET for older setups that reused one value.
+ */
+export function cronSecretMatches(env: Env, header: string | null): boolean {
+  if (!header) return false;
+  const expected = [env.CRON_SECRET, env.SESSION_SECRET].filter(
+    (s): s is string => typeof s === "string" && s.length > 0,
+  );
+  return expected.includes(header);
 }
 
 /** ISO timestamp, second precision, suitable for D1 TEXT columns. */

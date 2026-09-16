@@ -14,7 +14,7 @@
 
 import type { APIRoute } from 'astro';
 import { getAllAdapters, getAdapter } from '../../../lib/adapters/index.js';
-import { getEnv, ulid, now, sha256, normaliseForFingerprint } from '../../../lib/db.js';
+import { getEnv, ulid, now, sha256, normaliseForFingerprint, cronSecretMatches } from '../../../lib/db.js';
 
 export const prerender = false;
 
@@ -24,7 +24,7 @@ export const POST: APIRoute = async (ctx) => {
   const env = getEnv(ctx);
 
   const secret = ctx.request.headers.get('x-cron-secret');
-  if (!env.SESSION_SECRET || secret !== env.SESSION_SECRET) {
+  if (!cronSecretMatches(env, secret)) {
     return json({ error: 'Unauthorised' }, 401);
   }
 
@@ -34,7 +34,7 @@ export const POST: APIRoute = async (ctx) => {
   const fetchMode = url.searchParams.get('fetch') === '1';
   const contentType = ctx.request.headers.get('content-type') ?? '';
 
-  // ── MODE A: pre-fetched data in body ────────────────────────────────────
+  // ── MODE A: pre-fetched data in body ──────────────────────────────────
   if (contentType.includes('application/json') && !fetchMode) {
     let body: any;
     try {
@@ -55,7 +55,7 @@ export const POST: APIRoute = async (ctx) => {
     return json({ ok: true, source: sourceId, ...result }, 200);
   }
 
-  // ── MODE B: Worker fetches internally ───────────────────────────────────
+  // ── MODE B: Worker fetches internally ───────────────────────────
   const adapters = sourceParam
     ? [getAdapter(sourceParam)].filter(Boolean) as any[]
     : getAllAdapters();
@@ -96,7 +96,7 @@ export const POST: APIRoute = async (ctx) => {
   return json({ ok: true, results, total_ms: Date.now() - globalStart }, 200);
 };
 
-// ── Shared write logic ────────────────────────────────────────────────────
+// ── Shared write logic ─────────────────────────────────────────
 
 async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
   if (tenders.length === 0) return { items_found: 0, items_new: 0, items_updated: 0 };
@@ -176,7 +176,7 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
     itemsNew = toInsert.length;
   }
 
-  // ── Batch UPDATE — only mutable fields ─────────────────────────────────
+  // ── Batch UPDATE — only mutable fields ─────────────────────────────
   if (toUpdate.length > 0) {
     const stmts = toUpdate.map(({ t, fp }) => {
       const ex = existingMap.get(t.externalId)!;

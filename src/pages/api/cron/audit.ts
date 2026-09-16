@@ -3,7 +3,7 @@
  * SCHEMA-CORRECT: uses first_seen_at, last_seen_at correctly.
  */
 import type { APIRoute } from 'astro';
-import { getEnv, now } from '../../../lib/db.js';
+import { getEnv, now, cronSecretMatches } from '../../../lib/db.js';
 
 export const prerender = false;
 
@@ -11,7 +11,7 @@ export const POST: APIRoute = async (ctx) => {
   const env = getEnv(ctx);
 
   const secret = ctx.request.headers.get('x-cron-secret');
-  if (!env.SESSION_SECRET || secret !== env.SESSION_SECRET) {
+  if (!cronSecretMatches(env, secret)) {
     return json({ error: 'Unauthorised' }, 401);
   }
 

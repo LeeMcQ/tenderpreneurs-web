@@ -1,20 +1,19 @@
 /**
  * src/pages/api/admin/verify-cron.ts
- * POST  (header x-cron-secret: <CRON_SECRET>)
+ * POST  (header x-cron-secret: <CRON_SECRET or SESSION_SECRET>)
  * Auto-verifies recently imported tenders that have no report yet, queuing
  * drafts for admin review. Idempotent (skips tenders already having a report).
  * Call from GitHub Actions / a scheduled Worker. Cost-capped via ?limit.
  */
 import type { APIRoute } from 'astro';
-import { getEnv } from '../../../lib/db.js';
+import { getEnv, cronSecretMatches } from '../../../lib/db.js';
 import { runVerificationForTender } from '../../../lib/verifier/run.js';
 
 export const prerender = false;
 
 export const POST: APIRoute = async (ctx) => {
   const env = getEnv(ctx);
-  const secret = (env as any).CRON_SECRET;
-  if (!secret || ctx.request.headers.get('x-cron-secret') !== secret) {
+  if (!cronSecretMatches(env, ctx.request.headers.get('x-cron-secret'))) {
     return json({ ok: false, error: 'unauthorized' }, 401);
   }
 
