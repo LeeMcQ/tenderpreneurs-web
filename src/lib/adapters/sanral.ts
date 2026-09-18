@@ -2,14 +2,16 @@
  * SANRAL adapter — public DataTables JSON on nra.co.za.
  * Listing: GET /sanral-tenders/list/open-tenders
  * sourceId must stay `sanral` to match the D1 sources row.
+ *
+ * Their pageIndex pagination overlaps (pageSize=50 × 3 → ~68 unique of 119).
+ * One request with pageSize=150 returns ~116 unique. Do not page at 50.
  */
 
 import type { BaseAdapter, RawTender } from './base.js';
 
 export const SANRAL_SOURCE_ID = 'sanral';
 export const SANRAL_LIST_URL = 'https://www.nra.co.za/sanral-tenders/list/open-tenders';
-const PAGE_SIZE = 50;
-const MAX_PAGES = 3;
+const PAGE_SIZE = 150;
 
 const PROVINCE_MAP: Record<string, string> = {
   'Eastern Cape': 'eastern-cape',
@@ -29,10 +31,10 @@ export function stripHtml(s: string): string {
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
+    .replace(/&/gi, '&')
+    .replace(/</gi, '<')
+    .replace(/>/gi, '>')
+    .replace(/"/gi, '"')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -49,7 +51,7 @@ export function parseSanralHref(html: string): { href: string; ref: string } | n
     const text = stripHtml(html);
     return text ? { href: '', ref: text } : null;
   }
-  return { href: m[1].replace(/&amp;/g, '&'), ref: stripHtml(m[2]) };
+  return { href: m[1].replace(/&/g, '&'), ref: stripHtml(m[2]) };
 }
 
 function mapSector(category: string): string {
@@ -57,6 +59,13 @@ function mapSector(category: string): string {
   if (lower.includes('construct') || lower.includes('works') || lower.includes('road')) return 'construction';
   if (lower.includes('consult') || lower.includes('profession')) return 'consulting';
   return 'construction';
+}
+
+function mapProvince(region: string): string {
+  const exact = PROVINCE_MAP[region];
+  if (exact) return exact;
+  const first = region.split(',')[0]?.trim();
+  return (first && PROVINCE_MAP[first]) || 'national';
 }
 
 export function mapSanralRow(cells: string[]): RawTender | null {
@@ -67,7 +76,10 @@ export function mapSanralRow(cells: string[]): RawTender | null {
   const category = stripHtml(cells[1] ?? '');
   const region = stripHtml(cells[2] ?? '');
   const description = stripHtml(cells[3] ?? '').slice(0, 500);
-  const contactEmail = stripHtml(cells[4] ?? '') || null;
+  const emailRaw = stripHtml(cells[4] ?? '').replace(/\.{2,}$/, '').trim();
+  const contactEmail = emailRaw.includes('@') && !emailRaw.endsWith('@sanral.co.za') === false
+    ? emailRaw
+    : (emailRaw.includes('@') ? emailRaw : null);
   const closingDate = parseSanralDate(stripHtml(cells[5] ?? ''));
   const path = parsed.href.startsWith('http')
     ? parsed.href
@@ -80,7 +92,7 @@ export function mapSanralRow(cells: string[]): RawTender | null {
     title: parsed.ref.slice(0, 300),
     description: description || `${category} — ${region}`.trim(),
     buyer: 'SANRAL',
-    province: PROVINCE_MAP[region] ?? 'national',
+    province: mapProvince(region),
     sector: mapSector(category),
     status: 'active',
     closingDate,
@@ -110,34 +122,27 @@ export class SanralAdapter implements BaseAdapter {
   sourceId = SANRAL_SOURCE_ID;
 
   async fetch(): Promise<RawTender[]> {
-    const all: RawTender[] = [];
-    const seen = new Set<string>();
-
-    for (let page = 1; page <= MAX_PAGES; page++) {
-      const url =
-        `${SANRAL_LIST_URL}?pageSize=${PAGE_SIZE}&pageIndex=${page}` +
-        `&region_id=1&search=&init=${page === 1 ? 1 : 0}`;
-      const res = await fetch(url, {
-        headers: {
-          Accept: 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'User-Agent': 'Tenderpreneurs/1.0 (+https://tenderpreneurs.co.za)',
-        },
-      });
-      if (!res.ok) {
-        throw new Error(`SANRAL HTTP ${res.status} on page ${page}`);
-      }
-      const payload = (await res.json()) as { tenders?: unknown };
-      const batch = parseSanralList(payload);
-      if (batch.length === 0) break;
-      for (const t of batch) {
-        if (seen.has(t.externalId)) continue;
-        seen.add(t.externalId);
-        all.push(t);
-      }
-      if (batch.length < PAGE_SIZE) break;
+    const url =
+      `${SANRAL_LIST_URL}?pageSize=${PAGE_SIZE}&pageIndex=1` +
+      `&region_id=1&search=&init=1`;
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'User-Agent': 'Tenderpreneurs/1.0 (+https://tenderpreneurs.co.za)',
+      },
+    });
+    if (!res.ok) {
+      throw new Error(`SANRAL HTTP ${res.status}`);
     }
-
+    const payload = (await res.json()) as { tenders?: unknown };
+    const seen = new Set<string>();
+    const all: RawTender[] = [];
+    for (const t of parseSanralList(payload)) {
+      if (seen.has(t.externalId)) continue;
+      seen.add(t.externalId);
+      all.push(t);
+    }
     return all;
   }
 }
