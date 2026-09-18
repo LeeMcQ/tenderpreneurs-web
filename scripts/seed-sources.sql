@@ -21,7 +21,7 @@ INSERT OR REPLACE INTO sources (id, name, type, url, province, poll_freq_mins) V
   ('coj',                'City of Johannesburg',                'metro',      'https://www.joburg.org.za',                                   'gauteng',      720),
   ('tshwane',            'City of Tshwane',                     'metro',      'https://www.tshwane.gov.za',                                  'gauteng',      720),
   ('ekurhuleni',         'Ekurhuleni Metro',                    'metro',      'https://www.ekurhuleni.gov.za',                               'gauteng',      720),
-  ('cct',                'City of Cape Town',                   'metro',      'https://www.capetown.gov.za',                                 'western-cape', 720),
+  ('cct',                'City of Cape Town',                   'metro',      'https://web1.capetown.gov.za/web1/tenderportal/Tender',       'western-cape', 720),
   ('ethekwini',          'eThekwini Metro',                     'metro',      'https://www.durban.gov.za',                                   'kwazulu-natal',720),
   ('nmbm',               'Nelson Mandela Bay Metro',            'metro',      'https://www.nelsonmandelabay.gov.za',                         'eastern-cape', 720),
   ('bcm',                'Buffalo City Metro',                  'metro',      'https://www.buffalocity.gov.za',                              'eastern-cape', 720),
@@ -29,8 +29,8 @@ INSERT OR REPLACE INTO sources (id, name, type, url, province, poll_freq_mins) V
 
   -- Major SOEs
   ('sanral',             'SANRAL',                              'soe',        'https://www.nra.co.za/sanral-tenders/list/open-tenders',      NULL,           720),
-  ('eskom',              'Eskom Tender Bulletin',               'soe',        'https://tenderbulletin.eskom.co.za',                          NULL,           720),
-  ('transnet',           'Transnet',                            'soe',        'https://www.transnet.net',                                    NULL,           720),
+  ('eskom',              'Eskom Tender Bulletin',               'soe',        'https://tenderbulletin.eskom.co.za/webapi/api/Lookup/GetTender?TENDER_ID=', NULL, 360),
+  ('transnet',           'Transnet',                            'soe',        'https://transnetetenders.azurewebsites.net/Home/GetAdvertisedTenders', NULL, 360),
   ('prasa',              'Prasa',                               'soe',        'https://www.prasa.com',                                       NULL,           720),
   ('acsa',               'ACSA',                                'soe',        'https://www.airports.co.za',                                  NULL,           720),
   ('sita',               'SITA',                                'soe',        'https://www.sita.co.za',                                      NULL,           720),

@@ -12,11 +12,17 @@ import type { BaseAdapter } from './base.js';
 import { ETendersAdapter } from './etenders.js';
 import { TreasuryBulletinAdapter } from './treasury-bulletin.js';
 import { SanralAdapter } from './sanral.js';
+import { EskomAdapter } from './eskom.js';
+import { TransnetAdapter } from './transnet.js';
+import { CctAdapter } from './cct.js';
 
 const ADAPTERS: BaseAdapter[] = [
   new ETendersAdapter(),
   new TreasuryBulletinAdapter(),
   new SanralAdapter(),
+  new EskomAdapter(),
+  new TransnetAdapter(),
+  new CctAdapter(),
 ];
 
 const ADAPTER_MAP = new Map<string, BaseAdapter>(
