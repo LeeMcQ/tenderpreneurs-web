@@ -1,9 +1,16 @@
 -- Seed the 25-ish upstream public tender sources.
 -- Run: wrangler d1 execute tenderpreneurs --file=scripts/seed-sources.sql
+--
+-- National Treasury eTenders has three official surfaces. We ingest one source_id
+-- (`etenders`) from the live OCDS API. The human portal and transparency site
+-- are the same dataset — do not add extra source rows or you will double-count.
+--   portal:        https://www.etenders.gov.za
+--   transparency:  https://data.etenders.gov.za
+--   OCDS API:      https://ocds-api.etenders.gov.za
 
 INSERT OR REPLACE INTO sources (id, name, type, url, province, poll_freq_mins) VALUES
   -- National
-  ('etenders',           'eTenders Publication Portal',         'national',   'https://www.etenders.gov.za',                                 NULL,           360),
+  ('etenders',           'eTenders Publication Portal (OCDS API)', 'national',   'https://ocds-api.etenders.gov.za/api/OCDSReleases',            NULL,           360),
   ('treasury-bulletin',  'National Treasury Tender Bulletin',   'bulletin',   'https://www.gov.za/documents/tender-bulletin',                NULL,          1440),
 
   -- Provincial treasuries
