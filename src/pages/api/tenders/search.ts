@@ -40,6 +40,7 @@ export const GET: APIRoute = async (ctx) => {
     user = await getSessionUser(env.DB, ctx.request.headers.get('cookie'));
   } catch (_) { /* anonymous if session lookup fails */ }
   const effectiveLimit = user ? limit : Math.min(limit, GUEST_LIST_LIMIT);
+  const pageOffset = user ? offset : 0;
 
   const where: string[] = [
     "status = 'open'",
@@ -67,7 +68,7 @@ export const GET: APIRoute = async (ctx) => {
   }
 
   const countBinds = [...binds];
-  binds.push(effectiveLimit, offset);
+  binds.push(effectiveLimit, pageOffset);
 
   try {
     const [rows, total] = await Promise.all([
