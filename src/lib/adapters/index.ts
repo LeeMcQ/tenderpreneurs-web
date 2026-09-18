@@ -11,36 +11,28 @@
 import type { BaseAdapter } from './base.js';
 import { ETendersAdapter } from './etenders.js';
 import { TreasuryBulletinAdapter } from './treasury-bulletin.js';
-
-// ---------------------------------------------------------------------------
-// Registry
-// ---------------------------------------------------------------------------
+import { SanralAdapter } from './sanral.js';
+import { EskomAdapter } from './eskom.js';
+import { TransnetAdapter } from './transnet.js';
+import { CctAdapter } from './cct.js';
 
 const ADAPTERS: BaseAdapter[] = [
   new ETendersAdapter(),
   new TreasuryBulletinAdapter(),
-  // Add additional adapters here as they are implemented:
-  // new EThekwiniAdapter(),
-  // new JohannesburgAdapter(),
-  // etc.
+  new SanralAdapter(),
+  new EskomAdapter(),
+  new TransnetAdapter(),
+  new CctAdapter(),
 ];
 
 const ADAPTER_MAP = new Map<string, BaseAdapter>(
   ADAPTERS.map((a) => [a.sourceId, a])
 );
 
-/**
- * Returns the adapter for a given source ID, or null if none is registered.
- *
- * @param sourceId - The `id` value from the `sources` table row
- */
 export function getAdapter(sourceId: string): BaseAdapter | null {
   return ADAPTER_MAP.get(sourceId) ?? null;
 }
 
-/**
- * Returns all registered adapters (used by the ingest cron to run all sources).
- */
 export function getAllAdapters(): BaseAdapter[] {
   return ADAPTERS;
 }
