@@ -18,6 +18,7 @@ import {
   provinceLabel,
   urgency,
 } from "../../lib/tender-display";
+import "../../styles/tender-list.css";
 
 export const prerender = false;
 
@@ -121,14 +122,14 @@ try {
     <div id="chips" class="chips" aria-live="polite"></div>
 
     <div class="stats-bar" id="stats-bar" aria-live="polite">
-      {ssrOk ? `Showing ${ssrTenders.length} of ${ssrTotal.toLocaleString()} open tenders \u00b7 closing soonest` : 'Loading tenders…'}
+      {ssrOk ? `Showing ${ssrTenders.length} of ${ssrTotal.toLocaleString()} open tenders · closing soonest` : 'Loading tenders…'}
     </div>
 
     <div id="tender-list" class="tender-list" aria-live="polite" data-ssr={ssrOk && ssrTenders.length ? '1' : '0'} data-count={ssrTenders.length}>
       {ssrOk && ssrTenders.length ? ssrTenders.map((t) => {
         const u = urgency(t.closing_date, t.closing_time);
         const heading = displayTitle(t);
-        const entity = [t.procuring_entity, provinceLabel(t.province)].filter(Boolean).join(' \u00b7 ');
+        const entity = [t.procuring_entity, provinceLabel(t.province)].filter(Boolean).join(' · ');
         return (
           <a href={`/tenders/t/${t.id}`} class="tender-row">
             <div class="tr-main">
@@ -165,3 +166,7 @@ try {
     </div>
   </main>
 </BaseLayout>
+
+<script>
+  import '../../scripts/tender-list';
+</script>
