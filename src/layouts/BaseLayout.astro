@@ -30,7 +30,6 @@ const {
 } = Astro.props;
 
 const siteUrl  = 'https://tenderpreneurs.co.za';
-// canonical prop takes precedence; fallback uses Astro.url (safe in static & SSR)
 const _path    = Astro.url ? Astro.url.pathname : '/';
 const canonUrl = canonical
   ? (canonical.startsWith('http') ? canonical : `${siteUrl}${canonical}`)
@@ -43,25 +42,21 @@ const canonUrl = canonical
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-  <!-- PWA / App shell -->
   <meta name="theme-color"                        content="#0C1B33" />
   <meta name="apple-mobile-web-app-capable"        content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="mobile-web-app-capable"             content="yes" />
 
-  <!-- SEO -->
   <title>{title}</title>
   <meta name="description"  content={description} />
   <meta name="author"       content="Tenderpreneurs" />
   <meta name="robots"       content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
   <link rel="canonical"     href={canonUrl} />
 
-  <!-- Geo -->
   <meta name="geo.country"  content="South Africa" />
   <meta name="geo.region"   content="ZA" />
   <meta name="language"     content="English" />
 
-  <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="Tenderpreneurs" />
   <meta property="og:url"         content={canonUrl} />
@@ -72,51 +67,37 @@ const canonUrl = canonical
   <meta property="og:image:height" content="630" />
   <meta property="og:locale"      content="en_ZA" />
 
-  <!-- Twitter / X -->
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content={title} />
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image"       content={`${siteUrl}${ogImage}`} />
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&family=JetBrains+Mono:wght@400;500&display=swap"
     rel="stylesheet"
   />
 
-  <!-- Favicon -->
   <link rel="icon"             type="image/svg+xml" href="/favicon.svg" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="manifest"         href="/manifest.json" />
 
-  <!-- Slot for page-level head content -->
   <slot name="head" />
 </head>
 
 <body>
-  <!-- Accessibility skip link -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <!-- Sticky navigation -->
   <Nav />
 
-  <!-- Mobile drawer is rendered inside Nav but lives here visually -->
-
-  <!-- Page content -->
   <main id="main-content" tabindex="-1">
     <slot />
   </main>
 
-  <!-- Sitewide footer -->
   <Footer />
 
-  <!-- ── Global scripts ── -->
-  <!-- is:inline ensures this runs immediately and does not get bundled,
-       keeping it compatible with existing cookie consent scripts -->
   <script is:inline>
-    /* Nav scroll behaviour */
     document.addEventListener('DOMContentLoaded', function () {
       var nav = document.querySelector('.nav');
       if (nav) {
@@ -125,7 +106,6 @@ const canonUrl = canonical
         onScroll();
       }
 
-      /* Hamburger / mobile drawer */
       var ham    = document.getElementById('tp-ham');
       var drawer = document.getElementById('tp-drawer');
       if (ham && drawer) {
@@ -145,7 +125,10 @@ const canonUrl = canonical
         });
       }
 
-      /* Mark current nav link as active */
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      }
+
       var currentPath = window.location.pathname.replace(/\/$/, '') || '/';
       document.querySelectorAll('.nav-links a, .nav-drawer a').forEach(function (link) {
         var href = (link.getAttribute('href') || '').replace(/\/$/, '');
@@ -158,7 +141,6 @@ const canonUrl = canonical
     });
   </script>
 
-  <!-- Cookie consent and any other page-level scripts preserved here -->
   <slot name="scripts" />
 </body>
 </html>
