@@ -13,7 +13,6 @@ on:
         options: [ingest, audit, both]
 
 jobs:
-  # ── Fetch from OCDS API (runs on GitHub, no time limit) ───────────────────
   ingest:
     name: Fetch & ingest tenders
     runs-on: ubuntu-latest
@@ -35,7 +34,18 @@ jobs:
           SITE_URL: ${{ secrets.SITE_URL || 'https://tenderpreneurs.co.za' }}
         run: node .github/scripts/fetch-etenders.js
 
-  # ── Daily audit ────────────────────────────────────────────────
+      - name: Ingest SANRAL open tenders
+        env:
+          SITE_URL: ${{ secrets.SITE_URL || 'https://tenderpreneurs.co.za' }}
+        run: |
+          HTTP=$(curl -s -o /tmp/sanral.txt -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            --max-time 90 \
+            "${SITE_URL}/api/cron/ingest?source=sanral")
+          echo "HTTP $HTTP"; cat /tmp/sanral.txt
+          [ "$HTTP" -eq 200 ] || exit 1
+
   audit:
     name: Daily audit
     runs-on: ubuntu-latest
@@ -56,9 +66,3 @@ jobs:
             "${SITE_URL}/api/cron/audit")
           echo "HTTP $HTTP"; cat /tmp/body.txt
           [ "$HTTP" -eq 200 ] || exit 1
-
-# ── Setup ──────────────────────────────────────────────────
-# Add CRON_SECRET secret at:
-# https://github.com/LeeMcQ/tenderpreneurs-web/settings/secrets/actions
-# Value must match Cloudflare Pages CRON_SECRET (preferred) or SESSION_SECRET.
-# Optional SITE_URL secret overrides the production default.

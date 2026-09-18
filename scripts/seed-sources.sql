@@ -28,7 +28,7 @@ INSERT OR REPLACE INTO sources (id, name, type, url, province, poll_freq_mins) V
   ('mangaung',           'Mangaung Metro',                      'metro',      'https://www.mangaung.co.za',                                  'free-state',   720),
 
   -- Major SOEs
-  ('sanral',             'SANRAL',                              'soe',        'https://www.nra.co.za',                                       NULL,           720),
+  ('sanral',             'SANRAL',                              'soe',        'https://www.nra.co.za/sanral-tenders/list/open-tenders',      NULL,           720),
   ('eskom',              'Eskom Tender Bulletin',               'soe',        'https://tenderbulletin.eskom.co.za',                          NULL,           720),
   ('transnet',           'Transnet',                            'soe',        'https://www.transnet.net',                                    NULL,           720),
   ('prasa',              'Prasa',                               'soe',        'https://www.prasa.com',                                       NULL,           720),
