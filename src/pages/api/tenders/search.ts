@@ -6,6 +6,7 @@
 import type { APIRoute } from 'astro';
 import { getEnv } from '../../../lib/db.js';
 import { getSessionUser } from '../../../lib/auth/magic-link.js';
+import { GUEST_LIST_LIMIT } from '../../../lib/tender-display.js';
 
 export const prerender = false;
 
@@ -17,6 +18,7 @@ const VALID_SECTORS = new Set([
   'construction','ict','health','education','transport','agriculture',
   'energy','security','consulting','cleaning','catering','legal',
 ]);
+const VALID_WITHIN = new Set([7, 14, 30]);
 
 export const GET: APIRoute = async (ctx) => {
   const env = getEnv(ctx);
@@ -25,18 +27,20 @@ export const GET: APIRoute = async (ctx) => {
   const province = url.searchParams.get('province') ?? null;
   const sector   = url.searchParams.get('sector')   ?? null;
   const q        = url.searchParams.get('q')        ?? null;
+  const withinParam = parseInt(url.searchParams.get('within') ?? '', 10);
+  const within = VALID_WITHIN.has(withinParam) ? withinParam : null;
   const limitParam  = parseInt(url.searchParams.get('limit')  ?? '20', 10);
   const offsetParam = parseInt(url.searchParams.get('offset') ?? '0',  10);
 
   const limit  = Math.min(Math.max(limitParam, 1), 100);
   const offset = Math.max(offsetParam, 0);
 
-  // Anon = max 5 results
   let user: any = null;
   try {
     user = await getSessionUser(env.DB, ctx.request.headers.get('cookie'));
   } catch (_) { /* anonymous if session lookup fails */ }
-  const effectiveLimit = user ? limit : Math.min(limit, 5);
+  const effectiveLimit = user ? limit : Math.min(limit, GUEST_LIST_LIMIT);
+  const pageOffset = user ? offset : 0;
 
   const where: string[] = [
     "status = 'open'",
@@ -53,14 +57,18 @@ export const GET: APIRoute = async (ctx) => {
     where.push('sector = ?');
     binds.push(sector);
   }
+  if (within) {
+    where.push("closing_date IS NOT NULL AND date(closing_date) <= date('now', ?)");
+    binds.push(`+${within} days`);
+  }
   if (q && q.trim().length >= 2) {
-    where.push("(title LIKE ? OR procuring_entity LIKE ?)");
+    where.push("(title LIKE ? OR procuring_entity LIKE ? OR description LIKE ?)");
     const like = `%${q.trim()}%`;
-    binds.push(like, like);
+    binds.push(like, like, like);
   }
 
   const countBinds = [...binds];
-  binds.push(effectiveLimit, offset);
+  binds.push(effectiveLimit, pageOffset);
 
   try {
     const [rows, total] = await Promise.all([
@@ -91,7 +99,6 @@ export const GET: APIRoute = async (ctx) => {
       value_zar: t.estimated_value != null
         ? Math.round(t.estimated_value as number) / 100
         : null,
-      // Keep `value_cents` alias for backward compat with the UI
       value_cents: t.estimated_value,
       source_link: t.source_url ?? null,
     }));
@@ -103,7 +110,7 @@ export const GET: APIRoute = async (ctx) => {
         total: total?.n ?? 0,
         shown: tenders.length,
         tenders,
-        gated: !user && (total?.n ?? 0) > 5,
+        gated: !user && (total?.n ?? 0) > GUEST_LIST_LIMIT,
       }),
       { headers: { 'content-type': 'application/json' } }
     );
