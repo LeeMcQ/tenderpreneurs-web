@@ -10,6 +10,7 @@
     "astro": "astro",
     "check": "astro check",
     "lint": "eslint . --ext .ts,.tsx,.astro",
+    "test:unit": "node --experimental-strip-types --test tests/unit/*.test.ts",
     "test:p0": "playwright test",
     "test:perf": "lhci autorun"
   },
