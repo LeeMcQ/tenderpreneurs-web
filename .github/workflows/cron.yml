@@ -34,12 +34,12 @@ jobs:
           SITE_URL: ${{ secrets.SITE_URL || 'https://tenderpreneurs.co.za' }}
         run: node .github/scripts/fetch-etenders.js
 
-      - name: Ingest public SOE and metro adapters
+      - name: Ingest official eTenders API and public SOE/metro adapters
         env:
           SITE_URL: ${{ secrets.SITE_URL || 'https://tenderpreneurs.co.za' }}
         run: |
           fail=0
-          for source in sanral eskom transnet cct; do
+          for source in etenders sanral eskom transnet cct; do
             HTTP=$(curl -s -o "/tmp/${source}.txt" -w "%{http_code}" \
               -X POST \
               -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
