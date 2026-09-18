@@ -25,9 +25,9 @@ INSERT OR REPLACE INTO sources (id, name, type, url, province, poll_freq_mins) V
   ('nw-treasury',        'North West Provincial Treasury',      'provincial', 'https://www.nwpg.gov.za',                                     'north-west',   720),
 
   -- Metros
-  ('coj',                'City of Johannesburg',                'metro',      'https://www.joburg.org.za',                                   'gauteng',      720),
-  ('tshwane',            'City of Tshwane',                     'metro',      'https://www.tshwane.gov.za',                                  'gauteng',      720),
-  ('ekurhuleni',         'Ekurhuleni Metro',                    'metro',      'https://www.ekurhuleni.gov.za',                               'gauteng',      720),
+  ('coj',                'City of Johannesburg',                'metro',      'https://www.joburg.org.za/work_/Pages/2026-Tenders/Request-for-Quotations.aspx', 'gauteng', 720),
+  ('tshwane',            'City of Tshwane',                     'metro',      'https://www.tshwane.gov.za/?cat=61',                          'gauteng',      720),
+  ('ekurhuleni',         'Ekurhuleni Metro',                    'metro',      'https://www.ekurhuleni.gov.za/category/business/tenders/',    'gauteng',      720),
   ('cct',                'City of Cape Town',                   'metro',      'https://web1.capetown.gov.za/web1/tenderportal/Tender',       'western-cape', 720),
   ('ethekwini',          'eThekwini Metro',                     'metro',      'https://www.durban.gov.za',                                   'kwazulu-natal',720),
   ('nmbm',               'Nelson Mandela Bay Metro',            'metro',      'https://www.nelsonmandelabay.gov.za',                         'eastern-cape', 720),
@@ -39,6 +39,7 @@ INSERT OR REPLACE INTO sources (id, name, type, url, province, poll_freq_mins) V
   ('eskom',              'Eskom Tender Bulletin',               'soe',        'https://tenderbulletin.eskom.co.za/webapi/api/Lookup/GetTender?TENDER_ID=', NULL, 360),
   ('transnet',           'Transnet',                            'soe',        'https://transnetetenders.azurewebsites.net/Home/GetAdvertisedTenders', NULL, 360),
   ('prasa',              'Prasa',                               'soe',        'https://www.prasa.com',                                       NULL,           720),
-  ('acsa',               'ACSA',                                'soe',        'https://www.airports.co.za',                                  NULL,           720),
+  ('acsa',               'ACSA',                                'soe',        'https://www.airports.co.za/business/supply-chain-management/current-and-future-tenders', NULL, 720),
+  ('dbsa',               'Development Bank of Southern Africa', 'soe',        'https://www.dbsa.org/procurement',                            NULL,           720),
   ('sita',               'SITA',                                'soe',        'https://www.sita.co.za',                                      NULL,           720),
   ('cidb-itender',       'CIDB i.Tender',                       'national',   'https://itender.cidb.org.za',                                 NULL,           720);

@@ -15,6 +15,11 @@ import { SanralAdapter } from './sanral.js';
 import { EskomAdapter } from './eskom.js';
 import { TransnetAdapter } from './transnet.js';
 import { CctAdapter } from './cct.js';
+import { AcsaAdapter } from './acsa.js';
+import { DbsaAdapter } from './dbsa.js';
+import { CojAdapter } from './coj.js';
+import { TshwaneAdapter } from './tshwane.js';
+import { EkurhuleniAdapter } from './ekurhuleni.js';
 
 const ADAPTERS: BaseAdapter[] = [
   new ETendersAdapter(),
@@ -23,6 +28,11 @@ const ADAPTERS: BaseAdapter[] = [
   new EskomAdapter(),
   new TransnetAdapter(),
   new CctAdapter(),
+  new AcsaAdapter(),
+  new DbsaAdapter(),
+  new CojAdapter(),
+  new TshwaneAdapter(),
+  new EkurhuleniAdapter(),
 ];
 
 const ADAPTER_MAP = new Map<string, BaseAdapter>(
