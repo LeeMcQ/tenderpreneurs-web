@@ -65,16 +65,30 @@ function mapRelease(release) {
   };
 }
 
+async function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 async function fetchPage(url) {
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      'User-Agent': 'Tenderpreneurs/1.0 (+https://tenderpreneurs.co.za)',
-    },
-    signal: AbortSignal.timeout(30_000),
-  });
-  if (!res.ok) throw new Error(`OCDS HTTP ${res.status} ${url}`);
-  return res.json();
+  let lastErr;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'Tenderpreneurs/1.0 (+https://tenderpreneurs.co.za)',
+        },
+        signal: AbortSignal.timeout(45_000),
+      });
+      if (!res.ok) throw new Error(`OCDS HTTP ${res.status} ${url}`);
+      return await res.json();
+    } catch (err) {
+      lastErr = err;
+      console.log(`  retry ${attempt}/3: ${err.cause?.code || err.message}`);
+      await sleep(2000 * attempt);
+    }
+  }
+  throw lastErr;
 }
 
 async function pushBatch(siteUrl, secret, batch) {
@@ -110,13 +124,18 @@ async function main() {
 
   for (let page = 1; page <= MAX_PAGES && nextUrl; page++) {
     console.log(`Page ${page}: ${nextUrl}`);
-    const data = await fetchPage(nextUrl);
-    const chunk = data.releases ?? [];
-    console.log(`  ${chunk.length} releases`);
-    if (!chunk.length) break;
-    releases.push(...chunk);
-    const nxt = data.links?.next ?? null;
-    nextUrl = nxt && nxt !== nextUrl ? nxt : null;
+    try {
+      const data = await fetchPage(nextUrl);
+      const chunk = data.releases ?? [];
+      console.log(`  ${chunk.length} releases`);
+      if (!chunk.length) break;
+      releases.push(...chunk);
+      const nxt = data.links?.next ?? null;
+      nextUrl = nxt && nxt !== nextUrl ? nxt : null;
+    } catch (err) {
+      console.log(`Page ${page} failed (${err.cause?.code || err.message}) — keeping ${releases.length} already fetched`);
+      break;
+    }
   }
 
   const tenders = [];
@@ -153,7 +172,7 @@ async function main() {
     } catch (_) {}
   }
   console.log(`Done official OCDS: ${totalNew} new, ${totalUpdated} updated, ${errors} errors`);
-  if (errors && !totalNew && !totalUpdated) process.exit(1);
+  if (errors && !totalNew && !totalUpdated && !tenders.length) process.exit(1);
 }
 
 main().catch((e) => {
