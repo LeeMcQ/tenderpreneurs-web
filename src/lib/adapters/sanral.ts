@@ -76,10 +76,8 @@ export function mapSanralRow(cells: string[]): RawTender | null {
   const category = stripHtml(cells[1] ?? '');
   const region = stripHtml(cells[2] ?? '');
   const description = stripHtml(cells[3] ?? '').slice(0, 500);
-  const emailRaw = stripHtml(cells[4] ?? '').replace(/\.{2,}$/, '').trim();
-  const contactEmail = emailRaw.includes('@') && !emailRaw.endsWith('@sanral.co.za') === false
-    ? emailRaw
-    : (emailRaw.includes('@') ? emailRaw : null);
+  const emailRaw = stripHtml(cells[4] ?? '').replace(/\.+$/, '').trim();
+  const contactEmail = emailRaw.includes('@') ? emailRaw : null;
   const closingDate = parseSanralDate(stripHtml(cells[5] ?? ''));
   const path = parsed.href.startsWith('http')
     ? parsed.href
