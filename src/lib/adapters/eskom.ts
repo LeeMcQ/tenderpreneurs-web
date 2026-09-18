@@ -9,7 +9,7 @@ import type { BaseAdapter, RawTender } from './base.js';
 export const ESKOM_SOURCE_ID = 'eskom';
 export const ESKOM_LIST_URL =
   'https://tenderbulletin.eskom.co.za/webapi/api/Lookup/GetTender?TENDER_ID=';
-const MAX_ITEMS = 200;
+const MAX_ITEMS = 400;
 
 const PROVINCE_MAP: Record<string, string> = {
   'Western Cape': 'western-cape',

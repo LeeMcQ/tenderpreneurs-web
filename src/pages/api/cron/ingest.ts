@@ -18,7 +18,14 @@ import { getEnv, ulid, now, sha256, normaliseForFingerprint, cronSecretMatches }
 
 export const prerender = false;
 
-const MAX_PER_RUN = 200;
+const MAX_PER_RUN = 400;
+const OPEN_STATUSES = new Set(['', 'active', 'open', 'planning', 'planned', 'tender']);
+
+function toOpenStatus(raw: unknown): string {
+  const s = String(raw ?? '').toLowerCase();
+  if (!s || OPEN_STATUSES.has(s)) return 'open';
+  return String(raw);
+}
 
 export const POST: APIRoute = async (ctx) => {
   const env = getEnv(ctx);
@@ -34,7 +41,7 @@ export const POST: APIRoute = async (ctx) => {
   const fetchMode = url.searchParams.get('fetch') === '1';
   const contentType = ctx.request.headers.get('content-type') ?? '';
 
-  // ── MODE A: pre-fetched data in body ──────────────────────────────────
+  // ── MODE A: pre-fetched data in body ──────────────────────────────
   if (contentType.includes('application/json') && !fetchMode) {
     let body: any;
     try {
@@ -55,7 +62,7 @@ export const POST: APIRoute = async (ctx) => {
     return json({ ok: true, source: sourceId, ...result }, 200);
   }
 
-  // ── MODE B: Worker fetches internally ───────────────────────────
+  // ── MODE B: Worker fetches internally ─────────────────────────
   const adapters = sourceParam
     ? [getAdapter(sourceParam)].filter(Boolean) as any[]
     : getAllAdapters();
@@ -96,7 +103,7 @@ export const POST: APIRoute = async (ctx) => {
   return json({ ok: true, results, total_ms: Date.now() - globalStart }, 200);
 };
 
-// ── Shared write logic ─────────────────────────────────────────
+// ── Shared write logic ───────────────────────────────────────
 
 async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
   if (tenders.length === 0) return { items_found: 0, items_new: 0, items_updated: 0 };
@@ -132,10 +139,10 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
     return ex && ex.fingerprint !== fp;
   });
 
-  // ── Batch INSERT — exact schema column names ───────────────────────────
+  // ── Batch INSERT — exact schema column names ─────────────────────────
   if (toInsert.length > 0) {
     const stmts = toInsert.map(({ t, fp }) => {
-      const status = (!t.status || t.status === 'active') ? 'open' : t.status;
+      const status = toOpenStatus(t.status);
       const estimatedValue = t.value ? Math.round(t.value * 100) : null;
       return db.prepare(
         `INSERT INTO tenders (
@@ -180,7 +187,7 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
   if (toUpdate.length > 0) {
     const stmts = toUpdate.map(({ t, fp }) => {
       const ex = existingMap.get(t.externalId)!;
-      const status = (!t.status || t.status === 'active') ? 'open' : t.status;
+      const status = toOpenStatus(t.status);
       const estimatedValue = t.value ? Math.round(t.value * 100) : null;
       return db.prepare(
         `UPDATE tenders SET
