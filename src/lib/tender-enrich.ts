@@ -18,10 +18,52 @@ export type EnrichPatch = {
   submission_method?: string;
   source_url?: string;
   enrich_source?: string;
+  evaluation_notes?: string;
+  returnables_json?: string;
+  bbbee_level?: string;
+};
+
+export type Release = {
+  ocid?: string;
+  date?: string;
+  tender?: {
+    id?: string;
+    title?: string;
+    description?: string;
+    status?: string;
+    category?: string;
+    province?: string;
+    deliveryLocation?: string;
+    specialConditions?: string;
+    procurementMethod?: string;
+    procurementMethodDetails?: string;
+    value?: { amount?: number; currency?: string };
+    documents?: Array<{ url?: string; title?: string; description?: string }>;
+    tenderPeriod?: { startDate?: string; endDate?: string };
+    procuringEntity?: { name?: string };
+    briefingSession?: { isSession?: boolean; compulsory?: boolean; date?: string; venue?: string };
+    contactPerson?: { name?: string; email?: string; telephoneNumber?: string };
+    awardCriteria?: { criteria?: Array<{ type?: string; description?: string }> };
+  };
+  buyer?: { name?: string };
 };
 
 const CIDB = /\b([1-9]\s?(?:GB|CE|EB|EP|ME|SW|SB|SQ|PE))\b/i;
+const BBBEE = /\bB-?BBEE\s*(?:level\s*)?([1-8])\b/i;
 const OCDS = 'https://ocds-api.etenders.gov.za/api/OCDSReleases';
+const MAX_BYTES = 3 * 1024 * 1024;
+
+export const STANDARD_RETURNABLES = [
+  { code: 'CSD', label: 'CSD registration report' },
+  { code: 'TCS', label: 'SARS tax compliance PIN' },
+  { code: 'BBBEE', label: 'B-BBEE certificate or EME/QSE affidavit' },
+  { code: 'CIPC', label: 'CIPC company registration' },
+  { code: 'SBD1', label: 'SBD 1 Invitation to bid' },
+  { code: 'SBD4', label: 'SBD 4 Declaration of interest' },
+  { code: 'SBD6.1', label: 'SBD 6.1 Preference points' },
+  { code: 'SBD8', label: 'SBD 8 Past SCM practices' },
+  { code: 'SBD9', label: 'SBD 9 Independent bid determination' },
+];
 
 export function cidbFromText(...parts: Array<string | null | undefined>): string | null {
   const hay = parts.filter(Boolean).join(' ');
@@ -35,31 +77,82 @@ export function clockFromIso(iso: string | null | undefined): string | null {
   return m ? m[1] : null;
 }
 
-type Release = {
-  ocid?: string;
-  date?: string;
-  tender?: {
-    id?: string;
-    title?: string;
-    description?: string;
-    status?: string;
-    category?: string;
-    province?: string;
-    procurementMethod?: string;
-    value?: { amount?: number; currency?: string };
-    documents?: Array<{ url?: string; title?: string; description?: string }>;
-    tenderPeriod?: { startDate?: string; endDate?: string };
-    procuringEntity?: { name?: string };
-    briefingSession?: { isSession?: boolean; compulsory?: boolean; date?: string; venue?: string };
-    contactPerson?: { name?: string; email?: string; telephoneNumber?: string };
-  };
-  buyer?: { name?: string };
-};
+export function bbbeeFromText(...parts: Array<string | null | undefined>): string | null {
+  const hay = parts.filter(Boolean).join(' ');
+  const m = hay.match(BBBEE);
+  return m ? `Level ${m[1]}` : null;
+}
 
-export async function fetchOfficialRelease(sourceRef: string | null | undefined): Promise<Release | null> {
+export function returnablesFromText(...parts: Array<string | null | undefined>): typeof STANDARD_RETURNABLES {
+  const hay = parts.filter(Boolean).join(' ').toUpperCase();
+  const named = STANDARD_RETURNABLES.filter((item) => {
+    if (item.code === 'SBD6.1') return /SBD\s*6\.1|PREFERENCE POINTS/.test(hay);
+    return hay.includes(item.code) || hay.includes(item.label.toUpperCase());
+  });
+  const rest = STANDARD_RETURNABLES.filter((item) => !named.some((e) => e.code === item.code));
+  return named.length ? [...named, ...rest] : [...STANDARD_RETURNABLES];
+}
+
+function shiftDate(iso: string, days: number): string {
+  const t = Date.parse(iso.slice(0, 10) + 'T12:00:00Z');
+  const d = new Date(t + days * 86400000);
+  return d.toISOString().slice(0, 10);
+}
+
+export function officialFetchUrl(ocid: string, published?: string | null, now = new Date()): string {
+  const today = now.toISOString().slice(0, 10);
+  const from = published && /^\d{4}-\d{2}-\d{2}/.test(published)
+    ? shiftDate(published, -14)
+    : shiftDate(today, -400);
+  const to = published && /^\d{4}-\d{2}-\d{2}/.test(published)
+    ? shiftDate(published, 14)
+    : today;
+  return `${OCDS}?PageNumber=1&PageSize=20&dateFrom=${from}&dateTo=${to}&ocid=${encodeURIComponent(ocid)}`;
+}
+
+export function pickRelease(ocid: string, releases: Release[] | undefined): Release | null {
+  if (!releases?.length) return null;
+  return releases.find((r) => r.ocid === ocid) ?? releases[0] ?? null;
+}
+
+async function readJsonCapped(res: Response): Promise<unknown | null> {
+  const reader = res.body?.getReader();
+  if (!reader) {
+    try { return await res.json(); } catch { return null; }
+  }
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > MAX_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const combined = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    combined.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return JSON.parse(new TextDecoder().decode(combined));
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchOfficialRelease(
+  sourceRef: string | null | undefined,
+  published?: string | null,
+): Promise<Release | null> {
   const ocid = String(sourceRef || '').trim();
   if (!ocid.startsWith('ocds-')) return null;
-  const url = `${OCDS}?PageNumber=1&PageSize=5&ocid=${encodeURIComponent(ocid)}`;
+  const url = officialFetchUrl(ocid, published);
   try {
     const res = await fetch(url, {
       headers: {
@@ -68,11 +161,25 @@ export async function fetchOfficialRelease(sourceRef: string | null | undefined)
       },
     });
     if (!res.ok) return null;
-    const body = await res.json() as { releases?: Release[] };
-    return body.releases?.[0] ?? null;
+    const body = (await readJsonCapped(res)) as { releases?: Release[] } | null;
+    return pickRelease(ocid, body?.releases);
   } catch {
     return null;
   }
+}
+
+function valueToCents(amount: number): number | null {
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  if (amount >= 1_000_000_000) return Math.round(amount);
+  return Math.round(amount * 100);
+}
+
+function validBriefingDate(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const day = iso.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  if (day.startsWith('0001-') || day.startsWith('1900-')) return null;
+  return day;
 }
 
 export function patchFromRelease(release: Release, current: Record<string, unknown>): EnrichPatch {
@@ -91,24 +198,24 @@ export function patchFromRelease(release: Release, current: Record<string, unkno
     if (clock && !current.closing_time) patch.closing_time = clock;
   }
   if (t.tenderPeriod?.startDate && !current.published_date) {
-    patch.published_date = t.tenderPeriod.startDate.slice(0, 10);
+    const start = t.tenderPeriod.startDate.slice(0, 10);
+    if (!start.startsWith('0001-')) patch.published_date = start;
   }
   if (t.briefingSession?.isSession) {
-    if (t.briefingSession.date && !current.briefing_date) patch.briefing_date = t.briefingSession.date.slice(0, 10);
-    if (t.briefingSession.venue && !current.briefing_location) patch.briefing_location = t.briefingSession.venue;
+    const bday = validBriefingDate(t.briefingSession.date);
+    if (bday && !current.briefing_date) patch.briefing_date = bday;
+    if (t.briefingSession.venue && t.briefingSession.venue !== 'N/A' && !current.briefing_location) {
+      patch.briefing_location = t.briefingSession.venue;
+    }
     if (t.briefingSession.compulsory) patch.briefing_compulsory = 1;
   }
   if (t.contactPerson?.name && !current.contact_name) patch.contact_name = t.contactPerson.name;
   if (t.contactPerson?.email && !current.contact_email) patch.contact_email = t.contactPerson.email;
   if (t.contactPerson?.telephoneNumber && !current.contact_phone) patch.contact_phone = t.contactPerson.telephoneNumber;
-  const cidb = cidbFromText(t.title, t.description, String(current.title || ''), String(current.description || ''));
+  const cidb = cidbFromText(t.title, t.description, t.specialConditions, String(current.title || ''), String(current.description || ''));
   if (cidb && !current.cidb_grade) patch.cidb_grade = cidb;
-  if (t.value?.amount && !current.estimated_value) {
-    const amount = Number(t.value.amount);
-    if (Number.isFinite(amount) && amount > 0) {
-      patch.estimated_value = amount > 10_000_000 ? Math.round(amount) : Math.round(amount * 100);
-    }
-  }
+  const cents = t.value?.amount != null ? valueToCents(Number(t.value.amount)) : null;
+  if (cents && !current.estimated_value) patch.estimated_value = cents;
   const docs = (t.documents ?? []).filter((d) => d.url);
   if (docs.length && !current.documents_json) {
     patch.documents_json = JSON.stringify(docs.map((d) => ({
@@ -116,21 +223,28 @@ export function patchFromRelease(release: Release, current: Record<string, unkno
       url: d.url,
     })));
   }
-  if (t.procurementMethod && !current.submission_method) patch.submission_method = t.procurementMethod;
+  if ((t.procurementMethod || t.procurementMethodDetails) && !current.submission_method) {
+    patch.submission_method = t.procurementMethodDetails || t.procurementMethod;
+  }
   if (t.id && !current.source_url) {
     patch.source_url = `https://www.etenders.gov.za/home/TenderDetails?tenderID=${t.id}`;
   }
+  const notes = [
+    t.deliveryLocation ? `Delivery: ${t.deliveryLocation}` : '',
+    t.specialConditions ? `Special conditions: ${t.specialConditions}` : '',
+    t.category ? `Category: ${t.category}` : '',
+    ...(t.awardCriteria?.criteria ?? []).map((c) => [c.type, c.description].filter(Boolean).join(': ')),
+  ].filter(Boolean);
+  if (notes.length && !current.evaluation_notes) patch.evaluation_notes = notes.join('\n').slice(0, 2000);
+  const bbbee = bbbeeFromText(t.description, t.specialConditions, String(current.description || ''));
+  if (bbbee) patch.bbbee_level = bbbee;
+  const ret = returnablesFromText(t.description, t.specialConditions, String(current.description || ''));
+  if (!current.returnables_json) patch.returnables_json = JSON.stringify(ret);
   return patch;
 }
 
-export const STANDARD_RETURNABLES = [
-  { code: 'CSD', label: 'CSD registration report' },
-  { code: 'TCS', label: 'SARS tax compliance PIN' },
-  { code: 'BBBEE', label: 'B-BBEE certificate or EME/QSE affidavit' },
-  { code: 'CIPC', label: 'CIPC company registration' },
-  { code: 'SBD1', label: 'SBD 1 Invitation to bid' },
-  { code: 'SBD4', label: 'SBD 4 Declaration of interest' },
-  { code: 'SBD6.1', label: 'SBD 6.1 Preference points' },
-  { code: 'SBD8', label: 'SBD 8 Past SCM practices' },
-  { code: 'SBD9', label: 'SBD 9 Independent bid determination' },
-];
+export function isThinRow(row: Record<string, unknown>): boolean {
+  const desc = String(row.description || '');
+  const docs = String(row.documents_json || '');
+  return desc.length < 80 || !row.closing_time || !docs || !row.contact_email;
+}
