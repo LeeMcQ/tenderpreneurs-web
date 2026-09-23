@@ -1,8 +1,47 @@
-.tenders-main { max-width: 960px; margin: 0 auto; padding: calc(var(--nav-h, 64px) + 12px) 20px 80px; }
+.tenders-workspace {
+  --paper: #F3F0E8;
+  --ink: #141820;
+  --ink-2: #3D4A5C;
+  --ink-3: #6B7787;
+  --line: rgba(12, 27, 51, 0.12);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 70vh;
+}
+.tenders-workspace .tenders-hero h1,
+.tenders-workspace .tender-title {
+  font-family: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  color: var(--ink);
+}
+.tenders-workspace .lede,
+.tenders-workspace .tender-entity,
+.tenders-workspace .tender-place,
+.tenders-workspace .stats-bar,
+.tenders-workspace .breadcrumb,
+.tenders-workspace .tr-ref { color: var(--ink-2); }
+.tenders-workspace .breadcrumb a { color: #A66708; }
+.tenders-workspace .control {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--ink);
+}
+.tenders-workspace .tender-row { border-bottom-color: var(--line); }
+.tenders-workspace .tag-sector { background: #F8E7C2; color: #7A4C06; }
+.tenders-workspace .tag-value { background: #D7F3EC; color: #0B6B58; }
+.tenders-workspace .tag-cidb { background: #DCE8F6; color: #1B4F8A; }
+.tenders-workspace .tag-bbbee { background: #E8E4DA; color: #3D4A5C; }
+.tenders-workspace .u-red, .tenders-workspace .tag-brief { background: #F8D7D4; color: #8B1E1E; }
+.tenders-workspace .u-amber { background: #F8E7C2; color: #7A4C06; }
+.tenders-workspace .u-neutral, .tenders-workspace .u-none { background: #E4E0D6; color: #3D4A5C; }
+.tenders-workspace .filters-toggle, .tenders-workspace .btn-load-more { background: #fff; color: var(--ink); border-color: var(--line); }
+.tenders-workspace .error-state { color: #8B1E1E; }
+.tenders-workspace .tender-row:hover .tender-title { color: #A66708; }
+.tender-place { font-size: .8rem; margin: 0 0 8px; color: var(--ink-3); }
+.tenders-main { max-width: 1240px; margin: 0 auto; padding: 12px 20px 80px; }
 .breadcrumb ol { list-style: none; padding: 0; margin: 0 0 20px; display: flex; gap: 8px; font-size: 13px; color: var(--txt-secondary); }
 .breadcrumb a { color: var(--clr-gold); text-decoration: none; }
-.tenders-hero { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--brd); }
-.tenders-hero h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); color: var(--txt-primary); margin: 0 0 8px; }
+.tenders-hero { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--line, var(--brd)); display: flex; gap: 16px; align-items: flex-end; justify-content: space-between; }
+.tenders-hero h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--txt-primary); margin: 0 0 8px; font-weight: 600; }
 .lede { color: var(--txt-secondary); font-size: 1rem; margin: 0; }
 .control { background: var(--srf-1); border: 1px solid var(--brd); color: var(--txt-primary); border-radius: 10px; padding: 0 12px; font-size: 15px; min-height: 44px; }
 .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
@@ -54,6 +93,41 @@
 .empty-state button { margin-top: 12px; background: transparent; border: 1px solid var(--brd); color: var(--txt-primary); border-radius: 10px; padding: 0 18px; min-height: 44px; cursor: pointer; }
 .error-state { text-align: center; padding: 32px 20px; color: var(--clr-red); font-size: .9rem; }
 @media (min-width: 641px) { .tag-deadline { display: none; } }
+.tenders-split { display: grid; gap: 28px; }
+.map-toggle {
+  display: none; min-height: 44px; padding: 0 14px; border-radius: 10px;
+  border: 1px solid var(--line); background: #fff; font-weight: 600; cursor: pointer;
+}
+.province-density { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; margin: 0 0 16px; }
+.dens-cell { display: flex; flex-direction: column; gap: 6px; background: none; border: 0; padding: 0; cursor: pointer; min-height: 44px; }
+.dens-bar { height: 8px; border-radius: 999px; background: color-mix(in srgb, #0C1B33 calc(var(--heat) * 100%), #D5DDE6); }
+.dens-cell.is-on .dens-bar { background: #F5A623; }
+.dens-code { font-size: 11px; font-weight: 600; color: var(--ink-3, #6B7787); }
+.map-panel { display: none; }
+.map-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 8px; }
+.map-head h2 { font-size: 1.05rem; margin: 0 0 4px; color: var(--ink, #141820); }
+.map-head p { margin: 0; font-size: 12px; color: var(--ink-3, #6B7787); max-width: 36ch; }
+.map-national { font-size: 12px; font-weight: 600; color: var(--ink-2, #3D4A5C); }
+.sa-svg { width: 100%; height: auto; display: block; background: #E7EDF2; border-radius: 16px; }
+.sa-prov { cursor: pointer; transition: fill 180ms ease; }
+.sa-prov:hover, .sa-town { cursor: pointer; }
+@media (prefers-reduced-motion: reduce) {
+  .sa-prov, .spinner, .sk { animation: none; transition: none; }
+}
+.map-legend { display: flex; gap: 14px; list-style: none; padding: 10px 0 0; margin: 0; font-size: 12px; color: var(--ink-3, #6B7787); }
+.map-legend i { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.map-legend i.dot { width: 8px; height: 8px; border-radius: 50%; background: #F5A623; }
+@media (min-width: 980px) {
+  .tenders-split { grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr); align-items: start; }
+  .map-panel { display: block; position: sticky; top: 84px; }
+}
+@media (max-width: 979px) {
+  .tenders-split { display: flex; flex-direction: column; }
+  .map-toggle { display: inline-flex; align-items: center; }
+  .map-panel { display: none; }
+  .map-panel.is-open { display: block; order: -1; margin-bottom: 8px; }
+  .province-density { grid-template-columns: repeat(5, 1fr); }
+}
 @media (max-width: 640px) {
   .tender-row { grid-template-columns: 1fr; gap: 8px; padding: 14px 0; }
   .tr-close { display: none; }
