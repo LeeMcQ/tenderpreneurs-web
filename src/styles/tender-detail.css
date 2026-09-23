@@ -68,3 +68,26 @@
 .tdoc .warn { color: #8B1E1E; font-weight: 700; }
 .tdoc .crumb { font-size: 13px; color: var(--ink-3); margin: 0 0 16px; }
 .tdoc .crumb ol { list-style: none; display: flex; gap: 8px; padding: 0; margin: 0; }
+
+.tdoc .tdoc-stat.hot { border-color: #C45C26; }
+.tdoc .tdoc-stat.warn-card { border-color: #C45C26; background: #F8E7C2; }
+.tdoc .recover { background: #fff; border: 1px dashed rgba(12,27,51,.2); border-radius: 12px; padding: 12px 14px; }
+.tdoc .tdoc-notes {
+  white-space: pre-wrap; background: #fff; border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 14px; color: var(--ink-2); font-family: inherit;
+}
+.tdoc .tdoc-sub { font-size: .95rem; margin: 16px 0 8px; }
+.tdoc .tdoc-contact { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.tdoc .tdoc-contact dt { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.tdoc .tdoc-contact dd { margin: 0; font-weight: 600; }
+.tdoc .sim-list .sub { display: block; color: var(--ink-3); font-size: 13px; margin-top: 4px; }
+.tdoc .tdoc-gate { margin-top: 28px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+.tdoc .tdoc-form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.tdoc .tdoc-form input {
+  flex: 1; min-width: 200px; min-height: 44px; border: 1px solid var(--line);
+  border-radius: 10px; padding: 0 12px; background: #fff;
+}
+.tdoc .tdoc-form button {
+  min-height: 44px; border: 0; border-radius: 10px; padding: 0 16px;
+  background: #C9A15A; color: #141820; font-weight: 700;
+}
