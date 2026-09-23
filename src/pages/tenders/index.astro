@@ -13,8 +13,14 @@ import { peekEnv } from "../../lib/db";
 import { getSessionUser } from "../../lib/auth/magic-link";
 import {
   GUEST_LIST_LIMIT,
+  bidNumber,
+  closeWeekdayChip,
   displayTitle,
+  fmtCloseLong,
+  fmtCloseTime,
+  fmtUpdatedAgo,
   fmtValue,
+  provinceLabel,
   urgency,
 } from "../../lib/tender-display";
 import { resolveLocation } from "../../lib/tender-location";
@@ -39,7 +45,7 @@ try {
   const rows = await env.DB.prepare(
     `SELECT id, title, source_ref, description, procuring_entity, province, sector,
             closing_date, closing_time, cidb_grade, estimated_value, bbbee_required,
-            briefing_compulsory, briefing_location
+            briefing_compulsory, briefing_location, last_seen_at
      FROM tenders
      WHERE status = 'open' AND canonical_ref IS NULL
        AND (closing_date IS NULL OR date(closing_date) >= date('now'))
@@ -53,6 +59,9 @@ try {
 } catch (e) {
   ssrOk = false;
 }
+const ssrUpdated = fmtUpdatedAgo(
+  ssrTenders.map((t) => t.last_seen_at).filter(Boolean).sort().at(-1) as string | undefined,
+);
 ---
 
 <BaseLayout title={title} description={description}>
@@ -124,7 +133,12 @@ try {
     <div id="province-density" class="province-density" aria-label="Tender concentration by province"></div>
 
     <div class="stats-bar" id="stats-bar" aria-live="polite">
-      {ssrOk ? `Showing ${ssrTenders.length} of ${ssrTotal.toLocaleString()} open tenders · closing soonest` : 'Loading tenders…'}
+      {ssrOk ? (
+        <>
+          <span>{ssrTotal.toLocaleString()} open · closes soonest</span>
+          {ssrUpdated && <span class="stats-updated">{ssrUpdated}</span>}
+        </>
+      ) : 'Loading tenders…'}
     </div>
 
     <div class="tenders-split">
@@ -133,23 +147,32 @@ try {
         const u = urgency(t.closing_date, t.closing_time);
         const heading = displayTitle(t);
         const loc = resolveLocation(t);
+        const ref = bidNumber(t);
+        const weekday = closeWeekdayChip(t.closing_date);
+        const entityBits = [t.procuring_entity, loc.label || provinceLabel(t.province)].filter(Boolean);
         return (
           <a href={`/tenders/t/${t.id}`} class="tender-row">
+            <div class="tr-when">
+              {ref && <p class="tr-ref">{ref}</p>}
+              {t.closing_date && (
+                <>
+                  <p class="tr-close-lbl">Closing</p>
+                  <p class="tr-close-date">{fmtCloseLong(t.closing_date)}</p>
+                  {t.closing_time && <p class="tr-close-time">{fmtCloseTime(t.closing_time)}</p>}
+                </>
+              )}
+            </div>
             <div class="tr-main">
-              {t.source_ref && <p class="tr-ref">{t.source_ref}</p>}
               <h2 class="tender-title">{heading}</h2>
-              {t.procuring_entity && <p class="tender-entity">{t.procuring_entity}</p>}
-              <p class="tender-place">{loc.label}</p>
+              {entityBits.length > 0 && <p class="tender-entity">{entityBits.join(' · ')}</p>}
               <div class="tender-tags">
-                <span class={`tag tag-deadline ${u.cls}`}>{u.text}</span>
                 {t.estimated_value ? <span class="tag tag-value">{fmtValue(t.estimated_value)}</span> : null}
                 {t.cidb_grade ? <span class="tag tag-cidb">CIDB {t.cidb_grade}</span> : null}
-                {t.briefing_compulsory ? <span class="tag tag-brief">Compulsory briefing</span> : null}
+                {weekday ? <span class={`tag tag-deadline ${u.cls}`}>{weekday}</span> : null}
                 {t.bbbee_required ? <span class="tag tag-bbbee">B-BBEE L{t.bbbee_required}</span> : null}
-                {t.sector ? <span class="tag tag-sector">{t.sector}</span> : null}
+                {t.briefing_compulsory ? <span class="tag tag-brief">Compulsory briefing</span> : null}
               </div>
             </div>
-            <span class={`tr-close ${u.cls}`}>{u.text}</span>
           </a>
         );
       }) : (
