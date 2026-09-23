@@ -29,7 +29,14 @@ function parseDocs(json: string | null | undefined): Array<{ filename?: string; 
 
 export async function archiveTender(db: D1Database, row: ArchiveRow): Promise<void> {
   const loc = resolveLocation(row);
+  try {
+    await writeArchive(db, row, loc);
+  } catch (err) {
+    console.warn('[archiveTender] skipped (apply migrations/0005_tender_reference.sql):', err);
+  }
+}
 
+async function writeArchive(db: D1Database, row: ArchiveRow, loc: ReturnType<typeof resolveLocation>): Promise<void> {
   await db
     .prepare(
       `UPDATE tenders
