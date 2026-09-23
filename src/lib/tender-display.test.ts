@@ -6,6 +6,10 @@ import {
   fmtValue,
   urgency,
   daysToClose,
+  bidNumber,
+  fmtCloseLong,
+  fmtCloseTime,
+  closeWeekdayChip,
   GUEST_LIST_LIMIT,
 } from './tender-display.ts';
 
@@ -46,9 +50,23 @@ test('displayTitle uses Tender + ref when nothing else exists', () => {
 });
 
 test('fmtValue uses R thousands and millions', () => {
-  assert.equal(fmtValue(2_400_000_00), 'R2.4M');
-  assert.equal(fmtValue(12_000_00), 'R12K');
+  assert.equal(fmtValue(2_400_000_00), 'R2.4m');
+  assert.equal(fmtValue(12_000_00), 'R12k');
   assert.equal(fmtValue(null), '');
+});
+
+test('bidNumber prefers a human bid code over an OCDS id', () => {
+  assert.equal(bidNumber({ title: 'NB119/2026', source_ref: 'ocds-9t57fa-171158' }), 'NB119/2026');
+  assert.equal(bidNumber({ title: 'Supply of PPE', source_ref: 'ocds-9t57fa-1' }), null);
+  assert.equal(bidNumber({ title: 'Stormwater upgrade', source_ref: 'WC-C013-2025' }), 'WC-C013-2025');
+});
+
+test('closing rail formats date, time and weekday chip', () => {
+  const now = new Date('2026-09-23T07:00:00+02:00');
+  assert.match(fmtCloseLong('2026-09-23'), /23 Sep/);
+  assert.equal(fmtCloseTime('10:00:00'), '10:00');
+  assert.equal(closeWeekdayChip('2026-09-23', now), 'Closes today');
+  assert.equal(closeWeekdayChip('2026-09-24', now), 'Closes Thu');
 });
 
 test('urgency bands around a fixed Johannesburg day', () => {

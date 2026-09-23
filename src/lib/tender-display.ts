@@ -43,9 +43,53 @@ export function displayTitle(t: {
 export function fmtValue(cents: number | null | undefined): string {
   if (cents == null || cents === 0) return '';
   const z = cents / 100;
-  if (z >= 1_000_000) return 'R' + (z / 1_000_000).toFixed(1) + 'M';
-  if (z >= 1000) return 'R' + Math.round(z / 1000) + 'K';
+  if (z >= 1_000_000) return 'R' + (z / 1_000_000).toFixed(1) + 'm';
+  if (z >= 1000) return 'R' + Math.round(z / 1000) + 'k';
   return 'R' + Math.round(z).toLocaleString('en-ZA');
+}
+
+/** Bid / RFQ number for the left rail. Skip opaque OCDS ids. */
+export function bidNumber(t: { title?: string | null; source_ref?: string | null }): string | null {
+  const title = t.title?.trim() || '';
+  const ref = t.source_ref?.trim() || '';
+  if (title && looksLikeRef(title, ref)) return title;
+  if (ref && !/^ocds-/i.test(ref)) return ref;
+  return null;
+}
+
+export function fmtCloseLong(iso: string | null | undefined): string {
+  if (!iso) return '';
+  return new Date(iso.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+export function fmtCloseTime(time: string | null | undefined): string {
+  if (!time) return '';
+  const m = String(time).trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return String(time).trim();
+  return `${m[1].padStart(2, '0')}:${m[2]}`;
+}
+
+export function closeWeekdayChip(iso: string | null | undefined, now = new Date()): string | null {
+  const d = daysToClose(iso, now);
+  if (d === null || d < 0 || !iso) return null;
+  if (d === 0) return 'Closes today';
+  const wd = new Date(iso.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' });
+  return `Closes ${wd}`;
+}
+
+export function fmtUpdatedAgo(iso: string | null | undefined, now = new Date()): string | null {
+  if (!iso) return null;
+  const mins = Math.round((now.getTime() - Date.parse(iso)) / 60000);
+  if (!Number.isFinite(mins) || mins < 0) return null;
+  if (mins < 1) return 'Updated just now';
+  if (mins < 60) return `Updated ${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 36) return `Updated ${hrs}h ago`;
+  return `Updated ${fmtCloseLong(iso)}`;
 }
 
 export function daysToClose(iso: string | null | undefined, now = new Date()): number | null {
