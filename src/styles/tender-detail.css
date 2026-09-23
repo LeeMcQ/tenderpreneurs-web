@@ -1,0 +1,70 @@
+.tdoc {
+  --paper: #F3F0E8;
+  --ink: #141820;
+  --ink-2: #3D4A5C;
+  --ink-3: #6B7787;
+  --line: rgba(12, 27, 51, 0.12);
+  --gold: #C9A15A;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 70vh;
+}
+.tdoc a { color: #A66708; }
+.tdoc .tdoc-wrap { max-width: 880px; margin: 0 auto; padding: 16px 20px 80px; }
+.tdoc .tdoc-kicker {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px; font-weight: 700; color: var(--ink-2); margin: 0 0 8px;
+}
+.tdoc h1 {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  line-height: 1.25; margin: 0 0 8px; color: var(--ink);
+}
+.tdoc .tdoc-meta { margin: 0 0 16px; color: var(--ink-2); }
+.tdoc .tdoc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 0 0 22px;
+}
+@media (min-width: 720px) {
+  .tdoc .tdoc-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.tdoc .tdoc-stat {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.tdoc .tdoc-stat .lbl {
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold); font-weight: 700; margin: 0 0 4px;
+}
+.tdoc .tdoc-stat p { margin: 0; font-weight: 700; }
+.tdoc .tdoc-stat .sub { font-weight: 500; color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+.tdoc section h2 {
+  font-size: 1.05rem; margin: 28px 0 10px; color: var(--ink);
+}
+.tdoc .tdoc-body { color: var(--ink-2); line-height: 1.65; }
+.tdoc .gate-list, .tdoc .pack-list, .tdoc .sim-list, .tdoc .doc-list {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px;
+}
+.tdoc .gate-list li, .tdoc .pack-list li, .tdoc .sim-list a, .tdoc .doc-list a {
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  display: block; color: inherit; text-decoration: none;
+}
+.tdoc .sim-list a:hover, .tdoc .doc-list a:hover { border-color: var(--gold); }
+.tdoc .pack-list li { display: flex; gap: 10px; align-items: baseline; }
+.tdoc .pack-list code {
+  font-size: 11px; font-weight: 700; color: #7A4C06; background: #F8E7C2;
+  border-radius: 999px; padding: 2px 7px;
+}
+.tdoc .src-btn {
+  display: inline-flex; align-items: center; min-height: 44px;
+  background: #C9A15A; color: #141820; font-weight: 700;
+  border-radius: 10px; padding: 0 18px; text-decoration: none;
+}
+.tdoc .src-btn:hover { color: #141820; }
+.tdoc .warn { color: #8B1E1E; font-weight: 700; }
+.tdoc .crumb { font-size: 13px; color: var(--ink-3); margin: 0 0 16px; }
+.tdoc .crumb ol { list-style: none; display: flex; gap: 8px; padding: 0; margin: 0; }
