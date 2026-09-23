@@ -47,7 +47,7 @@ export const GET: APIRoute = async (ctx) => {
       `SELECT id, title, description, procuring_entity, briefing_location, province, estimated_value
        FROM tenders
        WHERE ${where.join(' AND ')}
-       LIMIT 800`,
+       LIMIT 5000`,
     ).bind(...binds).all<Record<string, unknown>>();
 
     const geo = clusterGeo((rows.results ?? []) as any);
