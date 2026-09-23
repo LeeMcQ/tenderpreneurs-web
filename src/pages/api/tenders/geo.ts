@@ -44,19 +44,30 @@ export const GET: APIRoute = async (ctx) => {
 
   try {
     const rows = await env.DB.prepare(
-      `SELECT id, title, description, procuring_entity, briefing_location, province, estimated_value
+      `SELECT id, title, description, procuring_entity, briefing_location, province, sector, estimated_value
        FROM tenders
        WHERE ${where.join(' AND ')}
        LIMIT 5000`,
     ).bind(...binds).all<Record<string, unknown>>();
 
     const geo = clusterGeo((rows.results ?? []) as any);
+    const themeMap = new Map<string, number>();
+    for (const row of rows.results ?? []) {
+      const sectorName = String(row.sector ?? '').trim();
+      if (!sectorName) continue;
+      themeMap.set(sectorName, (themeMap.get(sectorName) ?? 0) + 1);
+    }
+    const themes = [...themeMap.entries()]
+      .map(([slug, count]) => ({ slug, count }))
+      .sort((a, b) => b.count - a.count);
     return new Response(
       JSON.stringify({
         ok: true,
         total: geo.provinces.reduce((n, p) => n + p.count, 0),
         provinces: geo.provinces,
         towns: geo.towns,
+        points: geo.points,
+        themes,
       }),
       { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=120' } },
     );
