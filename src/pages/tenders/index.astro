@@ -9,15 +9,15 @@
  *  - Decision chips when data exists (value, CIDB, briefing, B-BBEE, sector).
  */
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getEnv } from "../../lib/db";
+import { peekEnv } from "../../lib/db";
 import { getSessionUser } from "../../lib/auth/magic-link";
 import {
   GUEST_LIST_LIMIT,
   displayTitle,
   fmtValue,
-  provinceLabel,
   urgency,
 } from "../../lib/tender-display";
+import { resolveLocation } from "../../lib/tender-location";
 import "../../styles/tender-list.css";
 
 export const prerender = false;
@@ -30,14 +30,15 @@ let ssrTotal = 0;
 let ssrGated = false;
 let ssrOk = false;
 try {
-  const env = getEnv(Astro);
+  const env = peekEnv(Astro);
+  if (!env?.DB) throw new Error('DB unbound');
   let user: any = null;
   try { user = await getSessionUser(env.DB, Astro.request.headers.get('cookie')); } catch {}
   const limit = user ? 20 : GUEST_LIST_LIMIT;
   const rows = await env.DB.prepare(
     `SELECT id, title, source_ref, description, procuring_entity, province, sector,
             closing_date, closing_time, cidb_grade, estimated_value, bbbee_required,
-            briefing_compulsory
+            briefing_compulsory, briefing_location
      FROM tenders
      WHERE status = 'open' AND canonical_ref IS NULL
        AND (closing_date IS NULL OR date(closing_date) >= date('now'))
@@ -59,7 +60,8 @@ try {
 ---
 
 <BaseLayout title={title} description={description}>
-  <main id="main-content" class="tenders-main">
+  <div class="tenders-workspace">
+  <div class="tenders-main">
     <nav aria-label="Breadcrumb" class="breadcrumb">
       <ol>
         <li><a href="/">Home</a></li>
@@ -69,8 +71,11 @@ try {
     </nav>
 
     <header class="tenders-hero">
-      <h1>South African Government Tenders</h1>
-      <p class="lede">Live listings from eTenders, sorted by who closes first. Filter by province, sector, or deadline.</p>
+      <div>
+        <h1>Open tenders</h1>
+        <p class="lede">Live notices from eTenders, sorted by who closes first. Map uses the province and any town named in the notice.</p>
+      </div>
+      <button id="map-toggle" class="map-toggle" type="button" aria-expanded="false" aria-controls="map-panel">Show map</button>
     </header>
 
     <button id="filters-toggle" class="filters-toggle" aria-expanded="false" aria-controls="filters-sheet">
@@ -120,22 +125,25 @@ try {
     </div>
 
     <div id="chips" class="chips" aria-live="polite"></div>
+    <div id="province-density" class="province-density" aria-label="Tender concentration by province"></div>
 
     <div class="stats-bar" id="stats-bar" aria-live="polite">
       {ssrOk ? `Showing ${ssrTenders.length} of ${ssrTotal.toLocaleString()} open tenders · closing soonest` : 'Loading tenders…'}
     </div>
 
+    <div class="tenders-split">
     <div id="tender-list" class="tender-list" aria-live="polite" data-ssr={ssrOk && ssrTenders.length ? '1' : '0'} data-count={ssrTenders.length}>
       {ssrOk && ssrTenders.length ? ssrTenders.map((t) => {
         const u = urgency(t.closing_date, t.closing_time);
         const heading = displayTitle(t);
-        const entity = [t.procuring_entity, provinceLabel(t.province)].filter(Boolean).join(' · ');
+        const loc = resolveLocation(t);
         return (
           <a href={`/tenders/t/${t.id}`} class="tender-row">
             <div class="tr-main">
               {t.source_ref && <p class="tr-ref">{t.source_ref}</p>}
               <h2 class="tender-title">{heading}</h2>
-              {entity && <p class="tender-entity">{entity}</p>}
+              {t.procuring_entity && <p class="tender-entity">{t.procuring_entity}</p>}
+              <p class="tender-place">{loc.label}</p>
               <div class="tender-tags">
                 <span class={`tag tag-deadline ${u.cls}`}>{u.text}</span>
                 {t.estimated_value ? <span class="tag tag-value">{fmtValue(t.estimated_value)}</span> : null}
@@ -152,6 +160,10 @@ try {
         <div class="loading-state"><div class="spinner" aria-hidden="true"></div><p>Loading tenders…</p></div>
       )}
     </div>
+    <aside id="map-panel" class="map-panel" aria-label="Tender map">
+      <div id="tender-map" class="tender-map"></div>
+    </aside>
+    </div>
 
     <div id="gate-banner" class={`gate-banner ${ssrGated ? '' : 'hidden'}`} role="alert">
       <div class="gate-inner">
@@ -164,7 +176,8 @@ try {
     <div class="load-more-row" id="load-more-row" style="display:none">
       <button id="load-more-btn" class="btn-load-more">Load more tenders</button>
     </div>
-  </main>
+  </div>
+  </div>
 </BaseLayout>
 
 <script>
