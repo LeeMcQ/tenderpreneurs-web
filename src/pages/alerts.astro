@@ -1,0 +1,72 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { peekEnv } from "../lib/db";
+import "../styles/tender-list.css";
+import { getSessionUser } from "../lib/auth/magic-link";
+import { displayTitle, urgency } from "../lib/tender-display";
+
+export const prerender = false;
+
+const env = peekEnv(Astro);
+if (!env?.DB) {
+  return Astro.redirect("/auth/login?redirect_to=/alerts");
+}
+const user = await getSessionUser(env.DB, Astro.request.headers.get("cookie"));
+if (!user) {
+  return Astro.redirect("/auth/login?redirect_to=/alerts");
+}
+
+let saved: any[] = [];
+try {
+  const rows = await env.DB.prepare(
+    `SELECT t.id, t.title, t.source_ref, t.procuring_entity, t.province,
+            t.closing_date, t.closing_time, t.sector
+     FROM bookmarks b
+     JOIN tenders t ON t.id = b.tender_id
+     WHERE b.user_id = ?
+     ORDER BY b.created_at DESC
+     LIMIT 100`,
+  ).bind(user.id).all();
+  saved = rows.results ?? [];
+} catch {
+  saved = [];
+}
+---
+<BaseLayout title="Saved tenders | Tenderpreneurs" description="Tenders you saved for later.">
+  <div class="tenders-workspace">
+    <div class="tenders-main" style="max-width:840px">
+      <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page">Saved tenders</li>
+        </ol>
+      </nav>
+      <header class="tenders-hero">
+        <div>
+          <h1>Saved tenders</h1>
+          <p class="lede">Bookmarks on this account. Email alerts use the same list once ingest is running.</p>
+        </div>
+      </header>
+      {saved.length === 0 ? (
+        <p class="lede">Nothing saved yet. Open a tender and keep it from the list once you are signed in.</p>
+      ) : (
+        <div class="tender-list">
+          {saved.map((t) => {
+            const u = urgency(t.closing_date, t.closing_time);
+            return (
+              <a href={`/tenders/t/${t.id}`} class="tender-row">
+                <div class="tr-main">
+                  {t.source_ref && <p class="tr-ref">{t.source_ref}</p>}
+                  <h2 class="tender-title">{displayTitle(t)}</h2>
+                  {t.procuring_entity && <p class="tender-entity">{t.procuring_entity}</p>}
+                </div>
+                <span class={`tr-close ${u.cls}`}>{u.text}</span>
+              </a>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

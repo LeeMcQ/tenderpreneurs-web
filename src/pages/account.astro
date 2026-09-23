@@ -1,0 +1,68 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { peekEnv } from "../lib/db";
+import "../styles/tender-list.css";
+import { getSessionUser } from "../lib/auth/magic-link";
+
+export const prerender = false;
+
+const env = peekEnv(Astro);
+if (!env?.DB) {
+  return Astro.redirect("/auth/login?redirect_to=/account");
+}
+const user = await getSessionUser(env.DB, Astro.request.headers.get("cookie"));
+if (!user) {
+  return Astro.redirect("/auth/login?redirect_to=/account");
+}
+
+const profile = await env.DB.prepare(
+  `SELECT cidb_grades_json, bbbee_level, provinces_json, sectors_json, csd_number
+   FROM supplier_profiles WHERE user_id = ?`,
+).bind(user.id).first().catch(() => null);
+---
+<BaseLayout title="Account | Tenderpreneurs" description="Your Tenderpreneurs account and supplier profile.">
+  <div class="tenders-workspace">
+    <div class="tenders-main" style="max-width:720px">
+      <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page">Account</li>
+        </ol>
+      </nav>
+      <header class="tenders-hero">
+        <div>
+          <h1>Account</h1>
+          <p class="lede">Signed in as {user.email}</p>
+        </div>
+      </header>
+      <section class="acct-card">
+        <h2>Supplier profile</h2>
+        {profile ? (
+          <dl>
+            {profile.csd_number ? <><dt>CSD</dt><dd>{profile.csd_number}</dd></> : null}
+            {profile.bbbee_level ? <><dt>B-BBEE</dt><dd>Level {profile.bbbee_level}</dd></> : null}
+            {profile.cidb_grades_json ? <><dt>CIDB</dt><dd>{profile.cidb_grades_json}</dd></> : null}
+            {profile.provinces_json ? <><dt>Provinces</dt><dd>{profile.provinces_json}</dd></> : null}
+            {profile.sectors_json ? <><dt>Sectors</dt><dd>{profile.sectors_json}</dd></> : null}
+          </dl>
+        ) : (
+          <p>No supplier profile saved yet. Win-probability uses this once you add grades, sectors, and provinces.</p>
+        )}
+      </section>
+      <p class="acct-links">
+        <a href="/tenders">Browse tenders</a>
+        <a href="/alerts">Saved tenders</a>
+        <a href="/pricing">Plans</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+<style>
+  .acct-card { background:#fff; border:1px solid rgba(12,27,51,.12); border-radius:14px; padding:20px; }
+  .acct-card h2 { margin:0 0 12px; font-size:1.1rem; }
+  .acct-card dl { display:grid; grid-template-columns:120px 1fr; gap:8px 16px; margin:0; }
+  .acct-card dt { color:#6B7787; }
+  .acct-links { display:flex; gap:16px; flex-wrap:wrap; margin-top:24px; }
+  .acct-links a { color:#A66708; font-weight:600; }
+</style>
