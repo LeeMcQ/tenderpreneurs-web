@@ -1,5 +1,10 @@
 import {
+  bidNumber,
+  closeWeekdayChip,
   displayTitle,
+  fmtCloseLong,
+  fmtCloseTime,
+  fmtUpdatedAgo,
   fmtValue,
   provinceLabel,
   urgency,
@@ -25,27 +30,33 @@ function renderCard(t: any): string {
   const u = urgency(t.closing_date, t.closing_time);
   const cents = t.estimated_value ?? t.value_cents ?? null;
   const heading = displayTitle(t);
+  const weekday = closeWeekdayChip(t.closing_date);
   const tags = [
-    `<span class="tag tag-deadline ${u.cls}">${esc(u.text)}</span>`,
     cents ? `<span class="tag tag-value">${fmtValue(cents)}</span>` : '',
     t.cidb_grade ? `<span class="tag tag-cidb">CIDB ${esc(t.cidb_grade)}</span>` : '',
-    t.briefing_compulsory ? `<span class="tag tag-brief">Compulsory briefing</span>` : '',
+    weekday ? `<span class="tag tag-deadline ${u.cls}">${esc(weekday)}</span>` : '',
     t.bbbee_required ? `<span class="tag tag-bbbee">B-BBEE L${esc(t.bbbee_required)}</span>` : '',
-    t.sector ? `<span class="tag tag-sector">${esc(t.sector)}</span>` : '',
+    t.briefing_compulsory ? `<span class="tag tag-brief">Compulsory briefing</span>` : '',
   ].filter(Boolean).join('');
-  const locLabel = t.location?.label || [t.procuring_entity, provinceLabel(t.province)].filter(Boolean).join(' \u00b7 ');
-  const entity = [t.procuring_entity].filter(Boolean).map(esc).join('');
-  const place = locLabel ? `<p class="tender-place">${esc(locLabel)}</p>` : '';
-  const ref = t.source_ref ? `<p class="tr-ref">${esc(t.source_ref)}</p>` : '';
+  const loc = t.location?.label || provinceLabel(t.province);
+  const entityBits = [t.procuring_entity, loc].filter(Boolean);
+  const entity = entityBits.length ? `<p class="tender-entity">${entityBits.map(esc).join(' · ')}</p>` : '';
+  const ref = bidNumber(t);
+  const closeDate = fmtCloseLong(t.closing_date);
+  const closeTime = fmtCloseTime(t.closing_time);
+  const rail = `
+    <div class="tr-when">
+      ${ref ? `<p class="tr-ref">${esc(ref)}</p>` : ''}
+      ${closeDate ? `<p class="tr-close-lbl">Closing</p><p class="tr-close-date">${esc(closeDate)}</p>` : ''}
+      ${closeTime ? `<p class="tr-close-time">${esc(closeTime)}</p>` : ''}
+    </div>`;
   return `<a href="/tenders/t/${t.id}" class="tender-row">
+      ${rail}
       <div class="tr-main">
-        ${ref}
         <h2 class="tender-title">${esc(heading)}</h2>
-        ${entity ? `<p class="tender-entity">${entity}</p>` : ''}
-        ${place}
+        ${entity}
         <div class="tender-tags">${tags}</div>
       </div>
-      <span class="tr-close ${u.cls}">${esc(u.text)}</span>
     </a>`;
 }
 
@@ -112,8 +123,12 @@ async function fetchTenders(append = false) {
       $('clear-filters')?.addEventListener('click', clearFilters);
     } else {
       data.tenders?.forEach((t: any) => list.insertAdjacentHTML('beforeend', renderCard(t)));
-      const showing = list.querySelectorAll('.tender-row').length;
-      statsBar.textContent = `Showing ${showing} of ${currentTotal.toLocaleString()} open tenders \u00b7 closing soonest`;
+      const newest = data.tenders?.reduce((acc: string | null, row: any) => {
+        const seen = row.last_seen_at || row.first_seen_at;
+        return !acc || (seen && seen > acc) ? seen : acc;
+      }, null);
+      const ago = fmtUpdatedAgo(newest);
+      statsBar.innerHTML = `<span>${currentTotal.toLocaleString()} open \u00b7 closes soonest</span>${ago ? `<span class="stats-updated">${esc(ago)}</span>` : ''}`;
     }
 
     if (data.gated) { gateBanner.classList.remove('hidden'); loadMoreRow.style.display = 'none'; }
