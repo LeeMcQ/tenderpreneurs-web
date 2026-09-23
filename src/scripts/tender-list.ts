@@ -95,8 +95,14 @@ async function fetchTenders(append = false) {
 
   try {
     const res = await fetch(`/api/tenders/search?${params}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      const quota = data?.code === 'd1_quota';
+      const msg = quota
+        ? (data.error || 'Live catalogue hit today\u2019s database read limit. It resets at midnight UTC.')
+        : (data?.error || `Tenders could not be loaded (${res.status}).`);
+      throw new Error(msg);
+    }
     if (!append) list.innerHTML = '';
     currentTotal = data.total ?? 0;
 
@@ -118,7 +124,14 @@ async function fetchTenders(append = false) {
       else loadMoreRow.style.display = 'none';
     }
   } catch (err) {
-    if (!append) list.innerHTML = `<div class="error-state">Tenders could not be loaded. Check the connection and try again.</div>`;
+    const msg = esc((err as Error)?.message || 'Tenders could not be loaded.');
+    if (!append) {
+      if (list.querySelector('.tender-row')) {
+        statsBar.textContent = (err as Error)?.message || 'Live catalogue temporarily unavailable.';
+      } else {
+        list.innerHTML = `<div class="error-state">${msg}</div>`;
+      }
+    }
     console.error('[tenders] fetch error:', err);
   } finally { loading = false; }
   void refreshMap();
@@ -166,7 +179,13 @@ async function refreshMap() {
   if (searchInput.value.trim()) params.set('q', searchInput.value.trim());
   try {
     const res = await fetch(`/api/tenders/geo?${params}`);
-    if (!res.ok) throw new Error(String(res.status));
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => null);
+      if (mapEl) {
+        mapEl.innerHTML = `<div class="map-head"><div><h2>Map paused</h2><p>${errBody?.code === 'd1_quota' ? 'Daily database read limit reached. It resets at midnight UTC.' : 'Map data could not be loaded.'}</p></div></div>`;
+      }
+      return;
+    }
     geoCache = await res.json();
     if (!sectorSel.value && geoCache.themes?.length) themeCache = geoCache.themes;
     else if (themeCache.length && geoCache) geoCache.themes = themeCache;

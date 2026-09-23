@@ -46,14 +46,9 @@ try {
      ORDER BY COALESCE(closing_date,'9999-12-31') ASC, first_seen_at DESC
      LIMIT ?`
   ).bind(limit).all();
-  const totalRow = await env.DB.prepare(
-    `SELECT COUNT(*) AS n FROM tenders
-     WHERE status='open' AND canonical_ref IS NULL
-       AND (closing_date IS NULL OR date(closing_date) >= date('now'))`
-  ).first();
   ssrTenders = (rows as any).results ?? [];
-  ssrTotal = (totalRow as any)?.n ?? ssrTenders.length;
-  ssrGated = !user && ssrTotal > GUEST_LIST_LIMIT;
+  ssrTotal = ssrTenders.length;
+  ssrGated = !user && ssrTenders.length >= GUEST_LIST_LIMIT;
   ssrOk = true;
 } catch (e) {
   ssrOk = false;
