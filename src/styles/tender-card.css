@@ -1,0 +1,82 @@
+/* Scan card: bid number + closing rail, decision chips. */
+.tenders-workspace .tender-row {
+  display: grid !important;
+  grid-template-columns: minmax(118px, 28%) 1fr !important;
+  gap: 12px 18px !important;
+  background: #fff !important;
+  border: 1px solid rgba(12, 27, 51, 0.12) !important;
+  border-radius: 14px !important;
+  padding: 14px 16px 14px 0 !important;
+  margin-bottom: 10px !important;
+  position: relative;
+  overflow: hidden;
+}
+.tenders-workspace .tender-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: #C9A15A;
+}
+.tr-when { padding: 0 4px 0 18px; min-width: 0; }
+.tenders-workspace .tr-ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #141820;
+  margin: 0 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tr-close-lbl {
+  margin: 0 0 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #C9A15A;
+}
+.tr-close-date {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #141820;
+  line-height: 1.25;
+}
+.tr-close-time {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #3D4A5C;
+}
+.stats-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+.stats-updated { color: #6B7787; white-space: nowrap; }
+.tag-deadline { display: inline-flex; }
+.tenders-workspace .tag-value { background: #D7F3EC; color: #0B6B58; }
+.tenders-workspace .tag-cidb { background: #DCE8F6; color: #1B4F8A; }
+.tenders-workspace .tag-bbbee { background: #E8E4DA; color: #3D4A5C; }
+.dens-code em {
+  display: block;
+  font-style: normal;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #C9A15A;
+  font-weight: 700;
+}
+.dens-cell.is-hot .dens-bar { background: #C9A15A; }
+@media (max-width: 640px) {
+  .tenders-workspace .tender-row {
+    grid-template-columns: 110px 1fr !important;
+    padding: 12px 12px 12px 0 !important;
+  }
+  .tr-when { padding-left: 14px; }
+  .tr-close-date { font-size: 13px; }
+}
