@@ -71,14 +71,14 @@ export const GET: APIRoute = async (ctx) => {
     binds.push(`+${within} days`);
   }
   if (q && q.trim().length >= 2) {
-    where.push("(title LIKE ? OR procuring_entity LIKE ? OR description LIKE ? OR briefing_location LIKE ? OR locality LIKE ?)");
+    where.push("(title LIKE ? OR procuring_entity LIKE ? OR description LIKE ? OR briefing_location LIKE ?)");
     const like = `%${q.trim()}%`;
-    binds.push(like, like, like, like, like);
+    binds.push(like, like, like, like);
   }
   if (locality && locality.trim().length >= 2) {
-    where.push("(locality LIKE ? OR title LIKE ? OR procuring_entity LIKE ? OR description LIKE ? OR briefing_location LIKE ?)");
+    where.push("(title LIKE ? OR procuring_entity LIKE ? OR description LIKE ? OR briefing_location LIKE ?)");
     const like = `%${locality.trim()}%`;
-    binds.push(like, like, like, like, like);
+    binds.push(like, like, like, like);
   }
 
   const countBinds = [...binds];
@@ -94,7 +94,6 @@ export const GET: APIRoute = async (ctx) => {
            closing_date, closing_time,
            briefing_date, briefing_compulsory, briefing_location,
            cidb_grade, estimated_value, bbbee_required,
-           locality, locality_precision, locality_lat, locality_lng, locality_source,
            first_seen_at, last_seen_at
          FROM tenders
          WHERE ${where.join(' AND ')}
