@@ -5,6 +5,7 @@ import {
   urgency,
   PROVINCE_LABELS,
 } from '../lib/tender-display';
+import { renderDensity, renderMap, type GeoPayload } from './tender-map';
 
 let offset = 0, currentTotal = 0, loading = false;
 const LIMIT = 20;
@@ -32,13 +33,16 @@ function renderCard(t: any): string {
     t.bbbee_required ? `<span class="tag tag-bbbee">B-BBEE L${esc(t.bbbee_required)}</span>` : '',
     t.sector ? `<span class="tag tag-sector">${esc(t.sector)}</span>` : '',
   ].filter(Boolean).join('');
-  const entity = [t.procuring_entity, provinceLabel(t.province)].filter(Boolean).map(esc).join(' \u00b7 ');
+  const locLabel = t.location?.label || [t.procuring_entity, provinceLabel(t.province)].filter(Boolean).join(' \u00b7 ');
+  const entity = [t.procuring_entity].filter(Boolean).map(esc).join('');
+  const place = locLabel ? `<p class="tender-place">${esc(locLabel)}</p>` : '';
   const ref = t.source_ref ? `<p class="tr-ref">${esc(t.source_ref)}</p>` : '';
   return `<a href="/tenders/t/${t.id}" class="tender-row">
       <div class="tr-main">
         ${ref}
         <h2 class="tender-title">${esc(heading)}</h2>
         ${entity ? `<p class="tender-entity">${entity}</p>` : ''}
+        ${place}
         <div class="tender-tags">${tags}</div>
       </div>
       <span class="tr-close ${u.cls}">${esc(u.text)}</span>
@@ -54,9 +58,12 @@ function skeletons(n = 8): string {
     </div>`).join('');
 }
 
+let locality = '';
+
 function renderChips() {
   const items: string[] = [];
   if (provinceSel.value) items.push(`<span class="chip">${PROVINCE_LABELS[provinceSel.value] ?? provinceSel.value}<button data-clear="province" aria-label="Remove province filter">\u00d7</button></span>`);
+  if (locality) items.push(`<span class="chip">${esc(locality)}<button data-clear="locality" aria-label="Remove town filter">\u00d7</button></span>`);
   if (sectorSel.value) items.push(`<span class="chip" style="text-transform:capitalize">${sectorSel.value}<button data-clear="sector" aria-label="Remove sector filter">\u00d7</button></span>`);
   if (withinSel.value) items.push(`<span class="chip">Closes in ${esc(withinSel.value)} days<button data-clear="within" aria-label="Remove closing window">\u00d7</button></span>`);
   if (searchInput.value.trim()) items.push(`<span class="chip">"${esc(searchInput.value.trim())}"<button data-clear="q" aria-label="Clear search">\u00d7</button></span>`);
@@ -67,6 +74,7 @@ function renderChips() {
 
 function clearFilters() {
   provinceSel.value = '';
+  locality = '';
   sectorSel.value = '';
   withinSel.value = '';
   searchInput.value = '';
@@ -77,6 +85,7 @@ async function fetchTenders(append = false) {
   if (loading) return; loading = true;
   const params = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
   if (provinceSel.value) params.set('province', provinceSel.value);
+  if (locality) params.set('locality', locality);
   if (sectorSel.value) params.set('sector', sectorSel.value);
   if (withinSel.value) params.set('within', withinSel.value);
   if (searchInput.value.trim()) params.set('q', searchInput.value.trim());
@@ -109,9 +118,10 @@ async function fetchTenders(append = false) {
       else loadMoreRow.style.display = 'none';
     }
   } catch (err) {
-    if (!append) list.innerHTML = `<div class="error-state">Failed to load tenders. Please try again.</div>`;
+    if (!append) list.innerHTML = `<div class="error-state">Tenders could not be loaded. Check the connection and try again.</div>`;
     console.error('[tenders] fetch error:', err);
   } finally { loading = false; }
+  void refreshMap();
 }
 
 function resetAndFetch() { offset = 0; renderChips(); fetchTenders(false); }
@@ -136,10 +146,58 @@ chipsEl.addEventListener('click', (e) => {
   if (!btn) return;
   const what = btn.getAttribute('data-clear');
   if (what === 'province') provinceSel.value = '';
+  else if (what === 'locality') locality = '';
   else if (what === 'sector') sectorSel.value = '';
   else if (what === 'within') withinSel.value = '';
   else if (what === 'q') searchInput.value = '';
   resetAndFetch();
+});
+
+const mapEl = document.getElementById('tender-map');
+const densEl = document.getElementById('province-density');
+const mapToggle = document.getElementById('map-toggle');
+let geoCache: GeoPayload | null = null;
+
+async function refreshMap() {
+  if (!mapEl && !densEl) return;
+  const params = new URLSearchParams();
+  if (sectorSel.value) params.set('sector', sectorSel.value);
+  if (searchInput.value.trim()) params.set('q', searchInput.value.trim());
+  try {
+    const res = await fetch(`/api/tenders/geo?${params}`);
+    if (!res.ok) throw new Error(String(res.status));
+    geoCache = await res.json();
+  } catch {
+    return;
+  }
+  if (!geoCache) return;
+  if (densEl) {
+    renderDensity(densEl, geoCache, provinceSel.value);
+    densEl.querySelectorAll<HTMLButtonElement>('[data-province]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const slug = btn.getAttribute('data-province') || '';
+        provinceSel.value = provinceSel.value === slug ? '' : slug;
+        resetAndFetch();
+      });
+    });
+  }
+  if (mapEl) {
+    renderMap(
+      mapEl,
+      geoCache,
+      provinceSel.value,
+      (slug) => { provinceSel.value = slug; locality = ''; resetAndFetch(); },
+      (name) => { locality = name; resetAndFetch(); },
+    );
+  }
+}
+
+mapToggle?.addEventListener('click', () => {
+  const panel = document.getElementById('map-panel');
+  if (!panel) return;
+  const open = panel.classList.toggle('is-open');
+  mapToggle.setAttribute('aria-expanded', String(open));
+  mapToggle.textContent = open ? 'Hide map' : 'Show map';
 });
 
 const ssr = list.getAttribute('data-ssr') === '1';
@@ -149,6 +207,7 @@ if (ssr) {
   currentTotal = ssrCount;
   if (!gateBanner.classList.contains('hidden')) loadMoreRow.style.display = 'none';
   else loadMoreRow.style.display = 'block';
+  void refreshMap();
 } else {
   fetchTenders(false);
 }

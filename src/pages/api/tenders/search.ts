@@ -4,9 +4,10 @@
  */
 
 import type { APIRoute } from 'astro';
-import { getEnv } from '../../../lib/db.js';
+import { peekEnv } from '../../../lib/db.js';
 import { getSessionUser } from '../../../lib/auth/magic-link.js';
 import { GUEST_LIST_LIMIT } from '../../../lib/tender-display.js';
+import { resolveLocation } from '../../../lib/tender-location.js';
 
 export const prerender = false;
 
@@ -21,11 +22,12 @@ const VALID_SECTORS = new Set([
 const VALID_WITHIN = new Set([7, 14, 30]);
 
 export const GET: APIRoute = async (ctx) => {
-  const env = getEnv(ctx);
+  const env = peekEnv(ctx);
   const url = new URL(ctx.request.url);
 
   const province = url.searchParams.get('province') ?? null;
   const sector   = url.searchParams.get('sector')   ?? null;
+  const locality = url.searchParams.get('locality') ?? null;
   const q        = url.searchParams.get('q')        ?? null;
   const withinParam = parseInt(url.searchParams.get('within') ?? '', 10);
   const within = VALID_WITHIN.has(withinParam) ? withinParam : null;
@@ -34,6 +36,13 @@ export const GET: APIRoute = async (ctx) => {
 
   const limit  = Math.min(Math.max(limitParam, 1), 100);
   const offset = Math.max(offsetParam, 0);
+
+  if (!env?.DB) {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'Tender database is not bound on this deployment.' }),
+      { status: 503, headers: { 'content-type': 'application/json' } },
+    );
+  }
 
   let user: any = null;
   try {
@@ -62,9 +71,14 @@ export const GET: APIRoute = async (ctx) => {
     binds.push(`+${within} days`);
   }
   if (q && q.trim().length >= 2) {
-    where.push("(title LIKE ? OR procuring_entity LIKE ? OR description LIKE ?)");
+    where.push("(title LIKE ? OR procuring_entity LIKE ? OR description LIKE ? OR briefing_location LIKE ?)");
     const like = `%${q.trim()}%`;
-    binds.push(like, like, like);
+    binds.push(like, like, like, like);
+  }
+  if (locality && locality.trim().length >= 2) {
+    where.push("(title LIKE ? OR procuring_entity LIKE ? OR description LIKE ? OR briefing_location LIKE ?)");
+    const like = `%${locality.trim()}%`;
+    binds.push(like, like, like, like);
   }
 
   const countBinds = [...binds];
@@ -78,7 +92,7 @@ export const GET: APIRoute = async (ctx) => {
            title, description, procuring_entity,
            province, sector, category,
            closing_date, closing_time,
-           briefing_date, briefing_compulsory,
+           briefing_date, briefing_compulsory, briefing_location,
            cidb_grade, estimated_value, bbbee_required,
            first_seen_at, last_seen_at
          FROM tenders
@@ -94,14 +108,24 @@ export const GET: APIRoute = async (ctx) => {
       ).bind(...countBinds).first<{ n: number }>(),
     ]);
 
-    const tenders = (rows.results ?? []).map(t => ({
-      ...t,
-      value_zar: t.estimated_value != null
-        ? Math.round(t.estimated_value as number) / 100
-        : null,
-      value_cents: t.estimated_value,
-      source_link: t.source_url ?? null,
-    }));
+    const tenders = (rows.results ?? []).map(t => {
+      const location = resolveLocation({
+        title: t.title as string,
+        description: t.description as string | null,
+        procuring_entity: t.procuring_entity as string | null,
+        briefing_location: t.briefing_location as string | null,
+        province: t.province as string | null,
+      });
+      return {
+        ...t,
+        value_zar: t.estimated_value != null
+          ? Math.round(t.estimated_value as number) / 100
+          : null,
+        value_cents: t.estimated_value,
+        source_link: t.source_url ?? null,
+        location,
+      };
+    });
 
     return new Response(
       JSON.stringify({

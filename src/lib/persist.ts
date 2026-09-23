@@ -12,6 +12,7 @@ import type { RawTender } from "./adapters/base";
 import { ulid, now, sha256, normaliseForFingerprint } from "./db";
 import { classify } from "./classify/gemini";
 import { linkDuplicates } from "./dedupe";
+import { archiveTender } from "./tender-archive";
 
 export interface PersistResult {
   id: string;
@@ -37,7 +38,6 @@ export async function persistTender(
     .bind(t.source_id, t.source_ref)
     .first<{ id: string; fingerprint: string; closing_date: string | null; status: string }>();
 
-  // Unchanged path — just bump last_seen
   if (existing && existing.fingerprint === fingerprint) {
     await db
       .prepare(`UPDATE tenders SET last_seen_at = ? WHERE id = ?`)
@@ -46,7 +46,6 @@ export async function persistTender(
     return { id: existing.id, status: "unchanged" };
   }
 
-  // Changed path — UPDATE + history row
   if (existing) {
     const changes: string[] = [];
     if (existing.closing_date !== (t.closing_date || null)) {
@@ -93,10 +92,26 @@ export async function persistTender(
         existing.id
       )
       .run();
+    await archiveTender(db, {
+      id: existing.id,
+      title: t.title,
+      description: t.description || null,
+      procuring_entity: t.procuring_entity || null,
+      briefing_location: t.briefing_location || null,
+      province: t.province || null,
+      source_ref: t.source_ref,
+      source_url: t.source_url || null,
+      sector: (t as any).sector || null,
+      published_date: t.published_date || null,
+      closing_date: t.closing_date || null,
+      closing_time: t.closing_time || null,
+      briefing_date: t.briefing_date || null,
+      briefing_compulsory: t.briefing_compulsory ? 1 : 0,
+      documents_json: t.documents ? JSON.stringify(t.documents) : null,
+    });
     return { id: existing.id, status: "updated", changes };
   }
 
-  // New path — INSERT, classify, dedupe
   const id = ulid();
   const classification = await classify(geminiKey, groqKey, t);
 
@@ -140,8 +155,24 @@ export async function persistTender(
     )
     .run();
 
-  // Cross-source dedupe
   await linkDuplicates(db, id, t.title, t.source_ref, t.source_id, t.procuring_entity || null);
+  await archiveTender(db, {
+    id,
+    title: t.title,
+    description: t.description || null,
+    procuring_entity: t.procuring_entity || null,
+    briefing_location: t.briefing_location || null,
+    province: t.province || classification.province || null,
+    source_ref: t.source_ref,
+    source_url: t.source_url || null,
+    sector: classification.sector || null,
+    published_date: t.published_date || null,
+    closing_date: t.closing_date || null,
+    closing_time: t.closing_time || null,
+    briefing_date: t.briefing_date || null,
+    briefing_compulsory: t.briefing_compulsory ? 1 : 0,
+    documents_json: t.documents ? JSON.stringify(t.documents) : null,
+  });
 
   return { id, status: "new" };
 }

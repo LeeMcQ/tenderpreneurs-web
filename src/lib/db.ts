@@ -26,10 +26,15 @@ export type Env = {
  *   const env = getEnv(Astro);
  *   const tenders = await env.DB.prepare("SELECT ...").all();
  */
+export function peekEnv(astro: { locals: any }): Env | null {
+  const locals = astro?.locals as any;
+  return (locals?.runtime?.env ?? locals?.env ?? null) as Env | null;
+}
+
 export function getEnv(astro: { locals: any }): Env {
   // Astro on Cloudflare exposes bindings via `Astro.locals.runtime.env`.
-  // We narrow it once here so the rest of the code doesn't repeat the cast.
-  const env = (astro.locals as any)?.runtime?.env;
+  // Pages Functions sometimes hoist the same object onto `locals.env`.
+  const env = peekEnv(astro);
   if (!env) {
     throw new Error("Cloudflare runtime env not available. Are you running on Pages?");
   }
