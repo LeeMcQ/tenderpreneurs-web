@@ -5,7 +5,7 @@ import {
   urgency,
   PROVINCE_LABELS,
 } from '../lib/tender-display';
-import { renderDensity, renderMap, type GeoPayload } from './tender-map';
+import { invalidateTenderMap, renderDensity, renderMap, type GeoPayload } from './tender-map';
 
 let offset = 0, currentTotal = 0, loading = false;
 const LIMIT = 20;
@@ -157,6 +157,7 @@ const mapEl = document.getElementById('tender-map');
 const densEl = document.getElementById('province-density');
 const mapToggle = document.getElementById('map-toggle');
 let geoCache: GeoPayload | null = null;
+let themeCache: Array<{ slug: string; count: number }> = [];
 
 async function refreshMap() {
   if (!mapEl && !densEl) return;
@@ -167,6 +168,8 @@ async function refreshMap() {
     const res = await fetch(`/api/tenders/geo?${params}`);
     if (!res.ok) throw new Error(String(res.status));
     geoCache = await res.json();
+    if (!sectorSel.value && geoCache.themes?.length) themeCache = geoCache.themes;
+    else if (themeCache.length && geoCache) geoCache.themes = themeCache;
   } catch {
     return;
   }
@@ -182,12 +185,14 @@ async function refreshMap() {
     });
   }
   if (mapEl) {
-    renderMap(
+    void renderMap(
       mapEl,
       geoCache,
       provinceSel.value,
+      sectorSel.value,
       (slug) => { provinceSel.value = slug; locality = ''; resetAndFetch(); },
       (name) => { locality = name; resetAndFetch(); },
+      (theme) => { sectorSel.value = theme; resetAndFetch(); },
     );
   }
 }
@@ -198,7 +203,17 @@ mapToggle?.addEventListener('click', () => {
   const open = panel.classList.toggle('is-open');
   mapToggle.setAttribute('aria-expanded', String(open));
   mapToggle.textContent = open ? 'Hide map' : 'Show map';
+  if (open) invalidateTenderMap();
 });
+
+if (mapToggle && window.innerWidth < 980) {
+  const panel = document.getElementById('map-panel');
+  if (panel && !panel.classList.contains('is-open')) {
+    panel.classList.add('is-open');
+    mapToggle.setAttribute('aria-expanded', 'true');
+    mapToggle.textContent = 'Hide map';
+  }
+}
 
 const ssr = list.getAttribute('data-ssr') === '1';
 const ssrCount = parseInt(list.getAttribute('data-count') ?? '0', 10) || 0;
