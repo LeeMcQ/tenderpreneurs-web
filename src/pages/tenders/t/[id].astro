@@ -1,376 +1,143 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import StructuredData from "../../../components/StructuredData.astro";
-import { getEnv } from "../../../lib/db";
+import { peekEnv } from "../../../lib/db";
 import { getSessionUser } from "../../../lib/auth/magic-link";
 import { resolveWinScore } from "../../../lib/winscore-resolve";
+import {
+  bidNumber, closeWeekdayChip, displayTitle, fmtCloseLong, fmtCloseTime,
+  fmtValue, provinceLabel as labelProvince, urgency,
+} from "../../../lib/tender-display";
+import { bbbeeFromText, isThinRow, STANDARD_RETURNABLES } from "../../../lib/tender-enrich";
+import { draftBidPack, findSimilarClosed, lessonsFromClosed, rememberComparables } from "../../../lib/tender-similar";
+import { resolveLocation } from "../../../lib/tender-location";
+import "../../../styles/tender-detail.css";
 
 export const prerender = false;
-
 const { id } = Astro.params;
 let tender: any = null;
 let history: any[] = [];
 let documents: any[] = [];
+let similar: any[] = [];
 let authed = false;
 let winData: any = null;
 
 try {
-  const env = getEnv(Astro);
-  const user = await getSessionUser(env.DB, Astro.request.headers.get("cookie"));
-  authed = !!user;
-
-  tender = await env.DB.prepare(
-    `SELECT * FROM tenders WHERE id = ? AND canonical_ref IS NULL`
-  ).bind(id).first();
-
-  if (tender && authed) {
-    const h = await env.DB.prepare(
-      `SELECT change_type, old_value, new_value, changed_at FROM tender_history
-       WHERE tender_id = ? ORDER BY changed_at DESC LIMIT 10`
-    ).bind(id).all();
-    history = h.results || [];
+  const env = peekEnv(Astro);
+  if (env?.DB) {
+    const user = await getSessionUser(env.DB, Astro.request.headers.get("cookie"));
+    authed = !!user;
+    tender = await env.DB.prepare(`SELECT * FROM tenders WHERE id = ? AND canonical_ref IS NULL`).bind(id).first();
+    if (tender && authed) {
+      try {
+        const h = await env.DB.prepare(`SELECT change_type, old_value, new_value, changed_at FROM tender_history WHERE tender_id = ? ORDER BY changed_at DESC LIMIT 10`).bind(id).all();
+        history = h.results || [];
+      } catch {}
+    }
+    try { winData = await resolveWinScore(env, user?.id ?? null, id); } catch { winData = null; }
+    if (tender) {
+      similar = await findSimilarClosed(env.DB, tender);
+      await rememberComparables(env.DB, tender.id, similar);
+    }
   }
+} catch {}
 
-  // R8: resolve the win-score server-side so signed-in users see it on first
-  // paint (no client fetch waterfall). Anon/no-profile → locked teaser.
-  try { winData = await resolveWinScore(env, user?.id ?? null, id); }
-  catch { winData = null; }
+if (tender?.documents_json) { try { documents = JSON.parse(tender.documents_json); } catch {} }
+if (!tender) return new Response("Tender not found", { status: 404 });
 
-  if (tender?.documents_json) {
-    try { documents = JSON.parse(tender.documents_json); } catch {}
-  }
-} catch {
-  // DB not ready; render a soft-fail page
+const title = displayTitle(tender);
+const ref = bidNumber(tender);
+const closingLong = fmtCloseLong(tender.closing_date);
+const closingTime = fmtCloseTime(tender.closing_time);
+const closeChip = closeWeekdayChip(tender.closing_date);
+const urg = urgency(tender.closing_date, tender.closing_time);
+const valueLabel = fmtValue(tender.estimated_value);
+const provinceLabel = labelProvince(tender.province);
+const place = resolveLocation(tender);
+const bbbee = bbbeeFromText(tender.description, tender.evaluation_notes, tender.title);
+const thin = isThinRow(tender);
+const lessons = lessonsFromClosed(tender, similar);
+const pack = draftBidPack(tender, similar);
+let returnables = STANDARD_RETURNABLES;
+if (tender.returnables_json) {
+  try { const parsed = JSON.parse(tender.returnables_json); if (Array.isArray(parsed) && parsed.length) returnables = parsed; } catch {}
 }
-
-if (!tender) {
-  return new Response("Tender not found", { status: 404 });
-}
-
-const closing = tender.closing_date
-  ? new Date(tender.closing_date + "T00:00:00Z").toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
-  : null;
-
-const provinceLabel = tender.province?.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
-
 const SITE = "https://tenderpreneurs.co.za";
 const tenderUrl = `${SITE}/tenders/t/${tender.id}`;
-const lastChecked = tender.last_seen_at
-  ? new Date(tender.last_seen_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })
-  : null;
-
+const lastChecked = tender.last_seen_at ? new Date(tender.last_seen_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" }) : null;
 const breadcrumbs = [
   { name: "Home", url: "/" },
   { name: "Tenders", url: "/tenders" },
-  ...(tender.province ? [{ name: provinceLabel, url: `/tenders/${tender.province}` }] : []),
-  { name: tender.title, url: `/tenders/t/${tender.id}` },
+  ...(tender.province ? [{ name: provinceLabel || tender.province, url: `/tenders/${tender.province}` }] : []),
+  { name: title, url: `/tenders/t/${tender.id}` },
 ];
-
-// schema.org "Demand" = a public request for goods/services — the correct
-// semantic for a tender opportunity.
 const tenderLd = {
   "@context": "https://schema.org",
   "@type": "Demand",
-  name: tender.title,
+  name: title,
   ...(tender.description ? { description: String(tender.description).slice(0, 300) } : {}),
   ...(tender.published_date ? { availabilityStarts: tender.published_date } : {}),
   ...(tender.closing_date ? { availabilityEnds: tender.closing_date } : {}),
   areaServed: provinceLabel || "South Africa",
   ...(tender.procuring_entity ? { seller: { "@type": "GovernmentOrganization", name: tender.procuring_entity } } : {}),
-  ...(tender.source_ref ? { identifier: tender.source_ref } : {}),
+  ...(ref || tender.source_ref ? { identifier: ref || tender.source_ref } : {}),
   url: tenderUrl,
 };
 ---
-
-<BaseLayout title={tender.title} description={tender.description?.slice(0, 160) || `Government tender ${tender.source_ref}`}>
+<BaseLayout title={title} description={tender.description?.slice(0, 160) || `Government tender ${ref || tender.source_ref}`}>
   <StructuredData breadcrumbs={breadcrumbs} extra={[tenderLd]} />
-  <nav aria-label="Breadcrumb" class="container mx-auto px-4 pt-6 text-sm text-slate-400">
-    <ol class="flex flex-wrap items-center gap-2">
-      <li><a href="/" class="hover:text-amber-400 hover:underline">Home</a></li>
-      <li aria-hidden="true">/</li>
-      <li><a href="/tenders" class="hover:text-amber-400 hover:underline">Tenders</a></li>
-      {tender.province && (
-        <>
-          <li aria-hidden="true">/</li>
-          <li><a href={`/tenders/${tender.province}`} class="hover:text-amber-400 hover:underline">{provinceLabel}</a></li>
-        </>
-      )}
-    </ol>
-  </nav>
-
-  <article class="container mx-auto px-4 py-8 max-w-4xl">
-    <header class="mb-6">
-      <p class="text-xs font-mono text-slate-400 mb-2">{tender.source_ref}</p>
-      <h1 class="text-2xl md:text-3xl font-bold text-white mb-3">{tender.title}</h1>
-      {tender.procuring_entity && <p class="text-lg text-slate-300">{tender.procuring_entity}</p>}
-      {lastChecked && (
-        <p class="text-xs text-slate-500 mt-2">
-          Source: {tender.source_url
-            ? <a href={tender.source_url} target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-amber-400 hover:underline">eTenders</a>
-            : "eTenders"} · last checked {lastChecked}
-        </p>
-      )}
-    </header>
-
-    <div class="grid md:grid-cols-3 gap-3 mb-8">
-      {closing && (
-        <div class="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-          <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Closing</p>
-          <p class="font-semibold text-white">{closing}</p>
-          {tender.closing_time && <p class="text-sm text-slate-300">{tender.closing_time}</p>}
-        </div>
-      )}
-      {tender.briefing_date && (
-        <div class={`rounded-lg border p-4 ${tender.briefing_compulsory ? "border-rose-500/40 bg-rose-500/10" : "border-slate-700 bg-slate-800/50"}`}>
-          <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">
-            {tender.briefing_compulsory ? "Compulsory briefing" : "Briefing"}
-          </p>
-          <p class="font-semibold text-white">{tender.briefing_date}</p>
-          {tender.briefing_location && <p class="text-sm text-slate-300">{tender.briefing_location}</p>}
-        </div>
-      )}
-      {tender.cidb_grade && (
-        <div class="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-          <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">CIDB grade required</p>
-          <p class="font-mono font-semibold text-white">{tender.cidb_grade}</p>
-        </div>
-      )}
+  <div class="tdoc" data-tender-id={tender.id} data-thin={thin ? "1" : "0"}>
+    <div class="tdoc-wrap">
+      <nav class="crumb" aria-label="Breadcrumb"><ol><li><a href="/tenders">Tenders</a></li>{tender.province && <li><a href={`/tenders/${tender.province}`}>{provinceLabel}</a></li>}</ol></nav>
+      <p class="tdoc-kicker">{ref || tender.source_ref || "Official notice"}{tender.status && <span> · {tender.status}</span>}{closeChip && <span> · {closeChip}</span>}</p>
+      <h1>{title}</h1>
+      <p class="tdoc-meta">{tender.procuring_entity || "Procuring entity not published"}{place.label ? ` · ${place.label}` : ""}{lastChecked ? ` · last checked ${lastChecked}` : ""}</p>
+      <div class="tdoc-grid">
+        <div class={`tdoc-stat ${urg.cls === "u-red" ? "hot" : ""}`}><p class="lbl">Closing</p><p>{closingLong || "Not published"}</p><p class="sub">{closingTime ? `${closingTime} SAST` : urg.text}</p></div>
+        <div class="tdoc-stat"><p class="lbl">Value</p><p>{valueLabel || "Not published"}</p><p class="sub">{tender.submission_method || "Check official method"}</p></div>
+        <div class={`tdoc-stat ${tender.briefing_compulsory ? "warn-card" : ""}`}><p class="lbl">{tender.briefing_compulsory ? "Compulsory briefing" : "Briefing"}</p><p>{tender.briefing_date || "None published"}</p><p class="sub">{tender.briefing_location || "Venue on official notice"}</p></div>
+        <div class="tdoc-stat"><p class="lbl">Can you bid?</p><p>{tender.cidb_grade ? `CIDB ${tender.cidb_grade}` : "No CIDB stated"}</p><p class="sub">{bbbee ? `B-BBEE ${bbbee}` : "B-BBEE in bid pack"}</p></div>
+      </div>
+      {thin && <p class="recover" id="recover-msg">Recovering omitted fields from the official eTenders release…</p>}
+      <section id="winscore" class="ws" data-tender-id={tender.id} aria-label="Win probability"><div class="ws-loading">Estimating your win probability…</div></section>
+      {winData && <script id="win-data" type="application/json" set:html={JSON.stringify(winData)} />}
+      <section id="verify" class="vf" data-tender-id={tender.id} aria-label="Tender verifier"><div class="vf-loading">Checking this tender for flaws…</div></section>
+      {tender.description && <section><h2>What they are buying</h2><p class="tdoc-body">{tender.description}</p></section>}
+      {tender.evaluation_notes && <section><h2>Conditions recovered from the official notice</h2><pre class="tdoc-notes">{tender.evaluation_notes}</pre></section>}
+      <section>
+        <h2>Bid-pack starter</h2>
+        <p class="tdoc-body">{pack.summary}</p>
+        <ul class="pack-list">{pack.sections.map((s) => <li>{s}</li>)}</ul>
+        <h3 class="tdoc-sub">Standard returnables</h3>
+        <ul class="pack-list">{returnables.map((r) => <li><code>{r.code}</code> <span>{r.label}</span></li>)}</ul>
+      </section>
+      {lessons.length > 0 && <section><h2>Checks against closed tenders</h2><ul class="gate-list">{lessons.map((l) => <li class={l.severity === "warning" ? "warn" : ""}>{l.message}</li>)}</ul></section>}
+      {similar.length > 0 && <section><h2>Similar closed notices</h2><p class="tdoc-body">Kept so you can compare scope, price signals, and missing fields — not to copy a bid.</p><ul class="sim-list">{similar.map((s) => <li><a href={`/tenders/t/${s.id}`}><strong>{s.title}</strong><span class="sub">{[s.procuring_entity, s.closing_date, s.status].filter(Boolean).join(" · ")}</span></a></li>)}</ul></section>}
+      {(tender.contact_name || tender.contact_email || tender.contact_phone) && <section><h2>Published contact</h2><dl class="tdoc-contact">{tender.contact_name && <div><dt>Name</dt><dd>{tender.contact_name}</dd></div>}{tender.contact_email && <div><dt>Email</dt><dd><a href={`mailto:${tender.contact_email}`}>{tender.contact_email}</a></dd></div>}{tender.contact_phone && <div><dt>Phone</dt><dd>{tender.contact_phone}</dd></div>}</dl></section>}
+      {documents.length > 0 && <section><h2>Public bid documents</h2><ul class="doc-list">{documents.map((d) => <li><a href={d.url} target="_blank" rel="noopener noreferrer">{d.filename || d.url}</a></li>)}</ul></section>}
+      {tender.source_url && <p><a class="src-btn" href={tender.source_url} target="_blank" rel="noopener noreferrer">Open official eTenders notice</a></p>}
+      {!authed && <section class="tdoc-gate"><h2>Save this tender</h2><p class="tdoc-body">Sign in to keep notes, history, and win probability against your profile. Documents and published contacts stay public.</p><form action="/api/auth/request" method="POST" class="tdoc-form"><input type="hidden" name="redirect_to" value={Astro.url.pathname} /><input type="email" name="email" required placeholder="you@yourcompany.co.za" /><button type="submit">Send sign-in link</button></form></section>}
+      {history.length > 0 && <section><h2>Change history</h2><ul class="gate-list">{history.map((h) => <li><span>{h.changed_at?.slice(0, 10)}</span> {h.change_type}: {h.old_value} → {h.new_value}</li>)}</ul></section>}
     </div>
-
-    <!-- Win Probability AI (v1) — fetched client-side from /api/tenders/:id/win-score -->
-    <section id="winscore" class="ws" data-tender-id={tender.id} aria-label="Win probability">
-      <div class="ws-loading">Estimating your win probability…</div>
-    </section>
-    {winData && <script id="win-data" type="application/json" set:html={JSON.stringify(winData)} />}
-
-    <section id="verify" class="vf" data-tender-id={tender.id} aria-label="Tender verifier">
-      <div class="vf-loading">Checking this tender for flaws…</div>
-    </section>
-
-    {tender.description && (
-      <section class="mb-8">
-        <h2 class="text-xl font-bold text-white mb-3">Description</h2>
-        <p class="text-slate-300 leading-relaxed">{tender.description}</p>
-      </section>
-    )}
-
-    {authed ? (
-      <>
-        {(tender.contact_name || tender.contact_email || tender.contact_phone) && (
-          <section class="mb-8 rounded-lg border border-slate-700 bg-slate-800/50 p-5">
-            <h2 class="text-lg font-semibold text-white mb-3">Procuring entity contact</h2>
-            <dl class="grid sm:grid-cols-3 gap-3 text-sm">
-              {tender.contact_name && (<div><dt class="text-slate-400">Name</dt><dd class="font-medium text-white">{tender.contact_name}</dd></div>)}
-              {tender.contact_email && (<div><dt class="text-slate-400">Email</dt><dd><a class="text-amber-400 hover:underline" href={`mailto:${tender.contact_email}`}>{tender.contact_email}</a></dd></div>)}
-              {tender.contact_phone && (<div><dt class="text-slate-400">Phone</dt><dd class="font-mono text-white">{tender.contact_phone}</dd></div>)}
-            </dl>
-          </section>
-        )}
-
-        {documents.length > 0 && (
-          <section class="mb-8">
-            <h2 class="text-lg font-semibold text-white mb-3">Bid documents</h2>
-            <ul class="space-y-2">
-              {documents.map((d) => (
-                <li>
-                  <a href={d.url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-800/50 px-4 py-2 text-slate-200 hover:border-amber-500 hover:text-amber-400">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    <span>{d.filename}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {tender.source_url && (
-          <p class="mt-4">
-            <a href={tender.source_url} target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:underline">View on source site →</a>
-          </p>
-        )}
-
-        {history.length > 0 && (
-          <section class="mt-10">
-            <h2 class="text-lg font-semibold text-white mb-3">Change history</h2>
-            <ul class="space-y-2 text-sm text-slate-300">
-              {history.map((h) => (
-                <li>
-                  <span class="font-mono text-xs text-slate-500">{h.changed_at?.slice(0, 10)}</span>{" "}
-                  <strong class="text-white">{h.change_type}</strong>: {h.old_value} → {h.new_value}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </>
-    ) : (
-      <section class="mt-8 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-slate-800/50 p-6">
-        <h2 class="text-xl font-bold text-white mb-2">Sign in to see the full tender</h2>
-        <p class="text-slate-300 mb-4">
-          Contact details, bid documents, briefing location, and change history are available after a free email sign-in.
-        </p>
-        <form action="/api/auth/request" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-md">
-          <input type="hidden" name="redirect_to" value={Astro.url.pathname} />
-          <input type="email" name="email" required placeholder="you@yourcompany.co.za" class="flex-1 rounded-md border border-slate-600 bg-slate-900 px-4 py-2.5 text-white placeholder-slate-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40" />
-          <button type="submit" class="rounded-md bg-amber-500 px-5 py-2.5 font-semibold text-slate-900 hover:bg-amber-400">Send sign-in link</button>
-        </form>
-      </section>
-    )}
-  </article>
+  </div>
 </BaseLayout>
-
-<style>
-  .ws { margin: 0 0 2rem; }
-  .ws-loading { color: #94a3b8; font-size: .9rem; padding: 1rem 0; }
-  .ws-card {
-    border: 1px solid #2d3f55; background: #1e2a3a; border-radius: 14px;
-    padding: 20px; display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start;
-  }
-  @media (max-width: 480px) { .ws-card { grid-template-columns: 1fr; } }
-  .ws-ring {
-    width: 96px; height: 96px; border-radius: 50%; position: relative; margin: 0 auto;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .ws-ring-inner {
-    width: 74px; height: 74px; border-radius: 50%; background: #0f1923;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-  }
-  .ws-pct { font-size: .8rem; font-weight: 600; color: var(--txt-secondary, #94a3b8); line-height: 1; font-family: ui-monospace, monospace; margin-top: 3px; }
-  .ws-band { font-size: .9rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; line-height: 1.05; }
-  .ws-head { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; margin: 0 0 8px; }
-  .ws-reasons { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-  .ws-reason { display: flex; gap: 8px; align-items: flex-start; font-size: .85rem; color: #cbd5e1; }
-  .ws-ic { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; font-weight: 700; }
-  .ws-pass { color: #10c9a8; } .ws-warn { color: #f59e0b; } .ws-fail { color: #ff5e5e; } .ws-info { color: #63b3ed; }
-  .ws-rlabel { color: #e2e8f0; font-weight: 600; }
-  .ws-disc { font-size: .72rem; color: #64748b; margin-top: 12px; }
-  .ws-locked { border: 1px dashed #2d3f55; border-radius: 14px; padding: 20px; text-align: center; color: #94a3b8; }
-  .ws-locked a { color: #f59e0b; font-weight: 600; text-decoration: none; }
-
-  /* Verifier */
-  .vf { margin: 0 0 2rem; }
-  .vf-loading { color: #94a3b8; font-size: .9rem; padding: .5rem 0 1rem; }
-  .vf-card { border: 1px solid #2d3f55; background: #1e2a3a; border-radius: 14px; padding: 20px; }
-  .vf-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-  .vf-score { font-size: 1.6rem; font-weight: 700; font-family: ui-monospace, monospace; }
-  .vf-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; }
-  .vf-flags { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-  .vf-flag { display: flex; gap: 10px; align-items: flex-start; font-size: .85rem; }
-  .vf-sev { flex: 0 0 auto; font-size: .62rem; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; margin-top: 1px; }
-  .vf-critical { background: rgba(255,94,94,.15); color: #ff5e5e; }
-  .vf-warning  { background: rgba(245,158,11,.15); color: #f59e0b; }
-  .vf-info     { background: rgba(99,179,237,.15); color: #63b3ed; }
-  .vf-msg { color: #e2e8f0; font-weight: 600; }
-  .vf-act { color: #94a3b8; }
-  .vf-disc { font-size: .72rem; color: #64748b; margin-top: 14px; border-top: 1px solid #2d3f55; padding-top: 10px; }
-</style>
-
-<script>
-  const BAND = {
-    high:   { color: '#10c9a8', label: 'Strong fit' },
-    medium: { color: '#f59e0b', label: 'Possible fit' },
-    low:    { color: '#ff5e5e', label: 'Weak fit' },
-    ineligible: { color: '#64748b', label: 'Likely ineligible' },
-  };
-  const ICON = { pass: '\u2713', warn: '!', fail: '\u2715', info: 'i' };
-  const SEVRANK = { critical: 0, warning: 1, info: 2 };
-  function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
-
-  function renderLocked(el, reason) {
-    const msg = reason === 'profile'
-      ? 'Complete your supplier profile to see your win probability on every tender.'
-      : 'Sign in free and add your supplier profile to unlock your win probability.';
-    const cta = reason === 'profile'
-      ? '<a href="/dashboard/profile">Complete profile \u2192</a>'
-      : '<a href="/auth/login">Sign in free \u2192</a>';
-    el.innerHTML = `<div class="ws-locked"><strong style="color:#e2e8f0">Win Probability AI</strong>
-      <p style="margin:8px 0 12px">${msg}</p>${cta}</div>`;
-  }
-
-  function renderScore(el, win) {
-    const band = BAND[win.band] || BAND.low;
-    const score = Math.max(0, Math.min(100, Math.round(Number(win.score) || 0))); // R11 coerce
-    const reasons = (win.reasons || []).map(r => `
-      <li class="ws-reason">
-        <span class="ws-ic ws-${r.status}">${ICON[r.status] || 'i'}</span>
-        <span><span class="ws-rlabel">${esc(r.label)}</span> \u2014 ${esc(r.detail)}</span>
-      </li>`).join('');
-    // R2: band is the headline; the % is secondary. 4.3: ring is decorative (aria-hidden),
-    // the card carries an accessible label.
-    el.innerHTML = `
-      <div class="ws-card" role="group" aria-label="Win probability: ${esc(band.label)}, about ${score} out of 100">
-        <div>
-          <div class="ws-ring" aria-hidden="true" style="background:conic-gradient(${band.color} ${score}%, rgba(255,255,255,.07) 0)">
-            <div class="ws-ring-inner">
-              <span class="ws-band" style="color:${band.color}">${esc(band.label)}</span>
-              <span class="ws-pct">~${score}%</span>
-            </div>
-          </div>
-        </div>
-        <div>
-          <p class="ws-head">Win Probability AI \u00b7 why this score</p>
-          <ul class="ws-reasons">${reasons}</ul>
-          <p class="ws-disc">${esc(win.disclaimer)}</p>
-        </div>
-      </div>`;
-  }
-
-  function applyWin(el, data) {
-    if (!data || data.ok === false || ('error' in data && data.error)) { el.innerHTML = ''; return; }
-    if (data.locked) return renderLocked(el, data.reason);
-    if (data.win) return renderScore(el, data.win);
-    el.innerHTML = '';
-  }
-
-  function vfColor(score) { return score >= 80 ? '#10c9a8' : score >= 60 ? '#f59e0b' : '#ff5e5e'; }
-
-  function renderVerify(vfEl, data) {
-    const flags = (data.flags || []).slice().sort((a, b) => (SEVRANK[a.severity] - SEVRANK[b.severity]));
-    const items = flags.length
-      ? flags.map(f => `
-          <li class="vf-flag">
-            <span class="vf-sev vf-${f.severity}">${f.severity}</span>
-            <span><span class="vf-msg">${esc(f.message)}</span><br><span class="vf-act">${esc(f.suggested_action)} <em style="color:#475569">(${esc(f.rule_ref)})</em></span></span>
-          </li>`).join('')
-      : `<li class="vf-flag"><span class="vf-sev vf-info">ok</span><span class="vf-msg">No obvious flaws detected by automated checks.</span></li>`;
-    const c = vfColor(data.health_score);
-    vfEl.innerHTML = `
-      <div class="vf-card">
-        <div class="vf-head">
-          <span class="vf-score" style="color:${c}">${data.health_score}<span style="font-size:.9rem;color:#64748b">/100</span></span>
-          <span><span class="vf-title">Tender health check</span>${data.reviewed ? ' <span style="background:rgba(16,201,168,.15);color:#10c9a8;font-size:.6rem;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:999px">Reviewed by Tenderpreneurs</span>' : ''}<br><span style="color:#94a3b8;font-size:.8rem">${flags.length} item(s) to review</span></span>
-        </div>
-        <ul class="vf-flags">${items}</ul>
-        <p class="vf-disc">${esc(data.disclaimer)}<br>Framework: ${esc(data.framework_version)}</p>
-      </div>`;
-  }
-
-  function initWinScore() {
-    const el = document.getElementById('winscore');
-    if (!el) return;
-    // R8: prefer the server-rendered win-data (no client fetch waterfall).
-    const inline = document.getElementById('win-data');
-    if (inline && inline.textContent) {
-      try { applyWin(el, JSON.parse(inline.textContent)); return; } catch {}
-    }
-    const id = el.getAttribute('data-tender-id');
+<script is:inline>
+(function () {
+  function initEnrich() {
+    var root = document.querySelector('.tdoc');
+    if (!root || root.getAttribute('data-thin') !== '1') return;
+    var id = root.getAttribute('data-tender-id');
     if (!id) return;
-    fetch(`/api/tenders/${id}/win-score`).then(r => r.json()).then(d => applyWin(el, d)).catch(() => { el.innerHTML = ''; });
+    fetch('/api/tenders/' + id + '/enrich', { method: 'POST' }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.ok && d.patch && Object.keys(d.patch).length) location.reload();
+      else { var msg = document.getElementById('recover-msg'); if (msg) msg.textContent = 'Official release had nothing extra to add, or the catalogue is rate-limited today.'; }
+    }).catch(function () { var msg = document.getElementById('recover-msg'); if (msg) msg.textContent = 'Could not reach the official eTenders release right now.'; });
   }
-
-  function initVerify() {
-    const vfEl = document.getElementById('verify');
-    if (!vfEl) return;
-    const vfId = vfEl.getAttribute('data-tender-id');
-    if (!vfId) return;
-    fetch(`/api/tenders/${vfId}/report`).then(r => r.json())
-      .then(rep => { if (rep && rep.ok && rep.published) { renderVerify(vfEl, rep); return null; } return fetch(`/api/tenders/${vfId}/verify`).then(r => r.json()); })
-      .then(data => { if (data) { if (data.ok === false) { vfEl.innerHTML = ''; return; } renderVerify(vfEl, data); } })
-      .catch(() => { vfEl.innerHTML = ''; });
+  var el = document.getElementById('winscore');
+  var inline = document.getElementById('win-data');
+  if (el && inline && inline.textContent) {
+    try { JSON.parse(inline.textContent); } catch (e) {}
   }
-
-  function initTenderPanels() { initWinScore(); initVerify(); }
-
-  initTenderPanels();
-  document.addEventListener('astro:page-load', initTenderPanels); // R14: re-init under View Transitions
+  initEnrich();
+})();
 </script>
