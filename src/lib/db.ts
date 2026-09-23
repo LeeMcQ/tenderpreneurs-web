@@ -26,6 +26,21 @@ export type Env = {
  *   const env = getEnv(Astro);
  *   const tenders = await env.DB.prepare("SELECT ...").all();
  */
+export function d1Fail(err: unknown): { status: number; body: { ok: false; code: string; error: string } } {
+  const raw = String(err ?? '');
+  const quota = /row read limit|free tier daily/i.test(raw);
+  return {
+    status: quota ? 503 : 500,
+    body: {
+      ok: false,
+      code: quota ? 'd1_quota' : 'd1_error',
+      error: quota
+        ? 'The live catalogue has hit today’s free database read limit. It resets at midnight UTC.'
+        : raw.slice(0, 280),
+    },
+  };
+}
+
 export function peekEnv(astro: { locals: any }): Env | null {
   const locals = astro?.locals as any;
   return (locals?.runtime?.env ?? locals?.env ?? null) as Env | null;

@@ -4,7 +4,7 @@
  */
 
 import type { APIRoute } from 'astro';
-import { peekEnv } from '../../../lib/db.js';
+import { peekEnv, d1Fail } from '../../../lib/db.js';
 import { getSessionUser } from '../../../lib/auth/magic-link.js';
 import { GUEST_LIST_LIMIT } from '../../../lib/tender-display.js';
 import { resolveLocation } from '../../../lib/tender-location.js';
@@ -81,32 +81,25 @@ export const GET: APIRoute = async (ctx) => {
     binds.push(like, like, like, like);
   }
 
-  const countBinds = [...binds];
   binds.push(effectiveLimit, pageOffset);
 
   try {
-    const [rows, total] = await Promise.all([
-      env.DB.prepare(
-        `SELECT
-           id, source_id, source_ref, source_url,
-           title, description, procuring_entity,
-           province, sector, category,
-           closing_date, closing_time,
-           briefing_date, briefing_compulsory, briefing_location,
-           cidb_grade, estimated_value, bbbee_required,
-           first_seen_at, last_seen_at
-         FROM tenders
-         WHERE ${where.join(' AND ')}
-         ORDER BY
-           COALESCE(closing_date, '9999-12-31') ASC,
-           first_seen_at DESC
-         LIMIT ? OFFSET ?`
-      ).bind(...binds).all<Record<string, unknown>>(),
-
-      env.DB.prepare(
-        `SELECT COUNT(*) AS n FROM tenders WHERE ${where.join(' AND ')}`
-      ).bind(...countBinds).first<{ n: number }>(),
-    ]);
+    const rows = await env.DB.prepare(
+      `SELECT
+         id, source_id, source_ref, source_url,
+         title, description, procuring_entity,
+         province, sector, category,
+         closing_date, closing_time,
+         briefing_date, briefing_compulsory, briefing_location,
+         cidb_grade, estimated_value, bbbee_required,
+         first_seen_at, last_seen_at
+       FROM tenders
+       WHERE ${where.join(' AND ')}
+       ORDER BY
+         COALESCE(closing_date, '9999-12-31') ASC,
+         first_seen_at DESC
+       LIMIT ? OFFSET ?`
+    ).bind(...binds).all<Record<string, unknown>>();
 
     const tenders = (rows.results ?? []).map(t => {
       const location = resolveLocation({
@@ -127,22 +120,27 @@ export const GET: APIRoute = async (ctx) => {
       };
     });
 
+    const shown = tenders.length;
+    const hasMore = shown === effectiveLimit;
+    const total = pageOffset + shown + (hasMore ? 1 : 0);
+
     return new Response(
       JSON.stringify({
         ok: true,
         authenticated: !!user,
-        total: total?.n ?? 0,
-        shown: tenders.length,
+        total,
+        shown,
         tenders,
-        gated: !user && (total?.n ?? 0) > GUEST_LIST_LIMIT,
+        gated: !user && shown >= GUEST_LIST_LIMIT,
       }),
-      { headers: { 'content-type': 'application/json' } }
+      { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=60' } }
     );
   } catch (err) {
     console.error('[search] error:', err);
-    return new Response(
-      JSON.stringify({ ok: false, error: String(err) }),
-      { status: 500, headers: { 'content-type': 'application/json' } }
-    );
+    const fail = d1Fail(err);
+    return new Response(JSON.stringify(fail.body), {
+      status: fail.status,
+      headers: { 'content-type': 'application/json' },
+    });
   }
 };
