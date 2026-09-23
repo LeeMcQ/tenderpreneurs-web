@@ -19,6 +19,7 @@ import {
 } from "../../lib/tender-display";
 import { resolveLocation } from "../../lib/tender-location";
 import "../../styles/tender-list.css";
+import "../../styles/tender-map.css";
 
 export const prerender = false;
 
@@ -73,7 +74,7 @@ try {
     <header class="tenders-hero">
       <div>
         <h1>Open tenders</h1>
-        <p class="lede">Live notices from eTenders, sorted by who closes first. Map uses the province and any town named in the notice.</p>
+        <p class="lede">Live notices from eTenders, sorted by who closes first. Zoom the map to split area bubbles into towns.</p>
       </div>
       <button id="map-toggle" class="map-toggle" type="button" aria-expanded="false" aria-controls="map-panel">Show map</button>
     </header>
