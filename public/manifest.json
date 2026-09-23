@@ -2,7 +2,8 @@
   "name": "Tenderpreneurs",
   "short_name": "Tenderpreneurs",
   "description": "AI-powered government tender intelligence for South African SMMEs.",
-  "start_url": "/",
+  "start_url": "/tenders",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0C1B33",
@@ -56,22 +57,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/mobile-home.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Tenderpreneurs home screen"
-    },
-    {
-      "src": "/screenshots/desktop-home.png",
-      "sizes": "1280x800",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Tenderpreneurs desktop home"
     }
   ],
   "categories": ["business", "finance", "productivity"],

@@ -2,15 +2,18 @@
 
 export const GUEST_LIST_LIMIT = 20;
 
-const REF_PREFIX = /^(TFR|RFQ|RFP|RFI|RFT|BID|N\d+|WCG|GT\/|KZN|EC\/|LP\/|MP\/|NW\/|NC\/|FS\/|WC\/)/i;
+const REF_PREFIX = /^(TFR|RFQ|RFP|RFI|RFT|BID|N\d+|WCG|GT\/|KZN|EC\/|LP\/|MP\/|NW\/|NC\/|FS\/|WC\/|NB|IM|SCMU|PR\d)/i;
 
 export function looksLikeRef(title: string | null | undefined, sourceRef?: string | null): boolean {
   const t = (title ?? '').trim();
   if (!t) return true;
   if (sourceRef && t === sourceRef.trim()) return true;
   if (REF_PREFIX.test(t)) return true;
+  const letters = t.replace(/[^A-Za-z]/g, '').length;
   const slashes = (t.match(/\//g) || []).length;
-  if (slashes >= 2 && t.length <= 80 && t.replace(/[^A-Za-z]/g, '').length < 12) return true;
+  const words = t.split(/\s+/).filter(Boolean).length;
+  if (slashes >= 1 && t.length <= 80 && letters < 16 && /\d/.test(t) && words <= 4) return true;
+  if (!/\s/.test(t) && t.length <= 24 && /\d/.test(t) && letters <= 8) return true;
   return false;
 }
 

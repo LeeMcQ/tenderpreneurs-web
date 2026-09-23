@@ -18,6 +18,11 @@ describe('looksLikeRef', () => {
   it('keeps a human title', () => {
     assert.equal(looksLikeRef('Supply and delivery of PPE to KZN Health'), false);
   });
+  it('treats compact bid numbers as refs', () => {
+    assert.equal(looksLikeRef('NB119/2026'), true);
+    assert.equal(looksLikeRef('IM2132026'), true);
+    assert.equal(looksLikeRef('00100224276OR'), true);
+  });
 });
 
 describe('displayTitle', () => {
