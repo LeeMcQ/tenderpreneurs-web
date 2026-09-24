@@ -1,0 +1,45 @@
+.pwa-install {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 16px;
+  z-index: 80;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  background: #0C1B33;
+  color: #F3F0E8;
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 40px rgba(12, 27, 51, 0.35);
+}
+.pwa-install[hidden] { display: none !important; }
+.pwa-install p { margin: 0; font-size: 14px; line-height: 1.35; }
+.pwa-install strong { display: block; font-size: 15px; }
+.pwa-install .pwa-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.pwa-install button {
+  min-height: 40px;
+  border-radius: 10px;
+  border: 0;
+  padding: 0 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pwa-install .pwa-go { background: #F5A623; color: #141820; }
+.pwa-install .pwa-skip { background: transparent; color: #F3F0E8; border: 1px solid rgba(243,240,232,.3); }
+.live-note {
+  background: #fff7e6;
+  border: 1px solid #e2c07a;
+  color: #3d4a5c;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 0 0 14px;
+  font-size: 14px;
+}
+.live-note a { color: #A66708; font-weight: 600; }
+.map-paused { background: #fff; border: 1px solid rgba(12,27,51,.12); border-radius: 16px; padding: 16px; }
+.map-demo-cta { font-size: 14px; color: #3D4A5C; margin: 8px 0 16px; max-width: 42ch; }
+@media (max-width: 640px) {
+  .pwa-install { flex-direction: column; align-items: stretch; }
+}

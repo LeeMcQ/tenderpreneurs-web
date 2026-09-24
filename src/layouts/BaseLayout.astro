@@ -12,6 +12,7 @@
  */
 
 import '../styles/global.css';
+import '../styles/pwa-install.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 
@@ -97,6 +98,14 @@ const canonUrl = canonical
 
   <Footer />
 
+  <div id="pwa-install" class="pwa-install" hidden>
+    <p><strong>Install Tenderpreneurs</strong>Add to your home screen. Works offline for pages you have opened.</p>
+    <div class="pwa-actions">
+      <button type="button" class="pwa-go" id="pwa-go">Install</button>
+      <button type="button" class="pwa-skip" id="pwa-skip">Not now</button>
+    </div>
+  </div>
+
   <script is:inline>
     document.addEventListener('DOMContentLoaded', function () {
       var nav = document.querySelector('.nav');
@@ -138,6 +147,38 @@ const canonUrl = canonical
           link.setAttribute('aria-current', 'page');
         }
       });
+
+      var banner = document.getElementById('pwa-install');
+      var go = document.getElementById('pwa-go');
+      var skip = document.getElementById('pwa-skip');
+      var deferred = null;
+      var dismissed = false;
+      try { dismissed = localStorage.getItem('tp-pwa-skip') === '1'; } catch (e) {}
+      var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferred = e;
+        if (!dismissed && !standalone && banner) banner.hidden = false;
+      });
+      go && go.addEventListener('click', function () {
+        if (!deferred) return;
+        deferred.prompt();
+        deferred.userChoice.finally(function () {
+          deferred = null;
+          if (banner) banner.hidden = true;
+        });
+      });
+      skip && skip.addEventListener('click', function () {
+        if (banner) banner.hidden = true;
+        try { localStorage.setItem('tp-pwa-skip', '1'); } catch (e) {}
+      });
+      if (!standalone && !dismissed && /iPhone|iPad|iPod/i.test(navigator.userAgent) && banner) {
+        banner.hidden = false;
+        if (go) go.textContent = 'How';
+        go && go.addEventListener('click', function () {
+          banner.querySelector('p').innerHTML = '<strong>On iPhone</strong>Tap Share, then Add to Home Screen.';
+        }, { once: true });
+      }
     });
   </script>
 
