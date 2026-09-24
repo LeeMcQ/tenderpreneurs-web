@@ -42,7 +42,8 @@ try {
   }
 } catch {}
 
-if (tender?.documents_json) { try { documents = JSON.parse(tender.documents_json); } catch {} }
+if (tender?.documents_json) { try { documents = JSON.parse(tender.documents_json); } catch {}
+}
 if (!tender) return new Response("Tender not found", { status: 404 });
 
 const title = displayTitle(tender);
@@ -133,10 +134,32 @@ const tenderLd = {
       else { var msg = document.getElementById('recover-msg'); if (msg) msg.textContent = 'Official release had nothing extra to add, or the catalogue is rate-limited today.'; }
     }).catch(function () { var msg = document.getElementById('recover-msg'); if (msg) msg.textContent = 'Could not reach the official eTenders release right now.'; });
   }
+  function paintWin(el, data) {
+    if (!el || !data) return;
+    if (data.locked) {
+      el.innerHTML = '<p class="tdoc-body">Sign in and add a supplier profile to see win probability.</p>';
+      return;
+    }
+    var win = data.win || data;
+    if (!win || win.score == null) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div class="tdoc-stat"><p class="lbl">Win probability</p><p>' +
+      String(win.band || 'fit') + ' · ~' + Math.round(Number(win.score) || 0) + '%</p></div>';
+  }
   var el = document.getElementById('winscore');
   var inline = document.getElementById('win-data');
   if (el && inline && inline.textContent) {
-    try { JSON.parse(inline.textContent); } catch (e) {}
+    try { paintWin(el, JSON.parse(inline.textContent)); } catch (e) {}
+  } else if (el) {
+    var wid = el.getAttribute('data-tender-id');
+    if (wid) fetch('/api/tenders/' + wid + '/win-score').then(function (r) { return r.json(); }).then(function (d) { paintWin(el, d); }).catch(function () { el.innerHTML = ''; });
+  }
+  var vf = document.getElementById('verify');
+  if (vf) {
+    var vid = vf.getAttribute('data-tender-id');
+    if (vid) fetch('/api/tenders/' + vid + '/report').then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.ok || !d.published || d.health_score == null) { vf.innerHTML = ''; return; }
+      vf.innerHTML = '<div class="tdoc-stat"><p class="lbl">Notice health</p><p>' + d.health_score + '/100</p></div>';
+    }).catch(function () { vf.innerHTML = ''; });
   }
   initEnrich();
 })();

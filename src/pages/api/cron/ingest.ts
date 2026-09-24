@@ -15,9 +15,10 @@
 import type { APIRoute } from 'astro';
 import { getAllAdapters, getAdapter } from '../../../lib/adapters/index.js';
 import { getEnv, ulid, now, sha256, normaliseForFingerprint, cronSecretMatches } from '../../../lib/db.js';
-import { cidbFromText, clockFromIso } from '../../../lib/tender-enrich.js';
+import { bbbeeLevelNumber, cidbFromText, clockFromIso } from '../../../lib/tender-enrich.js';
 import { closeExpired } from '../../../lib/tender-similar.js';
 import { ensureReferenceSchema } from '../../../lib/tender-schema.js';
+import { archiveTender } from '../../../lib/tender-archive.js';
 
 export const prerender = false;
 
@@ -147,10 +148,17 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
     return ex && ex.fingerprint !== fp;
   });
 
+  const archived: Array<{ id: string; t: any }> = [];
+
   if (toInsert.length > 0) {
     const stmts = toInsert.map(({ t, fp }) => {
+      const id = ulid();
       const status = toOpenStatus(t.status);
       const estimatedValue = t.value ? Math.round(t.value * 100) : null;
+      const docsJson = t.documentUrls?.length
+        ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u, filename: filenameFromUrl(u) })))
+        : null;
+      archived.push({ id, t: { ...t, documents_json: docsJson } });
       return db.prepare(
         `INSERT INTO tenders (
            id, source_id, source_ref, source_url,
@@ -160,11 +168,11 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
            briefing_date, briefing_compulsory, briefing_location,
            contact_name, contact_email, contact_phone,
            cidb_grade, estimated_value, documents_json,
-           fingerprint, status,
+           fingerprint, status, bbbee_required,
            first_seen_at, last_seen_at
-         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
       ).bind(
-        ulid(), sourceId, t.externalId, t.sourceUrl ?? null,
+        id, sourceId, t.externalId, t.sourceUrl ?? null,
         t.title,
         t.description ? String(t.description).slice(0, 4000) : null,
         t.buyer ?? '',
@@ -181,10 +189,9 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
         t.contactPhone ?? null,
         cidbFromText(t.title, t.description),
         estimatedValue,
-        t.documentUrls?.length
-          ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u, filename: filenameFromUrl(u) })))
-          : null,
-        fp, status, now(), now(),
+        docsJson,
+        fp, status, bbbeeLevelNumber(t.title, t.description),
+        now(), now(),
       );
     });
     for (let i = 0; i < stmts.length; i += 100) {
@@ -198,13 +205,25 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
       const ex = existingMap.get(t.externalId)!;
       const status = toOpenStatus(t.status);
       const estimatedValue = t.value ? Math.round(t.value * 100) : null;
+      const docsJson = t.documentUrls?.length
+        ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u, filename: filenameFromUrl(u) })))
+        : null;
+      archived.push({ id: ex.id, t: { ...t, documents_json: docsJson } });
       return db.prepare(
         `UPDATE tenders SET
            title = ?, description = ?, procuring_entity = ?,
            closing_date = ?, closing_time = COALESCE(?, closing_time), status = ?,
+           briefing_date = COALESCE(?, briefing_date),
+           briefing_compulsory = CASE WHEN ? IS NOT NULL THEN ? ELSE briefing_compulsory END,
            briefing_location = COALESCE(?, briefing_location),
+           contact_name = COALESCE(?, contact_name),
+           contact_email = COALESCE(?, contact_email),
+           contact_phone = COALESCE(?, contact_phone),
            cidb_grade = COALESCE(?, cidb_grade),
-           estimated_value = ?, fingerprint = ?,
+           estimated_value = COALESCE(?, estimated_value),
+           documents_json = COALESCE(?, documents_json),
+           bbbee_required = COALESCE(?, bbbee_required),
+           fingerprint = ?,
            last_seen_at = ?
          WHERE id = ?`
       ).bind(
@@ -214,9 +233,17 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
         (t.closingDate || '').slice(0, 10) || null,
         clockFromIso(t.closingDate),
         status,
+        t.briefingDate ?? null,
+        t.briefingCompulsory ? 1 : null,
+        t.briefingCompulsory ? 1 : null,
         t.briefingVenue ?? null,
+        t.contactName ?? null,
+        t.contactEmail ?? null,
+        t.contactPhone ?? null,
         cidbFromText(t.title, t.description),
         estimatedValue,
+        docsJson,
+        bbbeeLevelNumber(t.title, t.description),
         fp, now(), ex.id,
       );
     });
@@ -224,6 +251,30 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
       await db.batch(stmts.slice(i, i + 100));
     }
     itemsUpdated = toUpdate.length;
+  }
+
+  for (const row of archived.slice(0, 80)) {
+    try {
+      await archiveTender(db, {
+        id: row.id,
+        title: row.t.title,
+        description: row.t.description ?? null,
+        procuring_entity: row.t.buyer ?? null,
+        briefing_location: row.t.briefingVenue ?? null,
+        province: row.t.province ?? null,
+        source_ref: row.t.externalId ?? null,
+        source_url: row.t.sourceUrl ?? null,
+        sector: row.t.sector ?? null,
+        published_date: row.t.openingDate ?? null,
+        closing_date: (row.t.closingDate || '').slice(0, 10) || null,
+        closing_time: clockFromIso(row.t.closingDate),
+        briefing_date: row.t.briefingDate ?? null,
+        briefing_compulsory: row.t.briefingCompulsory ? 1 : 0,
+        documents_json: row.t.documents_json ?? null,
+      });
+    } catch {
+      break;
+    }
   }
 
   return { items_found: itemsFound, items_new: itemsNew, items_updated: itemsUpdated };
