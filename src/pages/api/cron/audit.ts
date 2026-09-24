@@ -4,6 +4,8 @@
  */
 import type { APIRoute } from 'astro';
 import { getEnv, now, cronSecretMatches } from '../../../lib/db.js';
+import { closeExpired } from '../../../lib/tender-similar.js';
+import { ensureReferenceSchema } from '../../../lib/tender-schema.js';
 
 export const prerender = false;
 
@@ -17,6 +19,8 @@ export const POST: APIRoute = async (ctx) => {
 
   const db = env.DB;
   const started = Date.now();
+  await ensureReferenceSchema(db);
+  const closedExpired = await closeExpired(db);
 
   try {
     const stats = await db.prepare(
@@ -49,6 +53,7 @@ export const POST: APIRoute = async (ctx) => {
       '',
       `Total tenders:  ${stats?.total_tenders ?? 0}`,
       `Open tenders:   ${stats?.open_tenders ?? 0}`,
+      `Closed expired: ${closedExpired}`,
       `New (24h):      ${stats?.new_24h ?? 0}`,
       `New (7d):       ${stats?.new_7d ?? 0}`,
       '',
@@ -82,7 +87,7 @@ export const POST: APIRoute = async (ctx) => {
       emailStatus = res.ok ? `sent (${res.status})` : `failed (${res.status})`;
     }
 
-    return json({ ok: true, stats, last_run: lastRun, email: emailStatus, duration_ms: duration }, 200);
+    return json({ ok: true, stats, last_run: lastRun, closed_expired: closedExpired, email: emailStatus, duration_ms: duration }, 200);
   } catch (err) {
     console.error('[audit] Error:', err);
     return json({ ok: false, error: String(err), duration_ms: Date.now() - started }, 500);
