@@ -21,6 +21,7 @@ let documents: any[] = [];
 let similar: any[] = [];
 let authed = false;
 let winData: any = null;
+let bookmark: { notes: string | null } | null = null;
 
 try {
   const env = peekEnv(Astro);
@@ -28,11 +29,16 @@ try {
     const user = await getSessionUser(env.DB, Astro.request.headers.get("cookie"));
     authed = !!user;
     tender = await env.DB.prepare(`SELECT * FROM tenders WHERE id = ? AND canonical_ref IS NULL`).bind(id).first();
-    if (tender && authed) {
+    if (tender && authed && user) {
       try {
         const h = await env.DB.prepare(`SELECT change_type, old_value, new_value, changed_at FROM tender_history WHERE tender_id = ? ORDER BY changed_at DESC LIMIT 10`).bind(id).all();
         history = h.results || [];
       } catch {}
+      try {
+        bookmark = await env.DB.prepare(
+          `SELECT notes FROM bookmarks WHERE user_id = ? AND tender_id = ?`,
+        ).bind(user.id, id).first() as any;
+      } catch { bookmark = null; }
     }
     try { winData = await resolveWinScore(env, user?.id ?? null, id); } catch { winData = null; }
     if (tender) {
@@ -87,7 +93,7 @@ const tenderLd = {
 ---
 <BaseLayout title={title} description={tender.description?.slice(0, 160) || `Government tender ${ref || tender.source_ref}`}>
   <StructuredData breadcrumbs={breadcrumbs} extra={[tenderLd]} />
-  <div class="tdoc" data-tender-id={tender.id} data-thin={thin ? "1" : "0"}>
+  <div class="tdoc" data-tender-id={tender.id} data-thin={thin ? "1" : "0"} data-saved={bookmark ? "1" : "0"}>
     <div class="tdoc-wrap">
       <nav class="crumb" aria-label="Breadcrumb"><ol><li><a href="/tenders">Tenders</a></li>{tender.province && <li><a href={`/tenders/${tender.province}`}>{provinceLabel}</a></li>}</ol></nav>
       <p class="tdoc-kicker">{ref || tender.source_ref || "Official notice"}{tender.status && <span> · {tender.status}</span>}{closeChip && <span> · {closeChip}</span>}</p>
@@ -100,6 +106,18 @@ const tenderLd = {
         <div class="tdoc-stat"><p class="lbl">Can you bid?</p><p>{tender.cidb_grade ? `CIDB ${tender.cidb_grade}` : "No CIDB stated"}</p><p class="sub">{bbbee ? `B-BBEE ${bbbee}` : "B-BBEE in bid pack"}</p></div>
       </div>
       {thin && <p class="recover" id="recover-msg">Recovering omitted fields from the official eTenders release…</p>}
+      {authed && (
+        <section class="save-box" id="save-box">
+          <div class="save-row">
+            <button type="button" id="save-btn" class="src-btn">{bookmark ? "Saved — remove" : "Save this tender"}</button>
+            <a href="/account">Open saved list</a>
+          </div>
+          <label for="save-note">Private note</label>
+          <textarea id="save-note" rows="3" maxlength="2000" placeholder="Site visit, CIDB gap, who is pricing this…">{bookmark?.notes || ""}</textarea>
+          <button type="button" id="save-note-btn" class="src-btn">Save note</button>
+          <p id="save-status" class="sub"></p>
+        </section>
+      )}
       <section id="winscore" class="ws" data-tender-id={tender.id} aria-label="Win probability"><div class="ws-loading">Estimating your win probability…</div></section>
       {winData && <script id="win-data" type="application/json" set:html={JSON.stringify(winData)} />}
       <section id="verify" class="vf" data-tender-id={tender.id} aria-label="Tender verifier"><div class="vf-loading">Checking this tender for flaws…</div></section>
@@ -161,6 +179,45 @@ const tenderLd = {
       vf.innerHTML = '<div class="tdoc-stat"><p class="lbl">Notice health</p><p>' + d.health_score + '/100</p></div>';
     }).catch(function () { vf.innerHTML = ''; });
   }
+  var root = document.querySelector('.tdoc');
+  var saveBtn = document.getElementById('save-btn');
+  var noteBtn = document.getElementById('save-note-btn');
+  var noteEl = document.getElementById('save-note');
+  var statusEl = document.getElementById('save-status');
+  function setSaved(on) {
+    if (root) root.setAttribute('data-saved', on ? '1' : '0');
+    if (saveBtn) saveBtn.textContent = on ? 'Saved — remove' : 'Save this tender';
+  }
+  function postBookmark(payload) {
+    if (!root) return Promise.resolve();
+    payload.tender_id = root.getAttribute('data-tender-id');
+    if (statusEl) statusEl.textContent = 'Saving…';
+    return fetch('/api/tenders/bookmark', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.ok) {
+        setSaved(!!d.bookmarked);
+        if (statusEl) statusEl.textContent = d.bookmarked ? 'Saved to your account.' : 'Removed from saved list.';
+      } else if (statusEl) statusEl.textContent = (d && d.error === 'auth_required') ? 'Sign in to save.' : 'Could not save right now.';
+    }).catch(function () { if (statusEl) statusEl.textContent = 'Could not save right now.'; });
+  }
+  if (saveBtn) saveBtn.addEventListener('click', function () {
+    var on = root && root.getAttribute('data-saved') === '1';
+    postBookmark({ action: on ? 'remove' : 'save', notes: noteEl ? noteEl.value : '' });
+  });
+  if (noteBtn) noteBtn.addEventListener('click', function () {
+    postBookmark({ action: 'save', notes: noteEl ? noteEl.value : '' });
+  });
   initEnrich();
 })();
 </script>
+<style>
+  .save-box { background:#fff; border:1px solid rgba(12,27,51,.12); border-radius:14px; padding:16px; margin:0 0 20px; }
+  .save-row { display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+  .save-box label { display:block; font-size:12px; color:#6B7787; margin-bottom:6px; }
+  .save-box textarea { width:100%; border:1px solid rgba(12,27,51,.12); border-radius:10px; padding:10px; font:inherit; margin-bottom:10px; }
+  .save-box .sub { margin:8px 0 0; color:#6B7787; font-size:13px; }
+  .save-row a { color:#A66708; font-weight:600; }
+</style>
