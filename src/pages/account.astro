@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { peekEnv } from "../lib/db";
 import "../styles/tender-list.css";
 import { getSessionUser } from "../lib/auth/magic-link";
+import { displayTitle, fmtCloseLong, urgency } from "../lib/tender-display";
 
 export const prerender = false;
 
@@ -19,10 +20,26 @@ const profile = await env.DB.prepare(
   `SELECT cidb_grades_json, bbbee_level, provinces_json, sectors_json, csd_number
    FROM supplier_profiles WHERE user_id = ?`,
 ).bind(user.id).first().catch(() => null);
+
+let saved: any[] = [];
+try {
+  const rows = await env.DB.prepare(
+    `SELECT t.id, t.title, t.source_ref, t.procuring_entity, t.province,
+            t.closing_date, t.closing_time, t.sector, b.notes, b.created_at
+     FROM bookmarks b
+     JOIN tenders t ON t.id = b.tender_id
+     WHERE b.user_id = ?
+     ORDER BY b.created_at DESC
+     LIMIT 50`,
+  ).bind(user.id).all();
+  saved = rows.results ?? [];
+} catch {
+  saved = [];
+}
 ---
-<BaseLayout title="Account | Tenderpreneurs" description="Your Tenderpreneurs account and supplier profile.">
+<BaseLayout title="Account | Tenderpreneurs" description="Your Tenderpreneurs account, saved tenders, and supplier profile.">
   <div class="tenders-workspace">
-    <div class="tenders-main" style="max-width:720px">
+    <div class="tenders-main" style="max-width:840px">
       <nav aria-label="Breadcrumb" class="breadcrumb">
         <ol>
           <li><a href="/">Home</a></li>
@@ -36,6 +53,31 @@ const profile = await env.DB.prepare(
           <p class="lede">Signed in as {user.email}</p>
         </div>
       </header>
+
+      <section class="acct-card" style="margin-bottom:20px">
+        <h2>Saved tenders</h2>
+        {saved.length === 0 ? (
+          <p>Nothing saved yet. Open a tender, tap Save, and it will land here.</p>
+        ) : (
+          <div class="tender-list">
+            {saved.map((t) => {
+              const u = urgency(t.closing_date, t.closing_time);
+              return (
+                <a href={`/tenders/t/${t.id}`} class="tender-row">
+                  <div class="tr-main">
+                    {t.source_ref && <p class="tr-ref">{t.source_ref}</p>}
+                    <h2 class="tender-title">{displayTitle(t)}</h2>
+                    {t.procuring_entity && <p class="tender-entity">{t.procuring_entity}</p>}
+                    {t.notes && <p class="tender-entity">Note: {t.notes}</p>}
+                  </div>
+                  <span class={`tr-close ${u.cls}`}>{fmtCloseLong(t.closing_date) || u.text}</span>
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <section class="acct-card">
         <h2>Supplier profile</h2>
         {profile ? (
@@ -52,7 +94,7 @@ const profile = await env.DB.prepare(
       </section>
       <p class="acct-links">
         <a href="/tenders">Browse tenders</a>
-        <a href="/alerts">Saved tenders</a>
+        <a href="/alerts">Alerts</a>
         <a href="/pricing">Plans</a>
       </p>
     </div>
