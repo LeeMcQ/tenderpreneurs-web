@@ -72,14 +72,18 @@ export const GET: APIRoute = async (ctx) => {
          GROUP BY sector`,
       ).bind(...binds).all<{ slug: string; count: number }>(),
       env.DB.prepare(
-        `SELECT province, briefing_location, COUNT(*) AS count
+        `SELECT province, sector,
+                COALESCE(NULLIF(trim(locality), ''), briefing_location) AS place,
+                COUNT(*) AS count
          FROM tenders
          WHERE ${sqlWhere}
-           AND briefing_location IS NOT NULL
-           AND trim(briefing_location) != ''
-         GROUP BY province, briefing_location
-         LIMIT 80`,
-      ).bind(...binds).all<{ province: string | null; briefing_location: string; count: number }>(),
+           AND (
+             (locality IS NOT NULL AND trim(locality) != '')
+             OR (briefing_location IS NOT NULL AND trim(briefing_location) != '')
+           )
+         GROUP BY province, sector, place
+         LIMIT 120`,
+      ).bind(...binds).all<{ province: string | null; sector: string | null; place: string; count: number }>(),
     ]);
 
     const provinces = Object.keys(PROVINCE_CENTROIDS).map((slug) => {
@@ -96,24 +100,28 @@ export const GET: APIRoute = async (ctx) => {
       .map((t) => ({ slug: t.slug, count: Number(t.count ?? 0) }))
       .sort((a, b) => b.count - a.count);
 
-    const townMap = new Map<string, { name: string; province: string | null; lat: number; lng: number; count: number; precision: 'town' | 'metro' | 'province' | 'national' | 'unknown' }>();
+    const townMap = new Map<string, { name: string; province: string | null; lat: number; lng: number; count: number; precision: 'town' | 'metro' | 'province' | 'national' | 'unknown'; sector?: string | null }>();
     for (const row of placeRows.results ?? []) {
       const loc = resolveLocation({
-        briefing_location: row.briefing_location,
+        title: row.place,
+        briefing_location: row.place,
         province: row.province,
       });
       if (!loc.town || loc.lat == null || loc.lng == null) continue;
       const key = `${loc.town.toLowerCase()}|${loc.province ?? ''}`;
       const existing = townMap.get(key);
       const n = Number(row.count ?? 0);
-      if (existing) existing.count += n;
-      else townMap.set(key, {
+      if (existing) {
+        existing.count += n;
+        if (!existing.sector && row.sector) existing.sector = row.sector;
+      } else townMap.set(key, {
         name: loc.town,
         province: loc.province,
         lat: loc.lat,
         lng: loc.lng,
         count: n,
         precision: loc.precision,
+        sector: row.sector,
       });
     }
 
