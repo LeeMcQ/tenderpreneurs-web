@@ -14,6 +14,38 @@ const CLUSTER_JS = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.m
 const OSM_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 const CLUSTER_CSS = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css';
 
+const SECTOR_MARK: Record<string, string> = {
+  construction: '■',
+  health: '+',
+  education: 'A',
+  transport: '>',
+  agriculture: 'Y',
+  energy: '*',
+  security: '#',
+  consulting: 'i',
+  cleaning: '~',
+  catering: 'o',
+  legal: '§',
+  ict: '/',
+};
+
+function sectorMark(sector: string): string {
+  return SECTOR_MARK[sector] || '•';
+}
+
+function clusterLabel(n: number): string {
+  if (n >= 20) return '20+';
+  if (n >= 10) return '10+';
+  return String(n);
+}
+
+function clusterSize(n: number): [number, number] {
+  if (n >= 20) return [52, 52];
+  if (n >= 10) return [44, 44];
+  if (n >= 5) return [38, 38];
+  return [32, 32];
+}
+
 function loadCss(href: string) {
   if (document.querySelector(`link[href="${href}"]`)) return;
   const link = document.createElement('link');
@@ -53,7 +85,7 @@ function renderCards(ids: string[] | null) {
   if (meta) {
     meta.textContent = ids
       ? `${rows.length} tender${rows.length === 1 ? '' : 's'} in this cluster`
-      : '20 sample notices \u00b7 click a bubble to filter this list';
+      : '20 sample notices · click a bubble to filter this list';
   }
   list.innerHTML = rows.map((t) => {
     const tone = urgencyTone(t.closeDays);
@@ -61,12 +93,12 @@ function renderCards(ids: string[] | null) {
       <div class="demo-rail tone-${tone}">
         <p class="ref">${t.bid}</p>
         <p class="when">Closes in ${t.closeDays}d</p>
-        <p class="prec">${t.pin.precision}</p>
+        <p class="prec">${t.pin.precision} · ${t.sector}</p>
       </div>
       <div>
         <h2>${t.title}</h2>
-        <p class="entity">${t.entity} \u00b7 issued from ${t.issuedFrom}</p>
-        <p class="why"><strong>Pinned:</strong> ${t.pin.label} \u2014 ${t.pin.reason}</p>
+        <p class="entity">${t.entity} · issued from ${t.issuedFrom}</p>
+        <p class="why"><strong>Pinned:</strong> ${t.pin.label} — ${t.pin.reason}</p>
       </div>
     </article>`;
   }).join('');
@@ -95,7 +127,7 @@ export async function bootMapDemo() {
 
   const cluster = L.markerClusterGroup({
     showCoverageOnHover: false,
-    maxClusterRadius: 60,
+    maxClusterRadius: 62,
     spiderfyOnMaxZoom: true,
     zoomToBoundsOnClick: true,
     disableClusteringAtZoom: 12,
@@ -103,10 +135,11 @@ export async function bootMapDemo() {
       const kids = cl.getAllChildMarkers().map((m) => m.options?.tender).filter(Boolean) as DemoTender[];
       const n = kids.length || cl.getAllChildMarkers().length;
       const tone = kids.length ? toneOf(kids) : 'later';
+      const size = clusterSize(n);
       return L.divIcon({
-        html: `<span>${n}</span>`,
-        className: `demo-bubble is-cluster tone-${tone}`,
-        iconSize: [44, 44],
+        html: `<span>${clusterLabel(n)}</span>`,
+        className: `demo-bubble is-cluster tone-${tone} size-${size[0]}`,
+        iconSize: size,
       });
     },
   });
@@ -115,11 +148,12 @@ export async function bootMapDemo() {
     const tone = urgencyTone(t.closeDays);
     const marker = L.marker([t.pin.lat, t.pin.lng], {
       tender: t,
-      title: t.title,
+      title: `${t.sector} · ${t.title}`,
       icon: L.divIcon({
-        html: `<span>1</span>`,
-        className: `demo-bubble is-pin tone-${tone} prec-${t.pin.precision}`,
-        iconSize: [30, 30],
+        html: `<span class="mark" aria-hidden="true">${sectorMark(t.sector)}</span>`,
+        className: `demo-pin tone-${tone} sector-${t.sector}`,
+        iconSize: [28, 36],
+        iconAnchor: [14, 34],
       }),
     });
     marker.on('click', () => {
