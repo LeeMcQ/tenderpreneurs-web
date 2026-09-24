@@ -146,6 +146,13 @@ async function readJsonCapped(res: Response): Promise<unknown | null> {
   }
 }
 
+export function bbbeeLevelNumber(...parts: Array<string | null | undefined>): number | null {
+  const label = bbbeeFromText(...parts);
+  if (!label) return null;
+  const n = Number(label.replace(/\D/g, ''));
+  return n >= 1 && n <= 8 ? n : null;
+}
+
 export async function fetchOfficialRelease(
   sourceRef: string | null | undefined,
   published?: string | null,
@@ -153,8 +160,11 @@ export async function fetchOfficialRelease(
   const ocid = String(sourceRef || '').trim();
   if (!ocid.startsWith('ocds-')) return null;
   const url = officialFetchUrl(ocid, published);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
     const res = await fetch(url, {
+      signal: ctrl.signal,
       headers: {
         Accept: 'application/json',
         'User-Agent': 'Tenderpreneurs/1.0 (+https://tenderpreneurs.co.za)',
@@ -165,6 +175,8 @@ export async function fetchOfficialRelease(
     return pickRelease(ocid, body?.releases);
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 

@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { peekEnv, d1Fail } from '../../../../lib/db.js';
 import { archiveTender } from '../../../../lib/tender-archive.js';
-import { fetchOfficialRelease, isThinRow, patchFromRelease } from '../../../../lib/tender-enrich.js';
+import { bbbeeLevelNumber, fetchOfficialRelease, isThinRow, patchFromRelease } from '../../../../lib/tender-enrich.js';
 
 export const prerender = false;
 
@@ -37,7 +37,8 @@ async function enrichOne(env: NonNullable<ReturnType<typeof peekEnv>>, id: strin
        cidb_grade = COALESCE(?, cidb_grade),
        estimated_value = COALESCE(?, estimated_value),
        documents_json = COALESCE(?, documents_json),
-       source_url = COALESCE(?, source_url)
+       source_url = COALESCE(?, source_url),
+       bbbee_required = COALESCE(?, bbbee_required)
      WHERE id = ?`,
   ).bind(
     patch.description ?? null,
@@ -56,6 +57,7 @@ async function enrichOne(env: NonNullable<ReturnType<typeof peekEnv>>, id: strin
     patch.estimated_value ?? null,
     patch.documents_json ?? null,
     patch.source_url ?? null,
+    bbbeeLevelNumber(patch.bbbee_level),
     id,
   ).run();
 
