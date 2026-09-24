@@ -190,9 +190,7 @@ function mapRelease(release: OcdsRelease): RawTender | null {
 
   const sector = mapSector(t.category ?? t.mainProcurementCategory);
   const buyer = t.procuringEntity?.name ?? release.buyer?.name ?? 'Unknown';
-  const closingDate = t.tenderPeriod?.endDate
-    ? t.tenderPeriod.endDate.split('T')[0]
-    : null;
+  const closingDate = t.tenderPeriod?.endDate ?? null;
   const openingDate = t.tenderPeriod?.startDate
     ? t.tenderPeriod.startDate.split('T')[0]
     : (release.date ? release.date.split('T')[0] : null);
