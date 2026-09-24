@@ -1,0 +1,56 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { DEMO_TENDERS } from "../../data/map-demo";
+import "../../styles/tender-map.css";
+import "../../styles/map-demo.css";
+
+const title = "Need-site map example | Tenderpreneurs";
+const description = "20-notice example: numbered clusters on OpenStreetMap, split on zoom, colour = closing urgency, pin = where the work is needed.";
+---
+<BaseLayout title={title} description={description}>
+  <div class="demo-page">
+    <nav class="demo-crumb" aria-label="Breadcrumb">
+      <a href="/tenders">Tenders</a>
+      <span aria-hidden="true">›</span>
+      <span>Map example</span>
+    </nav>
+    <header class="demo-hero">
+      <div>
+        <h1>Where the work is needed</h1>
+        <p>Twenty sample notices. The pin is the finest place the notice actually names for delivery — street, then town, then province, then the tender office, then the source. It is not the buyer’s head office unless that is the work site.</p>
+      </div>
+      <button id="demo-clear" type="button">Show all 20</button>
+    </header>
+
+    <ol class="demo-legend" aria-label="Cluster colour">
+      <li><i class="swatch tone-hot"></i>Closes in 3 days or less</li>
+      <li><i class="swatch tone-soon"></i>Closes in 4–7 days</li>
+      <li><i class="swatch tone-later"></i>Closes later</li>
+    </ol>
+    <p class="demo-note">A cluster number is how many notices sit in that area. Zoom in and the bubble splits. Click a cluster to keep only those tenders in the list.</p>
+
+    <div class="demo-split">
+      <div>
+        <p id="demo-meta" class="demo-meta">20 sample notices · click a bubble to filter this list</p>
+        <div id="demo-list" class="demo-list"></div>
+      </div>
+      <aside class="demo-map-wrap">
+        <div id="demo-osm" class="demo-osm" role="application" aria-label="Example need-site map"></div>
+        <ul class="demo-rules">
+          <li><strong>Street / GPS</strong> if the scope names one.</li>
+          <li><strong>Town</strong> if that is the finest named place.</li>
+          <li><strong>Province</strong> if no town is named.</li>
+          <li><strong>Office</strong> only when the work is at the buyer’s office.</li>
+          <li><strong>Source</strong> only when the notice names nowhere.</li>
+        </ul>
+      </aside>
+    </div>
+
+    <script type="application/json" id="demo-data" set:html={JSON.stringify(DEMO_TENDERS.map(t => t.id))} />
+  </div>
+</BaseLayout>
+
+<script>
+  import { bootMapDemo } from '../../scripts/map-demo';
+  bootMapDemo();
+</script>
