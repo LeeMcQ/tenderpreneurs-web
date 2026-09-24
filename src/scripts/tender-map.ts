@@ -5,7 +5,7 @@ export type GeoPayload = {
   ok: boolean;
   total?: number;
   provinces: Array<{ slug: string; name: string; count: number; valueZar: number }>;
-  towns: Array<{ name: string; province: string | null; lat: number; lng: number; count: number; precision: PlacePrecision }>;
+  towns: Array<{ name: string; province: string | null; lat: number; lng: number; count: number; precision: PlacePrecision; sector?: string | null }>;
   themes?: Array<{ slug: string; count: number }>;
 };
 
@@ -106,11 +106,53 @@ function ensureLeaflet(): Promise<LeafletNs> {
   return leafletReady;
 }
 
-function bubbleClass(count: number): string {
-  if (count >= 80) return 'is-xl';
-  if (count >= 25) return 'is-lg';
-  if (count >= 8) return 'is-md';
-  return 'is-sm';
+function countLabel(n: number): string {
+  if (n >= 100) return '100+';
+  if (n >= 50) return '50+';
+  if (n >= 20) return '20+';
+  if (n >= 10) return '10+';
+  return String(n);
+}
+
+function heatClass(n: number): string {
+  if (n >= 20) return 'is-red is-xl';
+  if (n >= 10) return 'is-red is-lg';
+  if (n >= 5) return 'is-amber is-md';
+  return 'is-amber is-sm';
+}
+
+function rippleHtml(n: number): string {
+  return `<div class="tp-ripple ${heatClass(n)}"><span class="core">${countLabel(n)}</span></div>`;
+}
+
+function pinColor(sector?: string | null): string {
+  if (sector === 'health') return '#b91c1c';
+  if (sector === 'construction') return '#9a3412';
+  if (sector === 'education') return '#1d4ed8';
+  if (sector === 'ict') return '#0f766e';
+  if (sector === 'security') return '#334155';
+  if (sector === 'transport') return '#1e3a8a';
+  if (sector === 'agriculture') return '#3f6212';
+  if (sector === 'legal') return '#6b21a8';
+  if (sector === 'energy') return '#b45309';
+  return '#e11d48';
+}
+
+function pinMark(sector?: string | null): string {
+  if (sector === 'health') return '<path d="M13 9h-2v3H8v2h3v3h2v-3h3v-2h-3z" fill="#fff"/>';
+  if (sector === 'construction') return '<path d="M8 16V10l4-3 4 3v6H8z" fill="#fff"/>';
+  if (sector === 'education') return '<path d="M7 12l6-3 6 3-6 3-6-3zm2 2v3l4 2 4-2v-3" fill="none" stroke="#fff" stroke-width="1.6"/>';
+  if (sector === 'transport') return '<path d="M8 14h10l-1.5-4H10L8 14zm2 .5a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4zm7 0a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" fill="#fff"/>';
+  if (sector === 'ict') return '<rect x="9" y="9" width="8" height="8" rx="1.4" fill="none" stroke="#fff" stroke-width="1.6"/>';
+  if (sector === 'security') return '<path d="M13 8l5 2v3c0 3-2.2 5.2-5 6-2.8-.8-5-3-5-6v-3l5-2z" fill="#fff"/>';
+  if (sector === 'agriculture') return '<path d="M13 18c0-5 4-7 5-10-4 0-7 3-8 7 0-4-2-6-5-7 3 4 3 8 3 10h5z" fill="#fff"/>';
+  if (sector === 'legal') return '<path d="M13 8v10M9 12h8M9 12l-2 4h4m8-4l2 4h-4" fill="none" stroke="#fff" stroke-width="1.6"/>';
+  return '<circle cx="13" cy="12.5" r="3" fill="#fff"/>';
+}
+
+function pinHtml(sector?: string | null): string {
+  const fill = pinColor(sector);
+  return `<div class="tp-pin"><svg viewBox="0 0 26 36" width="28" height="36" aria-hidden="true"><path d="M13 1C7 1 2.5 6 2.5 12.2 2.5 21 13 35 13 35s10.5-14 10.5-22.8C23.5 6 19 1 13 1z" fill="${fill}" stroke="#fff" stroke-width="1.6"/>${pinMark(sector)}</svg></div>`;
 }
 
 function placeBubbles(geo: GeoPayload) {
@@ -125,6 +167,7 @@ function placeBubbles(geo: GeoPayload) {
     label: string;
     province: string | null;
     kind: 'town' | 'province';
+    sector?: string | null;
   }> = geo.towns.map((t) => ({
     lat: t.lat,
     lng: t.lng,
@@ -132,6 +175,7 @@ function placeBubbles(geo: GeoPayload) {
     label: t.name,
     province: t.province,
     kind: 'town',
+    sector: t.sector,
   }));
   for (const p of geo.provinces) {
     if (p.slug === 'national' || p.count === 0) continue;
@@ -182,16 +226,17 @@ export async function renderMap(
       <div class="osm-shell">
       <div class="map-head">
         <div>
-          <h2>Where tenders sit</h2>
-          <p>OpenStreetMap. Numbered bubbles are counts. Zoom in and clusters split into towns.</p>
+          <h2>Where the work is needed</h2>
+          <p>Ripple bubbles are counts. Zoom in to split them. A single notice becomes a map pin for its sector.</p>
         </div>
         <p class="map-national">${national?.count ?? 0} national</p>
       </div>
       <div class="theme-row" id="map-themes" role="listbox" aria-label="Sector theme"></div>
       <div id="osm-map" class="osm-map" role="application" aria-label="South Africa tender map"></div>
       <ol class="map-legend">
-        <li><i class="dot"></i>Town named in the notice</li>
-        <li><i class="dot is-prov"></i>Province only</li>
+        <li><i class="dot"></i>Red ripple = many notices</li>
+        <li><i class="dot is-prov"></i>Amber ripple = fewer</li>
+        <li>Pin = one tender, mark = sector</li>
       </ol>
       </div>
     `;
@@ -212,7 +257,7 @@ export async function renderMap(
       zoomControl: true,
       attributionControl: true,
       minZoom: 5,
-      maxZoom: 12,
+      maxZoom: 16,
       maxBounds: SA_BOUNDS,
       maxBoundsViscosity: 0.8,
     });
@@ -223,16 +268,16 @@ export async function renderMap(
     map.setView([-28.5, 24.7], 5);
     clusterLayer = L.markerClusterGroup({
       showCoverageOnHover: false,
-      maxClusterRadius: 54,
+      maxClusterRadius: 58,
       spiderfyOnMaxZoom: true,
-      disableClusteringAtZoom: 10,
+      disableClusteringAtZoom: 12,
       zoomToBoundsOnClick: true,
       iconCreateFunction(cluster: { getAllChildMarkers: () => Array<{ options?: { count?: number } }> }) {
         const n = cluster.getAllChildMarkers().reduce((sum, m) => sum + (m.options?.count || 1), 0);
         return L.divIcon({
-          html: `<span>${n}</span>`,
-          className: `tp-bubble is-cluster ${bubbleClass(n)}`,
-          iconSize: [44, 44],
+          html: rippleHtml(n),
+          className: '',
+          iconSize: [52, 52],
         });
       },
     });
@@ -242,12 +287,14 @@ export async function renderMap(
   clusterLayer!.clearLayers();
   const bubbles = placeBubbles(geo);
   const markers = bubbles.map((b) => {
+    const single = b.count === 1 && b.kind === 'town';
     const marker = L.marker([b.lat, b.lng], {
       count: b.count,
       icon: L.divIcon({
-        html: `<span>${b.count}</span>`,
-        className: `tp-bubble ${b.kind === 'town' ? 'is-town' : 'is-prov'} ${bubbleClass(b.count)}${selectedProvince && b.province === selectedProvince ? ' is-on' : ''}`,
-        iconSize: [36, 36],
+        html: single ? pinHtml(b.sector) : rippleHtml(b.count),
+        className: '',
+        iconSize: single ? [28, 36] : [52, 52],
+        iconAnchor: single ? [14, 34] : [26, 26],
       }),
       title: `${b.label}: ${b.count} open`,
     });

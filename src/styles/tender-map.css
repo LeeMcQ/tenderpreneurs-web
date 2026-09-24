@@ -26,26 +26,59 @@
 .theme-chip em { font-style: normal; color: var(--ink-3, #6B7787); margin-left: 4px; }
 .theme-chip.is-on { background: #0C1B33; color: #fff; border-color: #0C1B33; }
 .theme-chip.is-on em { color: #F5A623; }
-.tp-bubble {
+.tp-ripple {
+  position: relative;
   display: grid;
   place-items: center;
+  width: 44px;
+  height: 44px;
+}
+.tp-ripple .core {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 6px;
   border-radius: 999px;
+  color: #fff;
   font-weight: 800;
   font-size: 12px;
-  color: #0C1B33;
-  background: #F5A623;
-  border: 2px solid #0C1B33;
-  box-shadow: 0 2px 8px rgba(12,27,51,.25);
+  background: #e11d48;
+  box-shadow: 0 1px 4px rgba(15,23,42,.35);
 }
-.tp-bubble span { line-height: 1; }
-.tp-bubble.is-prov { background: #fff; }
-.tp-bubble.is-cluster { background: #0C1B33; color: #fff; border-color: #F5A623; }
-.tp-bubble.is-on { outline: 3px solid #F5A623; }
-.tp-bubble.is-sm { width: 32px; height: 32px; font-size: 11px; }
-.tp-bubble.is-md { width: 38px; height: 38px; font-size: 12px; }
-.tp-bubble.is-lg { width: 46px; height: 46px; font-size: 13px; }
-.tp-bubble.is-xl { width: 54px; height: 54px; font-size: 14px; }
+.tp-ripple.is-md .core { min-width: 40px; height: 40px; font-size: 13px; }
+.tp-ripple.is-lg .core { min-width: 46px; height: 46px; font-size: 13px; }
+.tp-ripple.is-xl .core { min-width: 52px; height: 52px; font-size: 14px; }
+.tp-ripple.is-amber .core { background: #f59e0b; color: #1c1917; }
+.tp-ripple.is-red .core { background: #e11d48; }
+.tp-ripple::before,
+.tp-ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 3px solid rgba(225, 29, 72, .35);
+  animation: tp-pulse 2.2s ease-out infinite;
+}
+.tp-ripple.is-amber::before,
+.tp-ripple.is-amber::after { border-color: rgba(245, 158, 11, .4); }
+.tp-ripple::after { animation-delay: 1.1s; }
+@keyframes tp-pulse {
+  0% { transform: scale(.55); opacity: .7; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tp-ripple::before, .tp-ripple::after { animation: none; opacity: .35; transform: scale(1.25); }
+}
+.tp-pin {
+  width: 28px;
+  height: 36px;
+}
+.tp-pin svg { display: block; filter: drop-shadow(0 2px 3px rgba(15,23,42,.35)); }
 .leaflet-container { font-family: inherit; background: #d9e4ee; }
+.leaflet-div-icon { background: transparent; border: 0; }
 .map-legend i.dot.is-prov { background: #fff; border: 1px solid #0C1B33; box-sizing: border-box; }
 @media (max-width: 979px) {
   .osm-map { height: 300px; }
