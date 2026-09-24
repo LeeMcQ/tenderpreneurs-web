@@ -5,7 +5,7 @@ import { peekEnv } from "../../../lib/db";
 import { getSessionUser } from "../../../lib/auth/magic-link";
 import { resolveWinScore } from "../../../lib/winscore-resolve";
 import {
-  bidNumber, closeWeekdayChip, displayTitle, fmtCloseLong, fmtCloseTime,
+  bidNumber, closeWeekdayChip, displayTitle, docLabel, fmtCloseLong, fmtCloseTime,
   fmtValue, provinceLabel as labelProvince, urgency,
 } from "../../../lib/tender-display";
 import { bbbeeFromText, isThinRow, STANDARD_RETURNABLES } from "../../../lib/tender-enrich";
@@ -114,7 +114,7 @@ const tenderLd = {
       {lessons.length > 0 && <section><h2>Checks against closed tenders</h2><ul class="gate-list">{lessons.map((l) => <li class={l.severity === "warning" ? "warn" : ""}>{l.message}</li>)}</ul></section>}
       {similar.length > 0 && <section><h2>Similar closed notices</h2><p class="tdoc-body">Kept so you can compare scope, price signals, and missing fields — not to copy a bid.</p><ul class="sim-list">{similar.map((s) => <li><a href={`/tenders/t/${s.id}`}><strong>{s.title}</strong><span class="sub">{[s.procuring_entity, s.closing_date, s.status].filter(Boolean).join(" · ")}</span></a></li>)}</ul></section>}
       {(tender.contact_name || tender.contact_email || tender.contact_phone) && <section><h2>Published contact</h2><dl class="tdoc-contact">{tender.contact_name && <div><dt>Name</dt><dd>{tender.contact_name}</dd></div>}{tender.contact_email && <div><dt>Email</dt><dd><a href={`mailto:${tender.contact_email}`}>{tender.contact_email}</a></dd></div>}{tender.contact_phone && <div><dt>Phone</dt><dd>{tender.contact_phone}</dd></div>}</dl></section>}
-      {documents.length > 0 && <section><h2>Public bid documents</h2><ul class="doc-list">{documents.map((d) => <li><a href={d.url} target="_blank" rel="noopener noreferrer">{d.filename || d.url}</a></li>)}</ul></section>}
+      {documents.length > 0 && <section><h2>Public bid documents</h2><ul class="doc-list">{documents.map((d) => <li><a href={d.url} target="_blank" rel="noopener noreferrer">{docLabel(d)}</a></li>)}</ul></section>}
       {tender.source_url && <p><a class="src-btn" href={tender.source_url} target="_blank" rel="noopener noreferrer">Open official eTenders notice</a></p>}
       {!authed && <section class="tdoc-gate"><h2>Save this tender</h2><p class="tdoc-body">Sign in to keep notes, history, and win probability against your profile. Documents and published contacts stay public.</p><form action="/api/auth/request" method="POST" class="tdoc-form"><input type="hidden" name="redirect_to" value={Astro.url.pathname} /><input type="email" name="email" required placeholder="you@yourcompany.co.za" /><button type="submit">Send sign-in link</button></form></section>}
       {history.length > 0 && <section><h2>Change history</h2><ul class="gate-list">{history.map((h) => <li><span>{h.changed_at?.slice(0, 10)}</span> {h.change_type}: {h.old_value} → {h.new_value}</li>)}</ul></section>}

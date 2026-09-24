@@ -43,12 +43,21 @@ export function displayTitle(t: {
 export function fmtValue(cents: number | null | undefined): string {
   if (cents == null || cents === 0) return '';
   const z = cents / 100;
-  if (z >= 1_000_000) return 'R' + (z / 1_000_000).toFixed(1) + 'm';
-  if (z >= 1000) return 'R' + Math.round(z / 1000) + 'k';
+  if (z >= 1_000_000) return 'R' + (z / 1_000_000).toFixed(1) + 'M';
+  if (z >= 1000) return 'R' + Math.round(z / 1000) + 'K';
   return 'R' + Math.round(z).toLocaleString('en-ZA');
 }
 
-/** Bid / RFQ number for the left rail. Skip opaque OCDS ids. */
+export function docLabel(doc: { filename?: string | null; url?: string | null }): string {
+  const name = (doc.filename || '').trim();
+  if (name && !/^https?:/i.test(name)) return name;
+  try {
+    const fromUrl = new URL(String(doc.url || name)).searchParams.get('downloadedFileName');
+    if (fromUrl) return fromUrl;
+  } catch {}
+  return 'Bid document';
+}
+
 export function bidNumber(t: { title?: string | null; source_ref?: string | null }): string | null {
   const title = t.title?.trim() || '';
   const ref = t.source_ref?.trim() || '';
