@@ -22,6 +22,7 @@ let similar: any[] = [];
 let authed = false;
 let winData: any = null;
 let bookmark: { notes: string | null } | null = null;
+let packCodes: string[] = [];
 
 try {
   const env = peekEnv(Astro);
@@ -39,6 +40,19 @@ try {
           `SELECT notes FROM bookmarks WHERE user_id = ? AND tender_id = ?`,
         ).bind(user.id, id).first() as any;
       } catch { bookmark = null; }
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS bid_packs (
+             user_id TEXT NOT NULL, tender_id TEXT NOT NULL DEFAULT '',
+             codes_json TEXT NOT NULL DEFAULT '[]',
+             updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+             PRIMARY KEY (user_id, tender_id))`,
+        ).run();
+        const mine = await env.DB.prepare(
+          `SELECT codes_json FROM bid_packs WHERE user_id = ? AND tender_id IN (?, '') ORDER BY tender_id DESC LIMIT 1`,
+        ).bind(user.id, id).first<{ codes_json: string }>();
+        if (mine?.codes_json) packCodes = JSON.parse(mine.codes_json);
+      } catch {}
     }
     try { winData = await resolveWinScore(env, user?.id ?? null, id); } catch { winData = null; }
     if (tender) {
@@ -93,7 +107,7 @@ const tenderLd = {
 ---
 <BaseLayout title={title} description={tender.description?.slice(0, 160) || `Government tender ${ref || tender.source_ref}`}>
   <StructuredData breadcrumbs={breadcrumbs} extra={[tenderLd]} />
-  <div class="tdoc" data-tender-id={tender.id} data-thin={thin ? "1" : "0"} data-saved={bookmark ? "1" : "0"}>
+  <div class="tdoc" data-tender-id={tender.id} data-thin={thin ? "1" : "0"} data-saved={bookmark ? "1" : "0"} data-authed={authed ? "1" : "0"}>
     <div class="tdoc-wrap">
       <nav class="crumb" aria-label="Breadcrumb"><ol><li><a href="/tenders">Tenders</a></li>{tender.province && <li><a href={`/tenders/${tender.province}`}>{provinceLabel}</a></li>}</ol></nav>
       <p class="tdoc-kicker">{ref || tender.source_ref || "Official notice"}{tender.status && <span> · {tender.status}</span>}{closeChip && <span> · {closeChip}</span>}</p>
@@ -127,8 +141,20 @@ const tenderLd = {
         <h2>Bid-pack starter</h2>
         <p class="tdoc-body">{pack.summary}</p>
         <ul class="pack-list">{pack.sections.map((s) => <li>{s}</li>)}</ul>
-        <h3 class="tdoc-sub">Standard returnables</h3>
-        <ul class="pack-list">{returnables.map((r) => <li><code>{r.code}</code> <span>{r.label}</span></li>)}</ul>
+        <h3 class="tdoc-sub">Returnables checklist</h3>
+        <p class="tdoc-body">Tick what you already have. It stays on this phone. Signed-in ticks also reuse on the next tender.</p>
+        <ul class="pack-check" id="pack-check">
+          {returnables.map((r) => (
+            <li>
+              <label>
+                <input type="checkbox" data-code={r.code} checked={packCodes.includes(r.code)} />
+                <code>{r.code}</code>
+                <span>{r.label}</span>
+              </label>
+            </li>
+          ))}
+        </ul>
+        <p id="pack-status" class="tdoc-body"></p>
       </section>
       {lessons.length > 0 && <section><h2>Checks against closed tenders</h2><ul class="gate-list">{lessons.map((l) => <li class={l.severity === "warning" ? "warn" : ""}>{l.message}</li>)}</ul></section>}
       {similar.length > 0 && <section><h2>Similar closed notices</h2><p class="tdoc-body">Kept so you can compare scope, price signals, and missing fields — not to copy a bid.</p><ul class="sim-list">{similar.map((s) => <li><a href={`/tenders/t/${s.id}`}><strong>{s.title}</strong><span class="sub">{[s.procuring_entity, s.closing_date, s.status].filter(Boolean).join(" · ")}</span></a></li>)}</ul></section>}
@@ -210,6 +236,48 @@ const tenderLd = {
   if (noteBtn) noteBtn.addEventListener('click', function () {
     postBookmark({ action: 'save', notes: noteEl ? noteEl.value : '' });
   });
+
+  var packEl = document.getElementById('pack-check');
+  var packStatus = document.getElementById('pack-status');
+  var tid = root && root.getAttribute('data-tender-id');
+  var firmKey = 'tp-returnables';
+  var tenderKey = tid ? 'tp-returnables:' + tid : firmKey;
+  function readLocal() {
+    try {
+      return JSON.parse(localStorage.getItem(tenderKey) || localStorage.getItem(firmKey) || '[]');
+    } catch (e) { return []; }
+  }
+  function applyCodes(codes) {
+    if (!packEl || !codes || !codes.length) return;
+    packEl.querySelectorAll('input[data-code]').forEach(function (box) {
+      if (codes.indexOf(box.getAttribute('data-code')) !== -1) box.checked = true;
+    });
+  }
+  applyCodes(readLocal());
+  function currentCodes() {
+    return Array.prototype.map.call(packEl.querySelectorAll('input[data-code]:checked'), function (box) {
+      return box.getAttribute('data-code');
+    });
+  }
+  function persist() {
+    var codes = currentCodes();
+    try {
+      localStorage.setItem(tenderKey, JSON.stringify(codes));
+      localStorage.setItem(firmKey, JSON.stringify(codes));
+    } catch (e) {}
+    if (packStatus) packStatus.textContent = codes.length + ' of ' + packEl.querySelectorAll('input').length + ' ready';
+    if (root && root.getAttribute('data-authed') === '1') {
+      fetch('/api/tenders/pack', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ tender_id: tid, codes: codes, reuse: true }),
+      }).catch(function () {});
+    }
+  }
+  if (packEl) {
+    packEl.addEventListener('change', persist);
+    persist();
+  }
   initEnrich();
 })();
 </script>
@@ -220,4 +288,9 @@ const tenderLd = {
   .save-box textarea { width:100%; border:1px solid rgba(12,27,51,.12); border-radius:10px; padding:10px; font:inherit; margin-bottom:10px; }
   .save-box .sub { margin:8px 0 0; color:#6B7787; font-size:13px; }
   .save-row a { color:#A66708; font-weight:600; }
+  .pack-check { list-style:none; padding:0; margin:0 0 8px; }
+  .pack-check li { margin:0; }
+  .pack-check label { display:flex; gap:10px; align-items:center; min-height:44px; padding:4px 0; cursor:pointer; }
+  .pack-check input { width:18px; height:18px; }
+  .pack-check code { font-size:12px; min-width:4.5rem; }
 </style>
