@@ -1,7 +1,6 @@
 /**
  * Province counts + town clusters.
- * Two cheap GROUP BYs. No 5000-row scan.
- * Cached at the edge so map loads do not re-scan D1.
+ * Cheap GROUP BYs. Cached at the edge.
  */
 import type { APIRoute } from 'astro';
 import { peekEnv, d1Fail } from '../../../lib/db.js';
@@ -14,10 +13,10 @@ const VALID_SECTORS = new Set([
   'energy','security','consulting','cleaning','catering','legal',
 ]);
 
-function json(data: unknown, status = 200, extra?: HeadersInit) {
+function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=300', ...(extra as any) },
+    headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=300' },
   });
 }
 
@@ -61,7 +60,7 @@ export const GET: APIRoute = async (ctx) => {
   const sqlWhere = where.join(' AND ');
 
   try {
-    const [provRows, themeRows, placeRows] = await Promise.all([
+    const [provRows, themeRows] = await Promise.all([
       env.DB.prepare(
         `SELECT COALESCE(province, 'national') AS slug, COUNT(*) AS count
          FROM tenders WHERE ${sqlWhere} GROUP BY 1`,
@@ -71,7 +70,11 @@ export const GET: APIRoute = async (ctx) => {
          FROM tenders WHERE ${sqlWhere} AND sector IS NOT NULL AND sector != ''
          GROUP BY sector`,
       ).bind(...binds).all<{ slug: string; count: number }>(),
-      env.DB.prepare(
+    ]);
+
+    let placeRows: { province: string | null; sector: string | null; place: string; count: number }[] = [];
+    try {
+      const rich = await env.DB.prepare(
         `SELECT province, sector,
                 COALESCE(NULLIF(trim(locality), ''), briefing_location) AS place,
                 COUNT(*) AS count
@@ -83,8 +86,19 @@ export const GET: APIRoute = async (ctx) => {
            )
          GROUP BY province, sector, place
          LIMIT 120`,
-      ).bind(...binds).all<{ province: string | null; sector: string | null; place: string; count: number }>(),
-    ]);
+      ).bind(...binds).all<{ province: string | null; sector: string | null; place: string; count: number }>();
+      placeRows = rich.results ?? [];
+    } catch {
+      const plain = await env.DB.prepare(
+        `SELECT province, sector, briefing_location AS place, COUNT(*) AS count
+         FROM tenders
+         WHERE ${sqlWhere}
+           AND briefing_location IS NOT NULL AND trim(briefing_location) != ''
+         GROUP BY province, sector, briefing_location
+         LIMIT 80`,
+      ).bind(...binds).all<{ province: string | null; sector: string | null; place: string; count: number }>();
+      placeRows = plain.results ?? [];
+    }
 
     const provinces = Object.keys(PROVINCE_CENTROIDS).map((slug) => {
       const row = (provRows.results ?? []).find((p) => p.slug === slug);
@@ -101,7 +115,7 @@ export const GET: APIRoute = async (ctx) => {
       .sort((a, b) => b.count - a.count);
 
     const townMap = new Map<string, { name: string; province: string | null; lat: number; lng: number; count: number; precision: 'town' | 'metro' | 'province' | 'national' | 'unknown'; sector?: string | null }>();
-    for (const row of placeRows.results ?? []) {
+    for (const row of placeRows) {
       const loc = resolveLocation({
         title: row.place,
         briefing_location: row.place,
