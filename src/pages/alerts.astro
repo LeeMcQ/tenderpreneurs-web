@@ -3,7 +3,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { peekEnv } from "../lib/db";
 import "../styles/tender-list.css";
 import { getSessionUser } from "../lib/auth/magic-link";
-import { displayTitle, urgency } from "../lib/tender-display";
+import { displayTitle, urgency, PROVINCE_LABELS } from "../lib/tender-display";
+import { sentenceFor, whatsappHref, SECTORS } from "../lib/alerts/closing";
 
 export const prerender = false;
 
@@ -25,31 +26,95 @@ try {
      JOIN tenders t ON t.id = b.tender_id
      WHERE b.user_id = ?
      ORDER BY b.created_at DESC
-     LIMIT 100`,
+     LIMIT 20`,
   ).bind(user.id).all();
   saved = rows.results ?? [];
 } catch {
   saved = [];
 }
+
+let rules: any[] = [];
+try {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS closing_alerts (
+       user_id TEXT NOT NULL,
+       province TEXT NOT NULL DEFAULT '',
+       sector TEXT NOT NULL DEFAULT '',
+       within_days INTEGER NOT NULL DEFAULT 7,
+       phone TEXT,
+       last_sent_at TEXT,
+       created_at TEXT NOT NULL DEFAULT (datetime('now')),
+       PRIMARY KEY (user_id, province, sector, within_days)
+     )`,
+  ).run();
+  const r = await env.DB.prepare(
+    `SELECT province, sector, within_days, phone FROM closing_alerts WHERE user_id = ?`,
+  ).bind(user.id).all();
+  rules = r.results ?? [];
+} catch {
+  rules = [];
+}
 ---
-<BaseLayout title="Saved tenders | Tenderpreneurs" description="Tenders you saved for later.">
+<BaseLayout title="Closing alerts | Tenderpreneurs" description="One-line alerts when tenders in your province and sector are about to close.">
   <div class="tenders-workspace">
     <div class="tenders-main" style="max-width:840px">
       <nav aria-label="Breadcrumb" class="breadcrumb">
         <ol>
           <li><a href="/">Home</a></li>
           <li aria-hidden="true">›</li>
-          <li aria-current="page">Saved tenders</li>
+          <li aria-current="page">Alerts</li>
         </ol>
       </nav>
       <header class="tenders-hero">
         <div>
-          <h1>Saved tenders</h1>
-          <p class="lede">Bookmarks on this account. Email alerts use the same list once ingest is running.</p>
+          <h1>Closing alerts</h1>
+          <p class="lede">One sentence. Example: Western Cape + construction + closes in 7 days.</p>
         </div>
       </header>
+
+      <section class="acct-card" style="background:#fff;border:1px solid rgba(12,27,51,.12);border-radius:14px;padding:20px;margin-bottom:20px">
+        <form id="alert-form" class="filters" style="display:flex;flex-wrap:wrap;gap:10px">
+          <select id="al-province" class="control" required>
+            <option value="western-cape">Western Cape</option>
+            {Object.entries(PROVINCE_LABELS).filter(([k]) => k !== 'western-cape').map(([k, v]) => (
+              <option value={k}>{v}</option>
+            ))}
+            <option value="">Any province</option>
+          </select>
+          <select id="al-sector" class="control" required>
+            <option value="construction">construction</option>
+            {SECTORS.filter((s) => s !== 'construction').map((s) => <option value={s}>{s}</option>)}
+            <option value="">any sector</option>
+          </select>
+          <select id="al-within" class="control">
+            <option value="7">closes in 7 days</option>
+            <option value="3">closes in 3 days</option>
+            <option value="14">closes in 14 days</option>
+            <option value="30">closes in 30 days</option>
+          </select>
+          <input id="al-phone" class="control" type="tel" inputmode="tel" placeholder="WhatsApp number (optional)" />
+          <button class="btn-search" type="submit">Save alert</button>
+        </form>
+        <p id="alert-preview" class="lede" style="margin-top:12px">{sentenceFor({ province: 'western-cape', sector: 'construction', within: 7 })}</p>
+        <p><a id="wa-preview" href={whatsappHref(sentenceFor({ province: 'western-cape', sector: 'construction', within: 7 }))} target="_blank" rel="noopener">Send that sentence on WhatsApp now</a></p>
+        <p id="alert-status" class="lede"></p>
+      </section>
+
+      {rules.length > 0 && (
+        <section class="acct-card" style="background:#fff;border:1px solid rgba(12,27,51,.12);border-radius:14px;padding:20px;margin-bottom:20px">
+          <h2>Active rules</h2>
+          <ul>
+            {rules.map((r) => (
+              <li>{sentenceFor({ province: r.province, sector: r.sector, within: r.within_days })}</li>
+            ))}
+          </ul>
+          <p class="lede">Email goes to {user.email} about once a day when the catalogue is within quota. WhatsApp Business send is not wired — use the preview link until then.</p>
+        </section>
+      )}
+
+      <h2>Saved tenders</h2>
       {saved.length === 0 ? (
-        <p class="lede">Nothing saved yet. Open a tender and keep it from the list once you are signed in.</p>
+        <p class="lede">Nothing saved yet. Open a tender and tap Save.</p>
       ) : (
         <div class="tender-list">
           {saved.map((t) => {
@@ -70,3 +135,45 @@ try {
     </div>
   </div>
 </BaseLayout>
+<script is:inline>
+(function () {
+  var form = document.getElementById('alert-form');
+  var preview = document.getElementById('alert-preview');
+  var wa = document.getElementById('wa-preview');
+  var status = document.getElementById('alert-status');
+  function labels() {
+    var p = document.getElementById('al-province');
+    var s = document.getElementById('al-sector');
+    var w = document.getElementById('al-within');
+    var place = p.options[p.selectedIndex].text;
+    var sector = s.value || 'any sector';
+    var days = w.value || '7';
+    return place + ' + ' + sector + ' + closes in ' + days + ' days';
+  }
+  function paint() {
+    var line = labels();
+    if (preview) preview.textContent = line;
+    if (wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent(line);
+  }
+  form && ['al-province','al-sector','al-within'].forEach(function (id) {
+    var el = document.getElementById(id);
+    el && el.addEventListener('change', paint);
+  });
+  form && form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    status.textContent = 'Saving…';
+    fetch('/api/alerts/closing', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        province: document.getElementById('al-province').value,
+        sector: document.getElementById('al-sector').value,
+        within: document.getElementById('al-within').value,
+        phone: document.getElementById('al-phone').value,
+      }),
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      status.textContent = d && d.ok ? 'Saved. You will get that sentence by email once a day when matches exist.' : (d && d.error === 'auth_required' ? 'Sign in again.' : 'Could not save right now.');
+    }).catch(function () { status.textContent = 'Could not save right now.'; });
+  });
+})();
+</script>
