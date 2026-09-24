@@ -84,6 +84,8 @@ const ssrUpdated = fmtUpdatedAgo(
       <button id="map-toggle" class="map-toggle" type="button" aria-expanded="false" aria-controls="map-panel">Show map</button>
     </header>
 
+    <div id="live-note" class="live-note" hidden role="status"></div>
+
     <button id="filters-toggle" class="filters-toggle" aria-expanded="false" aria-controls="filters-sheet">
       <span>Filters</span>
       <span id="filters-count" class="filters-count" hidden>0</span>
@@ -139,7 +141,7 @@ const ssrUpdated = fmtUpdatedAgo(
           <span>{ssrTotal.toLocaleString()} open · closes soonest</span>
           {ssrUpdated && <span class="stats-updated">{ssrUpdated}</span>}
         </>
-      ) : 'Loading tenders…'}
+      ) : 'Showing the last good page while the live catalogue catches up.'}
     </div>
 
     <div class="tenders-split">

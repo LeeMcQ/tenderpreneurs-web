@@ -23,8 +23,24 @@ const sectorSel = $('sector-filter') as HTMLSelectElement;
 const withinSel = $('within-filter') as HTMLSelectElement;
 const searchInput = $('search-input') as HTMLInputElement;
 const chipsEl = $('chips'), sheet = $('filters-sheet'), toggle = $('filters-toggle'), fcount = $('filters-count');
+const liveNote = document.getElementById('live-note');
 
 function esc(s: any): string { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+function setLiveNote(msg: string | null) {
+  if (!liveNote) return;
+  if (!msg) {
+    liveNote.hidden = true;
+    liveNote.textContent = '';
+    return;
+  }
+  liveNote.hidden = false;
+  liveNote.innerHTML = msg;
+}
+
+function hasCards() {
+  return !!list.querySelector('.tender-row');
+}
 
 function renderCard(t: any): string {
   const u = urgency(t.closing_date, t.closing_time);
@@ -101,8 +117,14 @@ async function fetchTenders(append = false) {
   if (withinSel.value) params.set('within', withinSel.value);
   if (searchInput.value.trim()) params.set('q', searchInput.value.trim());
 
-  if (!append) { list.innerHTML = skeletons(); statsBar.textContent = ''; gateBanner.classList.add('hidden'); loadMoreRow.style.display = 'none'; }
-  else { loadMoreBtn.textContent = 'Loading\u2026'; loadMoreBtn.setAttribute('disabled',''); }
+  if (!append) {
+    if (!hasCards()) list.innerHTML = skeletons();
+    gateBanner.classList.add('hidden');
+    loadMoreRow.style.display = 'none';
+  } else {
+    loadMoreBtn.textContent = 'Loading\u2026';
+    loadMoreBtn.setAttribute('disabled','');
+  }
 
   try {
     const res = await fetch(`/api/tenders/search?${params}`);
@@ -110,10 +132,11 @@ async function fetchTenders(append = false) {
     if (!res.ok || !data?.ok) {
       const quota = data?.code === 'd1_quota';
       const msg = quota
-        ? (data.error || 'Live catalogue hit today\u2019s database read limit. It resets at midnight UTC.')
+        ? (data.error || 'Live catalogue hit today’s database read limit. It resets at midnight UTC.')
         : (data?.error || `Tenders could not be loaded (${res.status}).`);
-      throw new Error(msg);
+      throw Object.assign(new Error(msg), { quota });
     }
+    setLiveNote(null);
     if (!append) list.innerHTML = '';
     currentTotal = data.total ?? 0;
 
@@ -139,13 +162,15 @@ async function fetchTenders(append = false) {
       else loadMoreRow.style.display = 'none';
     }
   } catch (err) {
-    const msg = esc((err as Error)?.message || 'Tenders could not be loaded.');
-    if (!append) {
-      if (list.querySelector('.tender-row')) {
-        statsBar.textContent = (err as Error)?.message || 'Live catalogue temporarily unavailable.';
-      } else {
-        list.innerHTML = `<div class="error-state">${msg}</div>`;
-      }
+    const quota = !!(err as any)?.quota;
+    const msg = (err as Error)?.message || 'Tenders could not be loaded.';
+    setLiveNote(quota
+      ? `${esc(msg)} The cards below stay on screen. <a href="/tenders/map-demo">See how the map clusters work</a>.`
+      : esc(msg));
+    if (hasCards()) {
+      statsBar.textContent = quota ? 'Showing the last good page.' : msg;
+    } else if (!append) {
+      list.innerHTML = `<div class="error-state">${esc(msg)}</div>`;
     }
     console.error('[tenders] fetch error:', err);
   } finally { loading = false; }
@@ -187,6 +212,20 @@ const mapToggle = document.getElementById('map-toggle');
 let geoCache: GeoPayload | null = null;
 let themeCache: Array<{ slug: string; count: number }> = [];
 
+function paintMapPaused(reason: string) {
+  if (!mapEl) return;
+  mapEl.innerHTML = `<div class="osm-shell map-paused">
+    <div class="map-head">
+      <div>
+        <h2>Map paused</h2>
+        <p>${esc(reason)}</p>
+      </div>
+    </div>
+    <p class="map-demo-cta">The live catalogue map will return when the daily database limit resets. Meanwhile you can open the 20-pin cluster demo — same bubbles, same split-on-zoom, same sector pins.</p>
+    <a class="btn-primary" href="/tenders/map-demo">See how clusters work</a>
+  </div>`;
+}
+
 async function refreshMap() {
   if (!mapEl && !densEl) return;
   const params = new URLSearchParams();
@@ -196,15 +235,16 @@ async function refreshMap() {
     const res = await fetch(`/api/tenders/geo?${params}`);
     if (!res.ok) {
       const errBody = await res.json().catch(() => null);
-      if (mapEl) {
-        mapEl.innerHTML = `<div class="map-head"><div><h2>Map paused</h2><p>${errBody?.code === 'd1_quota' ? 'Daily database read limit reached. It resets at midnight UTC.' : 'Map data could not be loaded.'}</p></div></div>`;
-      }
+      paintMapPaused(errBody?.code === 'd1_quota'
+        ? 'Daily database read limit reached. It resets at midnight UTC.'
+        : 'Map data could not be loaded.');
       return;
     }
     geoCache = await res.json();
     if (!sectorSel.value && geoCache.themes?.length) themeCache = geoCache.themes;
     else if (themeCache.length && geoCache) geoCache.themes = themeCache;
   } catch {
+    paintMapPaused('Map data could not be loaded.');
     return;
   }
   if (!geoCache) return;
