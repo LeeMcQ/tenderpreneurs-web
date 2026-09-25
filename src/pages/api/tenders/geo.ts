@@ -1,7 +1,8 @@
-/** Province counts + town clusters. */
+/** One pin per open tender + province/theme counts. Cached at the edge. */
 import type { APIRoute } from 'astro';
 import { peekEnv, d1Fail } from '../../../lib/db.js';
-import { resolveLocation, PROVINCE_CENTROIDS } from '../../../lib/tender-location.js';
+import { PROVINCE_CENTROIDS } from '../../../lib/tender-location.js';
+import { pinFromTender } from '../../../lib/tender-geo-pin.js';
 
 export const prerender = false;
 
@@ -17,50 +18,12 @@ function json(data: unknown, status = 200) {
   });
 }
 
-type Town = {
-  name: string; province: string | null; lat: number; lng: number;
-  count: number; precision: 'town' | 'metro' | 'province' | 'national' | 'unknown';
-  sector?: string | null;
-  ids?: string[];
-};
-
-function addTown(
-  map: Map<string, Town>,
-  loc: ReturnType<typeof resolveLocation>,
-  n: number,
-  sector?: string | null,
-  id?: string | null,
-) {
-  if (!loc.town || loc.lat == null || loc.lng == null) return;
-  if (loc.precision === 'province' || loc.precision === 'national' || loc.precision === 'unknown') return;
-  const key = `${loc.town.toLowerCase()}|${loc.province ?? ''}`;
-  const existing = map.get(key);
-  if (existing) {
-    existing.count += n;
-    if (!existing.sector && sector) existing.sector = sector;
-    if (id && (!existing.ids || existing.ids.length < 40) && !existing.ids?.includes(id)) {
-      existing.ids = [...(existing.ids ?? []), id];
-    }
-  } else {
-    map.set(key, {
-      name: loc.town,
-      province: loc.province,
-      lat: loc.lat,
-      lng: loc.lng,
-      count: n,
-      precision: loc.precision,
-      sector: sector ?? null,
-      ids: id ? [id] : [],
-    });
-  }
-}
-
 export const GET: APIRoute = async (ctx) => {
   const url = new URL(ctx.request.url);
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
   const cacheKey = new Request(
-    `https://tenderpreneurs.co.za/api/tenders/geo?v=3&sector=${sector || ''}&q=${q || ''}`,
+    `https://tenderpreneurs.co.za/api/tenders/geo?v=4&sector=${sector || ''}&q=${q || ''}`,
     { method: 'GET' },
   );
 
@@ -70,7 +33,7 @@ export const GET: APIRoute = async (ctx) => {
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
     }
-  } catch { /* cache optional */ }
+  } catch { /* optional */ }
 
   const env = peekEnv(ctx);
   if (!env?.DB) {
@@ -92,87 +55,66 @@ export const GET: APIRoute = async (ctx) => {
     const like = `%${q.trim()}%`;
     binds.push(like, like, like);
   }
-  const sqlWhere = where.join(' AND ');
 
   try {
-    const [provRows, themeRows] = await Promise.all([
-      env.DB.prepare(
-        `SELECT COALESCE(province, 'national') AS slug, COUNT(*) AS count
-         FROM tenders WHERE ${sqlWhere} GROUP BY 1`,
-      ).bind(...binds).all<{ slug: string; count: number }>(),
-      env.DB.prepare(
-        `SELECT sector AS slug, COUNT(*) AS count
-         FROM tenders WHERE ${sqlWhere} AND sector IS NOT NULL AND sector != ''
-         GROUP BY sector`,
-      ).bind(...binds).all<{ slug: string; count: number }>(),
-    ]);
-
-    let placeRows: { province: string | null; sector: string | null; place: string; count: number }[] = [];
-    try {
-      const rich = await env.DB.prepare(
-        `SELECT province, sector,
-                COALESCE(NULLIF(trim(locality), ''), briefing_location) AS place,
-                COUNT(*) AS count
-         FROM tenders
-         WHERE ${sqlWhere}
-           AND (
-             (locality IS NOT NULL AND trim(locality) != '')
-             OR (briefing_location IS NOT NULL AND trim(briefing_location) != '')
-           )
-         GROUP BY province, sector, place
-         LIMIT 120`,
-      ).bind(...binds).all<{ province: string | null; sector: string | null; place: string; count: number }>();
-      placeRows = rich.results ?? [];
-    } catch {
-      const plain = await env.DB.prepare(
-        `SELECT province, sector, briefing_location AS place, COUNT(*) AS count
-         FROM tenders
-         WHERE ${sqlWhere}
-           AND briefing_location IS NOT NULL AND trim(briefing_location) != ''
-         GROUP BY province, sector, briefing_location
-         LIMIT 80`,
-      ).bind(...binds).all<{ province: string | null; sector: string | null; place: string; count: number }>();
-      placeRows = plain.results ?? [];
-    }
-
-    const townMap = new Map<string, Town>();
-    for (const row of placeRows) {
-      addTown(townMap, resolveLocation({
-        title: row.place,
-        briefing_location: row.place,
-        province: row.province,
-      }), Number(row.count ?? 0), row.sector);
-    }
-
-    const sample = await env.DB.prepare(
+    const rows = await env.DB.prepare(
       `SELECT id, title, description, procuring_entity, briefing_location, province, sector
-       FROM tenders WHERE ${sqlWhere}
-       ORDER BY first_seen_at DESC LIMIT 180`,
+       FROM tenders WHERE ${where.join(' AND ')}
+       LIMIT 2000`,
     ).bind(...binds).all<any>();
-    for (const row of sample.results ?? []) {
-      addTown(townMap, resolveLocation(row), townMap.size < 8 ? 1 : 0, row.sector, row.id);
+
+    const pins = [];
+    const provCount = new Map<string, number>();
+    const themeCount = new Map<string, number>();
+    const townCount = new Map<string, { name: string; province: string | null; lat: number; lng: number; count: number; ids: string[] }>();
+
+    for (const row of rows.results ?? []) {
+      const pin = pinFromTender(row);
+      const slug = row.province && PROVINCE_CENTROIDS[row.province] ? row.province : 'national';
+      provCount.set(slug, (provCount.get(slug) ?? 0) + 1);
+      if (row.sector) themeCount.set(row.sector, (themeCount.get(row.sector) ?? 0) + 1);
+      if (!pin) continue;
+      pins.push({
+        id: pin.id,
+        lat: Math.round(pin.lat * 1e5) / 1e5,
+        lng: Math.round(pin.lng * 1e5) / 1e5,
+        sector: pin.sector,
+        precision: pin.precision,
+        label: pin.label,
+      });
+      if (pin.label && pin.precision !== 'province' && pin.precision !== 'national' && pin.precision !== 'unknown') {
+        const key = pin.label.toLowerCase();
+        const t = townCount.get(key);
+        if (t) {
+          t.count += 1;
+          if (t.ids.length < 40) t.ids.push(pin.id);
+        } else {
+          townCount.set(key, {
+            name: pin.label.split(',')[0],
+            province: slug === 'national' ? null : slug,
+            lat: pin.lat,
+            lng: pin.lng,
+            count: 1,
+            ids: [pin.id],
+          });
+        }
+      }
     }
 
-    const provinces = Object.keys(PROVINCE_CENTROIDS).map((slug) => {
-      const row = (provRows.results ?? []).find((p) => p.slug === slug);
-      return {
-        slug,
-        name: PROVINCE_CENTROIDS[slug].name,
-        count: Number(row?.count ?? 0),
-        valueZar: 0,
-      };
-    }).sort((a, b) => b.count - a.count);
-
-    const themes = (themeRows.results ?? [])
-      .map((t) => ({ slug: t.slug, count: Number(t.count ?? 0) }))
-      .sort((a, b) => b.count - a.count);
+    const provinces = Object.keys(PROVINCE_CENTROIDS).map((slug) => ({
+      slug,
+      name: PROVINCE_CENTROIDS[slug].name,
+      count: provCount.get(slug) ?? 0,
+      valueZar: 0,
+    })).sort((a, b) => b.count - a.count);
 
     const res = json({
       ok: true,
-      total: provinces.reduce((n, p) => n + p.count, 0),
+      total: pins.length,
       provinces,
-      towns: [...townMap.values()].sort((a, b) => b.count - a.count),
-      themes,
+      towns: [...townCount.values()].sort((a, b) => b.count - a.count).slice(0, 80),
+      themes: [...themeCount.entries()].map(([slug, count]) => ({ slug, count })).sort((a, b) => b.count - a.count),
+      pins,
     });
 
     try {
