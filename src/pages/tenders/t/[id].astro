@@ -134,7 +134,24 @@ const tenderLd = {
       )}
       <section id="winscore" class="ws" data-tender-id={tender.id} aria-label="Win probability"><div class="ws-loading">Estimating your win probability…</div></section>
       {winData && <script id="win-data" type="application/json" set:html={JSON.stringify(winData)} />}
-      <section id="verify" class="vf" data-tender-id={tender.id} aria-label="Tender verifier"><div class="vf-loading">Checking this tender for flaws…</div></section>
+      <section id="verify" class="vf tc-box" data-tender-id={tender.id} aria-label="Tender check">
+        <div class="tc-head">
+          <div>
+            <p class="lbl">Tender Check</p>
+            <p class="tc-sub">Find gaps that make bids fail or give a contractor a later fight.</p>
+          </div>
+          <div class="tc-actions">
+            <button type="button" id="tc-basic" class="src-btn">Tender Check</button>
+            <button type="button" id="tc-advanced" class="tc-adv">Advanced</button>
+          </div>
+        </div>
+        <div id="tc-score" class="tc-score">Checking this notice…</div>
+        <div id="tc-findings"></div>
+        <div id="tc-editor" hidden></div>
+        <div id="tc-check" hidden></div>
+        <div id="tc-hist" hidden></div>
+        <p id="tc-note" class="tdoc-body tc-disc"></p>
+      </section>
       {tender.description && <section><h2>What they are buying</h2><p class="tdoc-body">{tender.description}</p></section>}
       {tender.evaluation_notes && <section><h2>Conditions recovered from the official notice</h2><pre class="tdoc-notes">{tender.evaluation_notes}</pre></section>}
       <section>
@@ -198,17 +215,122 @@ const tenderLd = {
     if (wid) fetch('/api/tenders/' + wid + '/win-score').then(function (r) { return r.json(); }).then(function (d) { paintWin(el, d); }).catch(function () { el.innerHTML = ''; });
   }
   var vf = document.getElementById('verify');
-  if (vf) {
-    var vid = vf.getAttribute('data-tender-id');
-    if (vid) fetch('/api/tenders/' + vid + '/report').then(function (r) { return r.json(); }).then(function (d) {
-      if (!d || !d.ok || !d.published || d.health_score == null) { vf.innerHTML = ''; return; }
-      vf.innerHTML = '<div class="tdoc-stat"><p class="lbl">Notice health</p><p>' + d.health_score + '/100</p></div>';
-    }).catch(function () { vf.innerHTML = ''; });
+  var scoreEl = document.getElementById('tc-score');
+  var findEl = document.getElementById('tc-findings');
+  var editEl = document.getElementById('tc-editor');
+  var checkEl = document.getElementById('tc-check');
+  var histEl = document.getElementById('tc-hist');
+  var discEl = document.getElementById('tc-note');
+  var vid = vf && vf.getAttribute('data-tender-id');
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]);
+    });
   }
+  function histKey() { return 'tp-edits:' + vid; }
+  function readHist() {
+    try { return JSON.parse(localStorage.getItem(histKey()) || '[]'); } catch (e) { return []; }
+  }
+  function writeHist(rows) {
+    try { localStorage.setItem(histKey(), JSON.stringify(rows.slice(0, 40))); } catch (e) {}
+  }
+  function paintBasic(d) {
+    if (!scoreEl) return;
+    if (!d || !d.ok) { scoreEl.textContent = 'Could not run Tender Check right now.'; return; }
+    var score = d.health_score != null ? d.health_score : d.readiness;
+    var flags = d.flags || d.findings || [];
+    scoreEl.innerHTML = '<div class="tdoc-stat"><p class="lbl">Notice health</p><p>' +
+      (score != null ? score + '/100' : '—') + '</p><p class="sub">' + flags.length + ' findings</p></div>';
+    if (!findEl) return;
+    if (!flags.length) {
+      findEl.innerHTML = '<p class="tdoc-body">No automatic gaps on the published fields. Open Advanced to scan the wording.</p>';
+      return;
+    }
+    findEl.innerHTML = flags.map(function (f) {
+      var sev = f.severity || 'info';
+      var msg = esc(f.message || f.problem || '');
+      var act = esc(f.suggested_action || f.suggestion || '');
+      return '<article class="tc-card sev-' + sev + '"><p class="tc-sev">' + sev + '</p><p>' + msg +
+        '</p>' + (act ? '<p class="tc-fix"><strong>Fix:</strong> ' + act + '</p>' : '') + '</article>';
+    }).join('');
+  }
+  function paintAdvanced(d) {
+    paintBasic(d);
+    if (discEl) discEl.textContent = d.note || d.disclaimer || '';
+    var findings = d.findings || [];
+    var accepted = {};
+    readHist().forEach(function (h) { if (h.id) accepted[h.id] = true; });
+    if (editEl) {
+      editEl.hidden = false;
+      var pairs = findings.filter(function (f) { return f.original && f.proposed; });
+      editEl.innerHTML = '<h2>Side-by-side fixes</h2><p class="tdoc-body">Left is what the notice says. Right is a plain-English correction. Accept keeps a local draft history.</p>' +
+        pairs.map(function (f) {
+          var on = accepted[f.id];
+          return '<div class="tc-pair" data-id="' + esc(f.id) + '"><p class="tc-pair-title">' + esc(f.title || f.id) +
+            '</p><div class="tc-cols"><div><span class="lbl">As published</span><p>' + esc(f.original) +
+            '</p></div><div><span class="lbl">Suggested fix</span><p>' + esc(f.proposed) +
+            '</p></div></div><button type="button" class="src-btn tc-accept"' + (on ? ' disabled' : '') + '>' +
+            (on ? 'Accepted' : 'Accept fix') + '</button></div>';
+        }).join('');
+    }
+    if (checkEl) {
+      checkEl.hidden = false;
+      var items = d.checklist || [];
+      checkEl.innerHTML = '<h2>Auto checklist</h2><p class="tdoc-body">Usual returnables plus items this notice actually names.</p><ul class="pack-check">' +
+        items.map(function (c) {
+          return '<li><label><input type="checkbox" data-adv="' + esc(c.code) + '"' +
+            (c.found_in_notice ? ' checked' : '') + ' /><code>' + esc(c.code) + '</code><span>' +
+            esc(c.label) + (c.required ? '' : ' (if it applies)') + '</span></label></li>';
+        }).join('') + '</ul>';
+    }
+    paintHist();
+  }
+  function paintHist() {
+    if (!histEl) return;
+    var rows = readHist();
+    if (!rows.length) { histEl.hidden = true; histEl.innerHTML = ''; return; }
+    histEl.hidden = false;
+    histEl.innerHTML = '<h2>Accepted fixes on this phone</h2><ul class="gate-list">' +
+      rows.slice(0, 12).map(function (h) {
+        return '<li><span>' + esc((h.at || '').slice(0, 16).replace('T', ' ')) + '</span> ' + esc(h.id) + '</li>';
+      }).join('') + '</ul>';
+  }
+  function loadBasic() {
+    if (!vid) return;
+    if (scoreEl) scoreEl.textContent = 'Checking this notice…';
+    fetch('/api/tenders/' + vid + '/verify').then(function (r) { return r.json(); }).then(paintBasic).catch(function () {
+      fetch('/api/tenders/' + vid + '/report').then(function (r) { return r.json(); }).then(paintBasic).catch(function () {
+        if (scoreEl) scoreEl.textContent = 'Check paused — try again in a minute.';
+      });
+    });
+  }
+  function loadAdvanced() {
+    if (!vid) return;
+    if (scoreEl) scoreEl.textContent = 'Running Advanced scan…';
+    fetch('/api/tenders/' + vid + '/advanced').then(function (r) { return r.json(); }).then(paintAdvanced).catch(function () {
+      if (scoreEl) scoreEl.textContent = 'Advanced scan could not run right now.';
+    });
+  }
+  if (document.getElementById('tc-basic')) document.getElementById('tc-basic').addEventListener('click', loadBasic);
+  if (document.getElementById('tc-advanced')) document.getElementById('tc-advanced').addEventListener('click', loadAdvanced);
+  if (editEl) editEl.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.tc-accept');
+    if (!btn || btn.disabled) return;
+    var wrap = btn.closest('.tc-pair');
+    var id = wrap && wrap.getAttribute('data-id');
+    if (!id) return;
+    var rows = readHist();
+    rows.unshift({ id: id, at: new Date().toISOString() });
+    writeHist(rows);
+    btn.textContent = 'Accepted';
+    btn.disabled = true;
+    if (typeof paintHist === 'function') paintHist();
+  });
+  loadBasic();
   var root = document.querySelector('.tdoc');
   var saveBtn = document.getElementById('save-btn');
   var noteBtn = document.getElementById('save-note-btn');
-  var noteEl = document.getElementById('save-note');
+  var saveNoteEl = document.getElementById('save-note');
   var statusEl = document.getElementById('save-status');
   function setSaved(on) {
     if (root) root.setAttribute('data-saved', on ? '1' : '0');
@@ -231,10 +353,10 @@ const tenderLd = {
   }
   if (saveBtn) saveBtn.addEventListener('click', function () {
     var on = root && root.getAttribute('data-saved') === '1';
-    postBookmark({ action: on ? 'remove' : 'save', notes: noteEl ? noteEl.value : '' });
+    postBookmark({ action: on ? 'remove' : 'save', notes: saveNoteEl ? saveNoteEl.value : '' });
   });
   if (noteBtn) noteBtn.addEventListener('click', function () {
-    postBookmark({ action: 'save', notes: noteEl ? noteEl.value : '' });
+    postBookmark({ action: 'save', notes: saveNoteEl ? saveNoteEl.value : '' });
   });
 
   var packEl = document.getElementById('pack-check');
@@ -293,4 +415,22 @@ const tenderLd = {
   .pack-check label { display:flex; gap:10px; align-items:center; min-height:44px; padding:4px 0; cursor:pointer; }
   .pack-check input { width:18px; height:18px; }
   .pack-check code { font-size:12px; min-width:4.5rem; }
+  .tc-box { background:#fff; border:1px solid rgba(12,27,51,.12); border-radius:16px; padding:16px; margin:0 0 22px; }
+  .tc-head { display:flex; gap:12px; justify-content:space-between; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px; }
+  .tc-sub { margin:4px 0 0; color:#6B7787; font-size:13px; font-weight:500; }
+  .tc-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .tc-adv { min-height:44px; border:1px solid #C9A15A; background:#fff; color:#141820; font-weight:700; border-radius:10px; padding:0 16px; }
+  .tc-score { margin-bottom:12px; }
+  .tc-card { background:#F3F0E8; border-radius:12px; padding:12px 14px; margin:0 0 8px; }
+  .tc-card.sev-critical { border-left:4px solid #8B1E1E; }
+  .tc-card.sev-warning { border-left:4px solid #C45C26; }
+  .tc-card.sev-info { border-left:4px solid #C9A15A; }
+  .tc-sev { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#7A4C06; margin:0 0 4px; font-weight:700; }
+  .tc-fix { margin:8px 0 0; color:#3D4A5C; }
+  .tc-pair { border:1px solid rgba(12,27,51,.12); border-radius:12px; padding:12px; margin:0 0 10px; }
+  .tc-pair-title { font-weight:700; margin:0 0 8px; }
+  .tc-cols { display:grid; gap:10px; grid-template-columns:1fr; }
+  @media (min-width:720px) { .tc-cols { grid-template-columns:1fr 1fr; } }
+  .tc-cols p { margin:6px 0 0; color:#3D4A5C; font-size:14px; }
+  .tc-disc { font-size:12px; margin-top:12px; }
 </style>
