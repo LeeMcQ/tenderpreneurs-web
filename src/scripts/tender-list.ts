@@ -86,11 +86,12 @@ function skeletons(n = 8): string {
 }
 
 let locality = '';
+let clusterIds: string[] = [];
 
 function renderChips() {
   const items: string[] = [];
   if (provinceSel.value) items.push(`<span class="chip">${PROVINCE_LABELS[provinceSel.value] ?? provinceSel.value}<button data-clear="province" aria-label="Remove province filter">\u00d7</button></span>`);
-  if (locality) items.push(`<span class="chip">${esc(locality)}<button data-clear="locality" aria-label="Remove town filter">\u00d7</button></span>`);
+  if (locality || clusterIds.length) items.push(`<span class="chip">${esc(locality || 'map cluster')}${clusterIds.length ? ` (${clusterIds.length})` : ''}<button data-clear="locality" aria-label="Remove town filter">\u00d7</button></span>`);
   if (sectorSel.value) items.push(`<span class="chip" style="text-transform:capitalize">${sectorSel.value}<button data-clear="sector" aria-label="Remove sector filter">\u00d7</button></span>`);
   if (withinSel.value) items.push(`<span class="chip">Closes in ${esc(withinSel.value)} days<button data-clear="within" aria-label="Remove closing window">\u00d7</button></span>`);
   if (searchInput.value.trim()) items.push(`<span class="chip">"${esc(searchInput.value.trim())}"<button data-clear="q" aria-label="Clear search">\u00d7</button></span>`);
@@ -102,6 +103,7 @@ function renderChips() {
 function clearFilters() {
   provinceSel.value = '';
   locality = '';
+  clusterIds = [];
   sectorSel.value = '';
   withinSel.value = '';
   searchInput.value = '';
@@ -112,7 +114,8 @@ async function fetchTenders(append = false) {
   if (loading) return; loading = true;
   const params = new URLSearchParams({ limit: String(LIMIT), offset: String(offset) });
   if (provinceSel.value) params.set('province', provinceSel.value);
-  if (locality) params.set('locality', locality);
+  if (clusterIds.length) params.set('ids', clusterIds.slice(0, 40).join(','));
+  else if (locality) params.set('locality', locality);
   if (sectorSel.value) params.set('sector', sectorSel.value);
   if (withinSel.value) params.set('within', withinSel.value);
   if (searchInput.value.trim()) params.set('q', searchInput.value.trim());
@@ -132,7 +135,7 @@ async function fetchTenders(append = false) {
     if (!res.ok || !data?.ok) {
       const quota = data?.code === 'd1_quota';
       const msg = quota
-        ? (data.error || 'Live catalogue hit today’s database read limit. It resets at midnight UTC.')
+        ? (data.error || 'Live catalogue hit today\u2019s database read limit. It resets at midnight UTC.')
         : (data?.error || `Tenders could not be loaded (${res.status}).`);
       throw Object.assign(new Error(msg), { quota });
     }
@@ -174,7 +177,7 @@ async function fetchTenders(append = false) {
     }
     console.error('[tenders] fetch error:', err);
   } finally { loading = false; }
-  void refreshMap();
+  if (!clusterIds.length) void refreshMap();
 }
 
 function resetAndFetch() { offset = 0; renderChips(); fetchTenders(false); }
@@ -199,7 +202,7 @@ chipsEl.addEventListener('click', (e) => {
   if (!btn) return;
   const what = btn.getAttribute('data-clear');
   if (what === 'province') provinceSel.value = '';
-  else if (what === 'locality') locality = '';
+  else if (what === 'locality') { locality = ''; clusterIds = []; }
   else if (what === 'sector') sectorSel.value = '';
   else if (what === 'within') withinSel.value = '';
   else if (what === 'q') searchInput.value = '';
@@ -254,6 +257,7 @@ async function refreshMap() {
       btn.addEventListener('click', () => {
         const slug = btn.getAttribute('data-province') || '';
         provinceSel.value = provinceSel.value === slug ? '' : slug;
+        clusterIds = [];
         resetAndFetch();
       });
     });
@@ -264,9 +268,9 @@ async function refreshMap() {
       geoCache,
       provinceSel.value,
       sectorSel.value,
-      (slug) => { provinceSel.value = slug; locality = ''; resetAndFetch(); },
-      (name) => { locality = name; resetAndFetch(); },
-      (theme) => { sectorSel.value = theme; resetAndFetch(); },
+      (slug) => { provinceSel.value = slug; locality = ''; clusterIds = []; resetAndFetch(); },
+      (name, ids) => { locality = name; clusterIds = ids && ids.length ? ids : []; resetAndFetch(); },
+      (theme) => { sectorSel.value = theme; clusterIds = []; resetAndFetch(); },
     );
   }
 }
