@@ -1,8 +1,6 @@
 /**
  * src/pages/api/profile.ts
  * POST /api/profile — save the signed-in user's supplier profile.
- * Normalises labels → slugs (R7) so matching/scoring work reliably.
- * PII stays in the worker; nothing is sent to any LLM.
  */
 import type { APIRoute } from 'astro';
 import { getEnv, now } from '../../lib/db.js';
@@ -27,6 +25,21 @@ export const POST: APIRoute = async (ctx) => {
 
   try {
     await env.DB.prepare(
+      `CREATE TABLE IF NOT EXISTS supplier_profiles (
+         user_id TEXT PRIMARY KEY,
+         cidb_grades_json TEXT,
+         bbbee_level INTEGER,
+         capacity_value_max INTEGER,
+         provinces_json TEXT,
+         sectors_json TEXT,
+         keywords_json TEXT,
+         csd_number TEXT,
+         jv_visible INTEGER NOT NULL DEFAULT 0,
+         updated_at TEXT
+       )`,
+    ).run();
+
+    await env.DB.prepare(
       `INSERT INTO supplier_profiles
          (user_id, cidb_grades_json, bbbee_level, capacity_value_max,
           provinces_json, sectors_json, keywords_json, csd_number, jv_visible, updated_at)
@@ -43,7 +56,7 @@ export const POST: APIRoute = async (ctx) => {
          updated_at=excluded.updated_at`
     ).bind(
       user.id,
-      p.cidb_grades_json,            // multi-grade (R1 resolved)
+      p.cidb_grades_json,
       p.bbbee_level,
       p.capacity_value_max,
       p.provinces_json,
@@ -54,7 +67,6 @@ export const POST: APIRoute = async (ctx) => {
       now(),
     ).run();
 
-    // Keep users.province / users.sectors_json in sync for legacy alert paths.
     const provinces = JSON.parse(p.provinces_json);
     await env.DB.prepare(
       `UPDATE users SET province = ?, sectors_json = ? WHERE id = ?`

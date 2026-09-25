@@ -3,7 +3,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { peekEnv } from "../lib/db";
 import "../styles/tender-list.css";
 import { getSessionUser } from "../lib/auth/magic-link";
-import { displayTitle, fmtCloseLong, urgency } from "../lib/tender-display";
+import { displayTitle, fmtCloseLong, urgency, PROVINCE_LABELS } from "../lib/tender-display";
+import { SECTOR_SLUGS } from "../lib/profile";
 
 export const prerender = false;
 
@@ -16,10 +17,36 @@ if (!user) {
   return Astro.redirect("/auth/login?redirect_to=/account");
 }
 
+await env.DB.prepare(
+  `CREATE TABLE IF NOT EXISTS supplier_profiles (
+     user_id TEXT PRIMARY KEY,
+     cidb_grades_json TEXT,
+     bbbee_level INTEGER,
+     capacity_value_max INTEGER,
+     provinces_json TEXT,
+     sectors_json TEXT,
+     keywords_json TEXT,
+     csd_number TEXT,
+     jv_visible INTEGER NOT NULL DEFAULT 0,
+     updated_at TEXT
+   )`,
+).run().catch(() => null);
+
 const profile = await env.DB.prepare(
-  `SELECT cidb_grades_json, bbbee_level, provinces_json, sectors_json, csd_number
+  `SELECT cidb_grades_json, bbbee_level, capacity_value_max, provinces_json, sectors_json, csd_number
    FROM supplier_profiles WHERE user_id = ?`,
 ).bind(user.id).first().catch(() => null);
+
+const parseList = (raw: unknown): string[] => {
+  if (!raw) return [];
+  try { const v = JSON.parse(String(raw)); return Array.isArray(v) ? v.map(String) : []; }
+  catch { return []; }
+};
+const heldGrades = parseList(profile?.cidb_grades_json);
+const heldProvinces = parseList(profile?.provinces_json);
+const heldSectors = parseList(profile?.sectors_json);
+const cidbText = heldGrades.join(', ');
+const capRand = profile?.capacity_value_max ? Math.round(Number(profile.capacity_value_max) / 100) : '';
 
 let saved: any[] = [];
 try {
@@ -55,6 +82,36 @@ try {
       </header>
 
       <section class="acct-card" style="margin-bottom:20px">
+        <h2>Can you bid?</h2>
+        <p class="lede">CIDB, B-BBEE, provinces and sectors feed the score on every tender page.</p>
+        <form id="profile-form" class="prof-form">
+          <label>CIDB grades <input class="control" name="cidb" value={cidbText} placeholder="5CE, 4GB" /></label>
+          <label>B-BBEE level
+            <select class="control" name="bbbee">
+              <option value="">Not set</option>
+              {[1,2,3,4,5,6,7,8].map((n) => <option value={`Level ${n}`} selected={profile?.bbbee_level === n}>Level {n}</option>)}
+            </select>
+          </label>
+          <label>Max contract (R) <input class="control" name="capacity" type="number" min="0" value={capRand} placeholder="2000000" /></label>
+          <label>CSD number <input class="control" name="csd" value={profile?.csd_number || ''} placeholder="MAAA…" /></label>
+          <fieldset>
+            <legend>Provinces you work in</legend>
+            {Object.entries(PROVINCE_LABELS).map(([slug, name]) => (
+              <label class="chk"><input type="checkbox" name="province" value={slug} checked={heldProvinces.includes(slug)} /> {name}</label>
+            ))}
+          </fieldset>
+          <fieldset>
+            <legend>Sectors</legend>
+            {SECTOR_SLUGS.map((slug) => (
+              <label class="chk"><input type="checkbox" name="sector" value={slug} checked={heldSectors.includes(slug)} /> {slug}</label>
+            ))}
+          </fieldset>
+          <button class="btn-search" type="submit">Save profile</button>
+          <p id="prof-status" class="lede"></p>
+        </form>
+      </section>
+
+      <section class="acct-card" style="margin-bottom:20px">
         <h2>Saved tenders</h2>
         {saved.length === 0 ? (
           <p>Nothing saved yet. Open a tender, tap Save, and it will land here.</p>
@@ -77,21 +134,6 @@ try {
           </div>
         )}
       </section>
-
-      <section class="acct-card">
-        <h2>Supplier profile</h2>
-        {profile ? (
-          <dl>
-            {profile.csd_number ? <><dt>CSD</dt><dd>{profile.csd_number}</dd></> : null}
-            {profile.bbbee_level ? <><dt>B-BBEE</dt><dd>Level {profile.bbbee_level}</dd></> : null}
-            {profile.cidb_grades_json ? <><dt>CIDB</dt><dd>{profile.cidb_grades_json}</dd></> : null}
-            {profile.provinces_json ? <><dt>Provinces</dt><dd>{profile.provinces_json}</dd></> : null}
-            {profile.sectors_json ? <><dt>Sectors</dt><dd>{profile.sectors_json}</dd></> : null}
-          </dl>
-        ) : (
-          <p>No supplier profile saved yet. Win-probability uses this once you add grades, sectors, and provinces.</p>
-        )}
-      </section>
       <p class="acct-links">
         <a href="/tenders">Browse tenders</a>
         <a href="/alerts">Alerts</a>
@@ -100,11 +142,42 @@ try {
     </div>
   </div>
 </BaseLayout>
+<script is:inline>
+(function () {
+  var form = document.getElementById('profile-form');
+  var status = document.getElementById('prof-status');
+  if (!form) return;
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var cidb = (form.cidb.value || '').split(/[,;\s]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+    var provinces = Array.prototype.map.call(form.querySelectorAll('input[name=province]:checked'), function (el) { return el.value; });
+    var sectors = Array.prototype.map.call(form.querySelectorAll('input[name=sector]:checked'), function (el) { return el.value; });
+    status.textContent = 'Saving…';
+    fetch('/api/profile', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        cidb_grades: cidb,
+        bbbeeLevel: form.bbbee.value || null,
+        provinces: provinces,
+        sectors: sectors,
+        capacityValueMaxRand: form.capacity.value ? Number(form.capacity.value) : null,
+        csdNumber: form.csd.value || null,
+      }),
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      status.textContent = d && d.ok ? 'Saved. Open a tender to see Can you bid.' : 'Could not save right now.';
+    }).catch(function () { status.textContent = 'Could not save right now.'; });
+  });
+})();
+</script>
 <style>
   .acct-card { background:#fff; border:1px solid rgba(12,27,51,.12); border-radius:14px; padding:20px; }
   .acct-card h2 { margin:0 0 12px; font-size:1.1rem; }
-  .acct-card dl { display:grid; grid-template-columns:120px 1fr; gap:8px 16px; margin:0; }
-  .acct-card dt { color:#6B7787; }
   .acct-links { display:flex; gap:16px; flex-wrap:wrap; margin-top:24px; }
   .acct-links a { color:#A66708; font-weight:600; }
+  .prof-form { display:grid; gap:12px; }
+  .prof-form label { display:grid; gap:6px; font-size:13px; color:#3D4A5C; }
+  .prof-form fieldset { border:1px solid rgba(12,27,51,.12); border-radius:12px; padding:12px; display:flex; flex-wrap:wrap; gap:8px 14px; }
+  .prof-form legend { padding:0 6px; font-size:13px; }
+  .chk { display:inline-flex !important; grid-template-columns:none; flex-direction:row; align-items:center; gap:6px; min-height:36px; }
 </style>
