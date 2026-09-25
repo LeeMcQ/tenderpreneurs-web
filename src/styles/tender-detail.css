@@ -91,3 +91,19 @@
   min-height: 44px; border: 0; border-radius: 10px; padding: 0 16px;
   background: #C9A15A; color: #141820; font-weight: 700;
 }
+
+.tdoc .tc-box { background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px; margin:0 0 22px; }
+.tdoc .tc-head { display:flex; gap:12px; justify-content:space-between; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px; }
+.tdoc .tc-sub { margin:4px 0 0; color:var(--ink-3); font-size:13px; font-weight:500; }
+.tdoc .tc-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.tdoc .tc-adv {
+  min-height:44px; border:1px solid var(--gold); background:#fff; color:var(--ink);
+  font-weight:700; border-radius:10px; padding:0 16px;
+}
+.tdoc .tc-card { background:var(--paper); border-radius:12px; padding:12px 14px; margin:0 0 8px; }
+.tdoc .tc-card.sev-critical { border-left:4px solid #8B1E1E; }
+.tdoc .tc-card.sev-warning { border-left:4px solid #C45C26; }
+.tdoc .tc-card.sev-info { border-left:4px solid var(--gold); }
+.tdoc .tc-pair { border:1px solid var(--line); border-radius:12px; padding:12px; margin:0 0 10px; }
+.tdoc .tc-cols { display:grid; gap:10px; grid-template-columns:1fr; }
+@media (min-width:720px) { .tdoc .tc-cols { grid-template-columns:1fr 1fr; } }
