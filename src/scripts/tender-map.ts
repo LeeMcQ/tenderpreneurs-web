@@ -5,34 +5,21 @@ export type GeoPayload = {
   ok: boolean;
   total?: number;
   provinces: Array<{ slug: string; name: string; count: number; valueZar: number }>;
-  towns: Array<{ name: string; province: string | null; lat: number; lng: number; count: number; precision: PlacePrecision; sector?: string | null; ids?: string[] }>;
+  towns: Array<{ name: string; province: string | null; lat: number; lng: number; count: number; precision?: PlacePrecision; sector?: string | null; ids?: string[] }>;
   themes?: Array<{ slug: string; count: number }>;
+  pins?: Array<{ id: string; lat: number; lng: number; sector?: string | null; precision?: string; label?: string }>;
 };
 
 type LeafletMap = {
-  setView: Function;
-  fitBounds: Function;
-  removeLayer: Function;
-  addLayer: Function;
-  invalidateSize: Function;
-  remove: Function;
-  on: Function;
+  setView: Function; fitBounds: Function; removeLayer: Function; addLayer: Function;
+  invalidateSize: Function; remove: Function; on: Function;
 };
 type LeafletNs = {
-  map: Function;
-  tileLayer: Function;
-  marker: Function;
-  divIcon: Function;
-  featureGroup: Function;
-  latLngBounds: Function;
-  markerClusterGroup: Function;
+  map: Function; tileLayer: Function; marker: Function; divIcon: Function;
+  featureGroup: Function; latLngBounds: Function; markerClusterGroup: Function;
 };
 
-declare global {
-  interface Window {
-    L?: LeafletNs;
-  }
-}
+declare global { interface Window { L?: LeafletNs } }
 
 const OSM_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
 const CLUSTER_JS = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js';
@@ -55,11 +42,8 @@ let townHandler: ((name: string, ids?: string[]) => void) | null = null;
 function loadCss(href: string) {
   if (document.querySelector(`link[href="${href}"]`)) return;
   const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = href;
-  document.head.appendChild(link);
+  link.rel = 'stylesheet'; link.href = href; document.head.appendChild(link);
 }
-
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null;
@@ -70,38 +54,27 @@ function loadScript(src: string): Promise<void> {
       return;
     }
     const s = document.createElement('script');
-    s.src = src;
-    s.async = true;
+    s.src = src; s.async = true;
     s.addEventListener('load', () => { (s as any).dataset.loaded = '1'; resolve(); });
     s.addEventListener('error', () => reject(new Error(src)));
     document.head.appendChild(s);
   });
 }
-
 function ensureLeaflet(): Promise<LeafletNs> {
   if (window.L?.markerClusterGroup) return Promise.resolve(window.L);
   if (leafletReady) return leafletReady;
-  loadCss(OSM_CSS);
-  loadCss(CLUSTER_CSS);
+  loadCss(OSM_CSS); loadCss(CLUSTER_CSS);
   leafletReady = loadScript(OSM_JS).then(() => loadScript(CLUSTER_JS)).then(() => {
     if (!window.L?.markerClusterGroup) throw new Error('Leaflet cluster missing');
     return window.L;
   });
   return leafletReady;
 }
-
 function countLabel(n: number): string {
-  if (n >= 100) return '100+';
-  if (n >= 50) return '50+';
-  if (n >= 20) return '20+';
-  if (n >= 10) return '10+';
-  return String(n);
+  if (n >= 100) return '100+'; if (n >= 50) return '50+'; if (n >= 20) return '20+'; if (n >= 10) return '10+'; return String(n);
 }
 function heatClass(n: number): string {
-  if (n >= 20) return 'is-red is-xl';
-  if (n >= 10) return 'is-red is-lg';
-  if (n >= 5) return 'is-amber is-md';
-  return 'is-amber is-sm';
+  if (n >= 20) return 'is-red is-xl'; if (n >= 10) return 'is-red is-lg'; if (n >= 5) return 'is-amber is-md'; return 'is-amber is-sm';
 }
 function rippleHtml(n: number): string {
   return `<div class="tp-ripple ${heatClass(n)}"><span class="core">${countLabel(n)}</span></div>`;
@@ -131,32 +104,8 @@ function pinMark(sector?: string | null): string {
 }
 function pinHtml(sector?: string | null): string {
   const fill = pinColor(sector);
-  return `<div class="tp-pin"><svg viewBox="0 0 26 36" width="28" height="36" aria-hidden="true"><path d="M13 1C7 1 2.5 6 2.5 12.2 2.5 21 13 35 13 35s10.5-14 10.5-22.8C23.5 6 19 1 13 1z" fill="${fill}" stroke="#fff" stroke-width="1.6"/>${pinMark(sector)}</svg></div>`;
+  return `<div class="tp-pin"><svg viewBox="0 0 26 36" width="26" height="34" aria-hidden="true"><path d="M13 1C7 1 2.5 6 2.5 12.2 2.5 21 13 35 13 35s10.5-14 10.5-22.8C23.5 6 19 1 13 1z" fill="${fill}" stroke="#fff" stroke-width="1.6"/>${pinMark(sector)}</svg></div>`;
 }
-
-function placeBubbles(geo: GeoPayload) {
-  const used = new Map<string, number>();
-  for (const town of geo.towns) {
-    if (town.province) used.set(town.province, (used.get(town.province) ?? 0) + town.count);
-  }
-  const bubbles: Array<{
-    lat: number; lng: number; count: number; label: string;
-    province: string | null; kind: 'town' | 'province'; sector?: string | null; ids?: string[];
-  }> = geo.towns.map((t) => ({
-    lat: t.lat, lng: t.lng, count: t.count, label: t.name,
-    province: t.province, kind: 'town', sector: t.sector, ids: t.ids,
-  }));
-  for (const p of geo.provinces) {
-    if (p.slug === 'national' || p.count === 0) continue;
-    const rest = Math.max(0, p.count - (used.get(p.slug) ?? 0));
-    if (rest === 0) continue;
-    const c = PROVINCE_CENTROIDS[p.slug];
-    if (!c) continue;
-    bubbles.push({ lat: c.lat, lng: c.lng, count: rest, label: `${p.name} (province)`, province: p.slug, kind: 'province' });
-  }
-  return bubbles;
-}
-
 function renderThemes(host: HTMLElement, geo: GeoPayload, selected: string, onTheme: (slug: string) => void) {
   const themes = geo.themes ?? [];
   host.innerHTML = [`<button type="button" class="theme-chip${selected ? '' : ' is-on'}" data-theme="">All sectors</button>`]
@@ -186,21 +135,20 @@ export async function renderMap(
       <div class="map-head">
         <div>
           <h2>Where the work is needed</h2>
-          <p>Ripple bubbles are counts. Zoom in to split them. Click a cluster to list those tenders.</p>
+          <p>Every open notice is a pin. Zoom to split clusters. GPS pins stay exact; town and province pins fan out so they are not one dot.</p>
         </div>
-        <p class="map-national">${national?.count ?? 0} national</p>
+        <p class="map-national">${geo.pins?.length ?? national?.count ?? 0} pins</p>
       </div>
       <div class="theme-row" id="map-themes" role="listbox" aria-label="Sector theme"></div>
       <div id="osm-map" class="osm-map" role="application" aria-label="South Africa tender map"></div>
       <ol class="map-legend">
-        <li><i class="dot"></i>Red ripple = many notices</li>
-        <li><i class="dot is-prov"></i>Amber ripple = fewer</li>
-        <li>Pin = one tender, mark = sector</li>
+        <li><i class="dot"></i>Ripple = cluster of notices</li>
+        <li>Pin = one tender</li>
       </ol>
       </div>`;
   } else {
     const nat = el.querySelector('.map-national');
-    if (nat) nat.textContent = `${national?.count ?? 0} national`;
+    if (nat) nat.textContent = `${geo.pins?.length ?? national?.count ?? 0} pins`;
   }
 
   const themeHost = el.querySelector('#map-themes') as HTMLElement | null;
@@ -212,7 +160,7 @@ export async function renderMap(
 
   if (!map) {
     map = L.map(mapNode, {
-      zoomControl: true, attributionControl: true, minZoom: 5, maxZoom: 16,
+      zoomControl: true, attributionControl: true, minZoom: 5, maxZoom: 17,
       maxBounds: SA_BOUNDS, maxBoundsViscosity: 0.8,
     });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -222,9 +170,9 @@ export async function renderMap(
     map.setView([-28.5, 24.7], 5);
     clusterLayer = L.markerClusterGroup({
       showCoverageOnHover: false,
-      maxClusterRadius: 58,
+      maxClusterRadius: 48,
       spiderfyOnMaxZoom: true,
-      disableClusteringAtZoom: 12,
+      disableClusteringAtZoom: 13,
       zoomToBoundsOnClick: true,
       iconCreateFunction(cluster: { getAllChildMarkers: () => Array<{ options?: { count?: number } }> }) {
         const n = cluster.getAllChildMarkers().reduce((sum, m) => sum + (m.options?.count || 1), 0);
@@ -235,38 +183,36 @@ export async function renderMap(
       const kids = e.layer?.getAllChildMarkers?.() ?? [];
       const ids = kids.flatMap((m: any) => m.options?.ids || []);
       const label = kids.find((m: any) => m.options?.townName)?.options?.townName;
-      if (ids.length && townHandler) townHandler(label || 'cluster', ids);
+      if (ids.length && townHandler) townHandler(label || 'cluster', ids.slice(0, 40));
     });
     map.addLayer(clusterLayer);
   }
 
   clusterLayer!.clearLayers();
-  const bubbles = placeBubbles(geo);
-  const markers = bubbles.map((b) => {
-    const single = b.count === 1 && b.kind === 'town';
-    const marker = L.marker([b.lat, b.lng], {
-      count: b.count,
-      ids: b.ids || [],
-      townName: b.label,
-      icon: L.divIcon({
-        html: single ? pinHtml(b.sector) : rippleHtml(b.count),
-        className: '',
-        iconSize: single ? [28, 36] : [52, 52],
-        iconAnchor: single ? [14, 34] : [26, 26],
-      }),
-      title: `${b.label}: ${b.count} open`,
-    });
-    marker.on('click', () => {
-      if (b.kind === 'town') onTown(b.label.replace(/ \(province\)$/, ''), b.ids);
-      else if (b.province) onProvince(selectedProvince === b.province ? '' : b.province);
-    });
-    return marker;
-  });
+  const pins = geo.pins && geo.pins.length ? geo.pins : [];
+  const markers = pins.length
+    ? pins.map((p) => {
+        const marker = L.marker([p.lat, p.lng], {
+          count: 1,
+          ids: [p.id],
+          townName: p.label || 'site',
+          icon: L.divIcon({
+            html: pinHtml(p.sector),
+            className: '',
+            iconSize: [26, 34],
+            iconAnchor: [13, 32],
+          }),
+          title: p.label || p.id,
+        });
+        marker.on('click', () => onTown(p.label || 'site', [p.id]));
+        return marker;
+      })
+    : [];
   clusterLayer!.addLayers(markers);
 
   if (selectedProvince && PROVINCE_CENTROIDS[selectedProvince] && selectedProvince !== 'national') {
     const c = PROVINCE_CENTROIDS[selectedProvince];
-    map!.setView([c.lat, c.lng], 7);
+    map!.setView([c.lat, c.lng], 8);
   }
   requestAnimationFrame(() => map?.invalidateSize());
 }
