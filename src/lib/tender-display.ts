@@ -2,18 +2,19 @@
 
 export const GUEST_LIST_LIMIT = 20;
 
-const REF_PREFIX = /^(TFR|RFQ|RFP|RFI|RFT|BID|N\d+|WCG|GT\/|KZN|EC\/|LP\/|MP\/|NW\/|NC\/|FS\/|WC\/|NB|IM|SCMU|PR\d)/i;
+const REF_PREFIX = /^(TFR|RFQ|RFP|RFI|RFT|BID|IDT|CPSC|TPT|WCG|GT\/|KZN|EC\/|LP\/|MP\/|NW\/|NC\/|FS\/|WC\/|NB|IM|SCMU|PR\d|N\d+)/i;
 
 export function looksLikeRef(title: string | null | undefined, sourceRef?: string | null): boolean {
   const t = (title ?? '').trim();
   if (!t) return true;
   if (sourceRef && t === sourceRef.trim()) return true;
+  if (/^intention to award/i.test(t) && t.length < 40) return true;
   if (REF_PREFIX.test(t)) return true;
   const letters = t.replace(/[^A-Za-z]/g, '').length;
   const slashes = (t.match(/\//g) || []).length;
   const words = t.split(/\s+/).filter(Boolean).length;
-  if (slashes >= 1 && t.length <= 80 && letters < 16 && /\d/.test(t) && words <= 4) return true;
-  if (!/\s/.test(t) && t.length <= 24 && /\d/.test(t) && letters <= 8) return true;
+  if (slashes >= 1 && t.length <= 80 && letters < 20 && /\d/.test(t) && words <= 6) return true;
+  if (!/\s/.test(t) && t.length <= 28 && /\d/.test(t) && letters <= 10) return true;
   return false;
 }
 
@@ -21,6 +22,10 @@ export function firstSentence(desc: string | null | undefined): string | null {
   if (!desc) return null;
   const cleaned = desc.replace(/\s+/g, ' ').trim();
   if (cleaned.length < 12) return null;
+  if (looksLikeRef(cleaned.slice(0, 40))) {
+    const rest = cleaned.replace(/^[^a-zA-Z]{0,40}/, '').trim();
+    if (rest.length >= 12) return firstSentence(rest);
+  }
   const cut = cleaned.slice(0, 160);
   const end = cut.search(/[.!?](\s|$)/);
   return (end >= 11 ? cut.slice(0, end + 1) : cut).trim();
@@ -30,11 +35,15 @@ export function displayTitle(t: {
   title?: string | null;
   source_ref?: string | null;
   description?: string | null;
+  procuring_entity?: string | null;
 }): string {
   const title = t.title?.trim() || '';
   if (title && !looksLikeRef(title, t.source_ref)) return title;
   const fromDesc = firstSentence(t.description);
-  if (fromDesc) return fromDesc;
+  if (fromDesc && !looksLikeRef(fromDesc)) return fromDesc;
+  if (t.procuring_entity && looksLikeRef(title, t.source_ref)) {
+    return `${t.procuring_entity} notice`;
+  }
   if (title) return title;
   if (t.source_ref) return `Tender ${t.source_ref}`;
   return 'Untitled tender';

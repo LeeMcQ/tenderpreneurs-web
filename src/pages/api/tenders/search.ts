@@ -1,8 +1,6 @@
 /**
  * src/pages/api/tenders/search.ts
- * SCHEMA-CORRECT: uses estimated_value, last_seen_at (not value_cents/updated_at).
  */
-
 import type { APIRoute } from 'astro';
 import { peekEnv, d1Fail } from '../../../lib/db.js';
 import { getSessionUser } from '../../../lib/auth/magic-link.js';
@@ -20,6 +18,7 @@ const VALID_SECTORS = new Set([
   'energy','security','consulting','cleaning','catering','legal',
 ]);
 const VALID_WITHIN = new Set([7, 14, 30]);
+const ULID = /^[0-9A-Z]{26}$/;
 
 export const GET: APIRoute = async (ctx) => {
   const env = peekEnv(ctx);
@@ -29,6 +28,11 @@ export const GET: APIRoute = async (ctx) => {
   const sector   = url.searchParams.get('sector')   ?? null;
   const locality = url.searchParams.get('locality') ?? null;
   const q        = url.searchParams.get('q')        ?? null;
+  const ids = (url.searchParams.get('ids') ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => ULID.test(s))
+    .slice(0, 40);
   const withinParam = parseInt(url.searchParams.get('within') ?? '', 10);
   const within = VALID_WITHIN.has(withinParam) ? withinParam : null;
   const limitParam  = parseInt(url.searchParams.get('limit')  ?? '20', 10);
@@ -47,9 +51,9 @@ export const GET: APIRoute = async (ctx) => {
   let user: any = null;
   try {
     user = await getSessionUser(env.DB, ctx.request.headers.get('cookie'));
-  } catch (_) { /* anonymous if session lookup fails */ }
+  } catch (_) { /* anonymous */ }
   const effectiveLimit = user ? limit : Math.min(limit, GUEST_LIST_LIMIT);
-  const pageOffset = user ? offset : 0;
+  const pageOffset = user || ids.length ? offset : 0;
 
   const where: string[] = [
     "status = 'open'",
@@ -58,6 +62,10 @@ export const GET: APIRoute = async (ctx) => {
   ];
   const binds: unknown[] = [];
 
+  if (ids.length) {
+    where.push(`id IN (${ids.map(() => '?').join(',')})`);
+    binds.push(...ids);
+  }
   if (province && VALID_PROVINCES.has(province)) {
     where.push('province = ?');
     binds.push(province);
@@ -75,15 +83,23 @@ export const GET: APIRoute = async (ctx) => {
     const like = `%${q.trim()}%`;
     binds.push(like, like, like, like);
   }
-  if (locality && locality.trim().length >= 2) {
+  if (!ids.length && locality && locality.trim().length >= 2) {
     where.push("(title LIKE ? OR procuring_entity LIKE ? OR description LIKE ? OR briefing_location LIKE ?)");
     const like = `%${locality.trim()}%`;
     binds.push(like, like, like, like);
   }
 
-  binds.push(effectiveLimit, pageOffset);
-
   try {
+    let total = 0;
+    if (ids.length) {
+      total = ids.length;
+    } else {
+      const counted = await env.DB.prepare(
+        `SELECT COUNT(*) AS n FROM tenders WHERE ${where.join(' AND ')}`,
+      ).bind(...binds).first<{ n: number }>();
+      total = Number(counted?.n ?? 0);
+    }
+
     const rows = await env.DB.prepare(
       `SELECT
          id, source_id, source_ref, source_url,
@@ -99,7 +115,7 @@ export const GET: APIRoute = async (ctx) => {
          COALESCE(closing_date, '9999-12-31') ASC,
          first_seen_at DESC
        LIMIT ? OFFSET ?`
-    ).bind(...binds).all<Record<string, unknown>>();
+    ).bind(...binds, effectiveLimit, pageOffset).all<Record<string, unknown>>();
 
     const tenders = (rows.results ?? []).map(t => {
       const location = resolveLocation({
@@ -121,8 +137,7 @@ export const GET: APIRoute = async (ctx) => {
     });
 
     const shown = tenders.length;
-    const hasMore = shown === effectiveLimit;
-    const total = pageOffset + shown + (hasMore ? 1 : 0);
+    const gated = !user && !ids.length && total > GUEST_LIST_LIMIT;
 
     return new Response(
       JSON.stringify({
@@ -131,7 +146,7 @@ export const GET: APIRoute = async (ctx) => {
         total,
         shown,
         tenders,
-        gated: !user && shown >= GUEST_LIST_LIMIT,
+        gated,
       }),
       { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=60' } }
     );
