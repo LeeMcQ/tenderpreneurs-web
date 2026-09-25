@@ -1,7 +1,4 @@
-/**
- * Province counts + town clusters.
- * Cheap GROUP BYs. Cached at the edge.
- */
+/** Province counts + town clusters. */
 import type { APIRoute } from 'astro';
 import { peekEnv, d1Fail } from '../../../lib/db.js';
 import { resolveLocation, PROVINCE_CENTROIDS } from '../../../lib/tender-location.js';
@@ -24,6 +21,7 @@ type Town = {
   name: string; province: string | null; lat: number; lng: number;
   count: number; precision: 'town' | 'metro' | 'province' | 'national' | 'unknown';
   sector?: string | null;
+  ids?: string[];
 };
 
 function addTown(
@@ -31,6 +29,7 @@ function addTown(
   loc: ReturnType<typeof resolveLocation>,
   n: number,
   sector?: string | null,
+  id?: string | null,
 ) {
   if (!loc.town || loc.lat == null || loc.lng == null) return;
   if (loc.precision === 'province' || loc.precision === 'national' || loc.precision === 'unknown') return;
@@ -39,6 +38,9 @@ function addTown(
   if (existing) {
     existing.count += n;
     if (!existing.sector && sector) existing.sector = sector;
+    if (id && (!existing.ids || existing.ids.length < 40) && !existing.ids?.includes(id)) {
+      existing.ids = [...(existing.ids ?? []), id];
+    }
   } else {
     map.set(key, {
       name: loc.town,
@@ -48,6 +50,7 @@ function addTown(
       count: n,
       precision: loc.precision,
       sector: sector ?? null,
+      ids: id ? [id] : [],
     });
   }
 }
@@ -57,7 +60,7 @@ export const GET: APIRoute = async (ctx) => {
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
   const cacheKey = new Request(
-    `https://tenderpreneurs.co.za/api/tenders/geo?v=2&sector=${sector || ''}&q=${q || ''}`,
+    `https://tenderpreneurs.co.za/api/tenders/geo?v=3&sector=${sector || ''}&q=${q || ''}`,
     { method: 'GET' },
   );
 
@@ -141,15 +144,13 @@ export const GET: APIRoute = async (ctx) => {
       }), Number(row.count ?? 0), row.sector);
     }
 
-    if (townMap.size < 8) {
-      const sample = await env.DB.prepare(
-        `SELECT title, description, procuring_entity, briefing_location, province, sector
-         FROM tenders WHERE ${sqlWhere}
-         ORDER BY first_seen_at DESC LIMIT 180`,
-      ).bind(...binds).all<any>();
-      for (const row of sample.results ?? []) {
-        addTown(townMap, resolveLocation(row), 1, row.sector);
-      }
+    const sample = await env.DB.prepare(
+      `SELECT id, title, description, procuring_entity, briefing_location, province, sector
+       FROM tenders WHERE ${sqlWhere}
+       ORDER BY first_seen_at DESC LIMIT 180`,
+    ).bind(...binds).all<any>();
+    for (const row of sample.results ?? []) {
+      addTown(townMap, resolveLocation(row), townMap.size < 8 ? 1 : 0, row.sector, row.id);
     }
 
     const provinces = Object.keys(PROVINCE_CENTROIDS).map((slug) => {
