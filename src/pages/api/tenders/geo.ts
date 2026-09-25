@@ -16,8 +16,40 @@ const VALID_SECTORS = new Set([
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=300' },
+    headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=180' },
   });
+}
+
+type Town = {
+  name: string; province: string | null; lat: number; lng: number;
+  count: number; precision: 'town' | 'metro' | 'province' | 'national' | 'unknown';
+  sector?: string | null;
+};
+
+function addTown(
+  map: Map<string, Town>,
+  loc: ReturnType<typeof resolveLocation>,
+  n: number,
+  sector?: string | null,
+) {
+  if (!loc.town || loc.lat == null || loc.lng == null) return;
+  if (loc.precision === 'province' || loc.precision === 'national' || loc.precision === 'unknown') return;
+  const key = `${loc.town.toLowerCase()}|${loc.province ?? ''}`;
+  const existing = map.get(key);
+  if (existing) {
+    existing.count += n;
+    if (!existing.sector && sector) existing.sector = sector;
+  } else {
+    map.set(key, {
+      name: loc.town,
+      province: loc.province,
+      lat: loc.lat,
+      lng: loc.lng,
+      count: n,
+      precision: loc.precision,
+      sector: sector ?? null,
+    });
+  }
 }
 
 export const GET: APIRoute = async (ctx) => {
@@ -25,7 +57,7 @@ export const GET: APIRoute = async (ctx) => {
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
   const cacheKey = new Request(
-    `https://tenderpreneurs.co.za/api/tenders/geo?sector=${sector || ''}&q=${q || ''}`,
+    `https://tenderpreneurs.co.za/api/tenders/geo?v=2&sector=${sector || ''}&q=${q || ''}`,
     { method: 'GET' },
   );
 
@@ -100,6 +132,26 @@ export const GET: APIRoute = async (ctx) => {
       placeRows = plain.results ?? [];
     }
 
+    const townMap = new Map<string, Town>();
+    for (const row of placeRows) {
+      addTown(townMap, resolveLocation({
+        title: row.place,
+        briefing_location: row.place,
+        province: row.province,
+      }), Number(row.count ?? 0), row.sector);
+    }
+
+    if (townMap.size < 8) {
+      const sample = await env.DB.prepare(
+        `SELECT title, description, procuring_entity, briefing_location, province, sector
+         FROM tenders WHERE ${sqlWhere}
+         ORDER BY first_seen_at DESC LIMIT 180`,
+      ).bind(...binds).all<any>();
+      for (const row of sample.results ?? []) {
+        addTown(townMap, resolveLocation(row), 1, row.sector);
+      }
+    }
+
     const provinces = Object.keys(PROVINCE_CENTROIDS).map((slug) => {
       const row = (provRows.results ?? []).find((p) => p.slug === slug);
       return {
@@ -113,31 +165,6 @@ export const GET: APIRoute = async (ctx) => {
     const themes = (themeRows.results ?? [])
       .map((t) => ({ slug: t.slug, count: Number(t.count ?? 0) }))
       .sort((a, b) => b.count - a.count);
-
-    const townMap = new Map<string, { name: string; province: string | null; lat: number; lng: number; count: number; precision: 'town' | 'metro' | 'province' | 'national' | 'unknown'; sector?: string | null }>();
-    for (const row of placeRows) {
-      const loc = resolveLocation({
-        title: row.place,
-        briefing_location: row.place,
-        province: row.province,
-      });
-      if (!loc.town || loc.lat == null || loc.lng == null) continue;
-      const key = `${loc.town.toLowerCase()}|${loc.province ?? ''}`;
-      const existing = townMap.get(key);
-      const n = Number(row.count ?? 0);
-      if (existing) {
-        existing.count += n;
-        if (!existing.sector && row.sector) existing.sector = row.sector;
-      } else townMap.set(key, {
-        name: loc.town,
-        province: loc.province,
-        lat: loc.lat,
-        lng: loc.lng,
-        count: n,
-        precision: loc.precision,
-        sector: row.sector,
-      });
-    }
 
     const res = json({
       ok: true,
