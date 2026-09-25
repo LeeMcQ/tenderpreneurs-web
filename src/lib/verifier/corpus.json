@@ -1,7 +1,7 @@
 {
-  "corpus_version": "2026-06-01",
-  "framework_version": "PPPFA-2000 + Preferential Procurement Regulations 2022 + PFMA/MFMA (PPA 2024 signed, not yet proclaimed)",
-  "note": "RE-REVIEW when the Public Procurement Act 28 of 2024 is proclaimed. Per s66 PPA, bids advertised before commencement are governed by the law in force at advertisement.",
+  "corpus_version": "2026-09-25",
+  "framework_version": "PPPFA-2000 + Preferential Procurement Regulations 2022 + PFMA/MFMA. Public Procurement Act 28 of 2024 declared invalid by the Constitutional Court on 17 September 2026 ([2026] ZACC 37).",
+  "note": "Do not apply the Public Procurement Act 28 of 2024. Until Parliament passes a valid replacement, bids are governed by the law in force at advertisement: PFMA/MFMA, PPPFA 2000, PPR 2022.",
   "disclaimer": "Automated guidance only — NOT legal advice. Verify every item against the official tender documents and current legislation. Corpus requires sign-off by a procurement lawyer before production use.",
   "rules": [
     { "id": "no_closing_date", "category": "process", "severity": "critical", "rule_ref": "Constitution s217 · PPR 2022", "message": "No closing date is stated.", "suggested_action": "State a clear closing date and time.", "needs_legal_review": true },
