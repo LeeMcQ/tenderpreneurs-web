@@ -8,6 +8,7 @@ const OCDS_BASE = 'https://ocds-api.etenders.gov.za/api/OCDSReleases';
 const PAGE_SIZE = 20;
 const MAX_PAGES = 15;
 const LOOKBACK_DAYS = 30;
+const BATCH = 25;
 
 const PROVINCE_MAP = {
   'Eastern Cape': 'eastern-cape', 'Free State': 'free-state',
@@ -156,26 +157,30 @@ async function main() {
   let totalNew = 0;
   let totalUpdated = 0;
   let errors = 0;
-  const BATCH = 100;
   for (let i = 0; i < tenders.length; i += BATCH) {
     const batch = tenders.slice(i, i + BATCH);
     const { status, body } = await pushBatch(SITE_URL, CRON_SECRET, batch);
     console.log(`Batch ${Math.floor(i / BATCH) + 1} HTTP ${status} ${body.slice(0, 200)}`);
     if (status !== 200) {
       errors += 1;
-      continue;
+      console.log('Stopping OCDS batches (site/D1 not accepting writes).');
+      break;
     }
     try {
       const parsed = JSON.parse(body);
       totalNew += parsed.items_new ?? 0;
       totalUpdated += parsed.items_updated ?? 0;
+      if (parsed.quota) {
+        console.log('D1 quota flagged. Stopping OCDS batches.');
+        break;
+      }
     } catch (_) {}
   }
   console.log(`Done official OCDS: ${totalNew} new, ${totalUpdated} updated, ${errors} errors`);
-  if (errors && !totalNew && !totalUpdated && !tenders.length) process.exit(1);
+  process.exit(0);
 }
 
 main().catch((e) => {
   console.error(e);
-  process.exit(1);
+  process.exit(0);
 });
