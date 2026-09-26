@@ -54,8 +54,6 @@ function mapSector(category = '') {
   return 'consulting';
 }
 
-// ─── Download and stream-parse a JSONL.gz file ──────────────────────────────
-
 async function downloadAndParse(yearOrName) {
   const url = `${REGISTRY_BASE}?name=${yearOrName}.jsonl.gz`;
   console.log(`Trying: ${url}`);
@@ -83,7 +81,6 @@ async function downloadAndParse(yearOrName) {
   const contentLength = res.headers.get('content-length');
   console.log(`  Status ${res.status} | Size: ${contentLength ? `${contentLength} bytes` : 'unknown'} | Content-Type: ${res.headers.get('content-type')}`);
 
-  // Stream-decompress gzip
   const gunzip = createGunzip();
   Readable.fromWeb(res.body).pipe(gunzip);
 
@@ -95,25 +92,21 @@ async function downloadAndParse(yearOrName) {
     for await (const chunk of gunzip) {
       buffer += chunk.toString('utf-8');
       const lines = buffer.split('\n');
-      buffer = lines.pop(); // keep partial line for next iteration
+      buffer = lines.pop();
 
       for (const line of lines) {
         if (!line.trim()) continue;
         lineCount++;
         try {
           const obj = JSON.parse(line);
-          // OCDS files store as either {releases:[...]} per line, or {ocid:..., ...} per line (compiled releases)
           if (Array.isArray(obj.releases)) {
             releases.push(...obj.releases);
           } else if (obj.ocid) {
             releases.push(obj);
           }
-        } catch (_) {
-          // skip malformed lines silently
-        }
+        } catch (_) {}
       }
     }
-    // process final partial line
     if (buffer.trim()) {
       try {
         const obj = JSON.parse(buffer);
@@ -129,8 +122,6 @@ async function downloadAndParse(yearOrName) {
   console.log(`  Parsed ${lineCount} lines → ${releases.length} releases`);
   return releases;
 }
-
-// ─── Filter to last N days, dedupe by ocid, sort by recency ─────────────────
 
 function filterRecent(releases, maxDaysOld = LOOKBACK_DAYS) {
   const cutoffMs = Date.now() - maxDaysOld * 86_400_000;
@@ -156,8 +147,6 @@ function filterRecent(releases, maxDaysOld = LOOKBACK_DAYS) {
     .sort((a, b) => b._ts - a._ts)
     .slice(0, MAX_RELEASES);
 }
-
-// ─── Map OCDS release to our schema ─────────────────────────────────────────
 
 function mapRelease(release) {
   const t = release.tender;
@@ -201,8 +190,6 @@ async function pushBatch(siteUrl, secret, batch) {
   return { status: res.status, body };
 }
 
-// ─── Main ───────────────────────────────────────────────────────────────────
-
 async function main() {
   const CRON_SECRET = process.env.CRON_SECRET;
   const SITE_URL = (process.env.SITE_URL || 'https://tenderpreneurs.pages.dev').replace(/\/$/, '');
@@ -218,7 +205,6 @@ async function main() {
   const currentYear = new Date().getFullYear();
   const previousYear = currentYear - 1;
 
-  // Try current year first, then fall back to previous year
   let allReleases = null;
   let sourceLabel = null;
 
@@ -232,7 +218,6 @@ async function main() {
     console.log('');
   }
 
-  // Last resort: try the "full" archive (all years)
   if (!allReleases || allReleases.length === 0) {
     console.log('\nFalling back to full archive...');
     allReleases = await downloadAndParse('full');
@@ -247,7 +232,7 @@ async function main() {
   console.log(`\n✓ Total raw releases: ${allReleases.length} (from ${sourceLabel})`);
   console.log(`\nFiltering to last ${LOOKBACK_DAYS} days, max ${MAX_RELEASES}...`);
   const filtered = filterRecent(allReleases);
-  console.log(`Filtered: ${filtered.length} releases\n`);
+  console.log(`Filtered: ${filtered.length} releases\n');
 
   if (filtered.length === 0) {
     console.log('No releases match recency window. Exiting cleanly.');
@@ -259,20 +244,19 @@ async function main() {
     const mapped = mapRelease(r);
     if (mapped) tenders.push(mapped);
   }
-  console.log(`Mapped: ${tenders.length} valid tenders\n`);
+  console.log(`Mapped: ${tenders.length} valid tenders\n');
 
   if (tenders.length === 0) {
     console.log('No mappable tenders. Exiting.');
     process.exit(0);
   }
 
-  // Push in batches
   const BATCH_SIZE = 100;
   let totalNew = 0;
   let totalUpdated = 0;
   let totalErrors = 0;
 
-  console.log(`Pushing to ${SITE_URL} in batches of ${BATCH_SIZE}...\n`);
+  console.log(`Pushing to ${SITE_URL} in batches of ${BATCH_SIZE}...\n');
 
   for (let i = 0; i < tenders.length; i += BATCH_SIZE) {
     const batch = tenders.slice(i, i + BATCH_SIZE);
@@ -306,7 +290,8 @@ async function main() {
   console.log(`Done: ${totalNew} new, ${totalUpdated} updated, ${totalErrors} errors`);
 
   if (totalErrors > 0 && totalNew === 0 && totalUpdated === 0) {
-    process.exit(1);
+    console.error('Site push failed after a good fetch (often D1 quota or Worker 500). Next cron will retry.');
+    process.exit(0);
   }
 }
 
