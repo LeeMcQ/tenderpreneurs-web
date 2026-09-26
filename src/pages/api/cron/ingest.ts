@@ -23,6 +23,7 @@ import { archiveTender } from '../../../lib/tender-archive.js';
 export const prerender = false;
 
 const MAX_PER_RUN = 400;
+const ARCHIVE_CAP = 8;
 const OPEN_STATUSES = new Set(['', 'active', 'open', 'planning', 'planned', 'tender']);
 
 function filenameFromUrl(url: string): string {
@@ -37,6 +38,10 @@ function toOpenStatus(raw: unknown): string {
   const s = String(raw ?? '').toLowerCase();
   if (!s || OPEN_STATUSES.has(s)) return 'open';
   return String(raw);
+}
+
+function isQuota(err: unknown): boolean {
+  return /row read limit|free tier daily|d1_quota/i.test(String(err ?? ''));
 }
 
 export const POST: APIRoute = async (ctx) => {
@@ -58,11 +63,17 @@ async function handleIngest(ctx: Parameters<APIRoute>[0]): Promise<Response> {
   }
 
   const db = env.DB;
-  await ensureReferenceSchema(db);
   const url = new URL(ctx.request.url);
   const sourceParam = url.searchParams.get('source');
   const fetchMode = url.searchParams.get('fetch') === '1';
+  const migrate = url.searchParams.get('migrate') === '1';
   const contentType = ctx.request.headers.get('content-type') ?? '';
+
+  // JSON dump pushes hit this endpoint many times per cron.
+  // Schema ensure (~25 D1 statements) only on adapter/migrate runs.
+  if (migrate || fetchMode || !contentType.includes('application/json')) {
+    await ensureReferenceSchema(db);
+  }
 
   if (contentType.includes('application/json') && !fetchMode) {
     let body: any;
@@ -80,9 +91,8 @@ async function handleIngest(ctx: Parameters<APIRoute>[0]): Promise<Response> {
     }
 
     const result = await writeTenders(db, sourceId, rawTenders);
-    const closed = await closeExpired(db);
-    await logRun(db, sourceId, result, null, 0);
-    return json({ ok: true, source: sourceId, closed_expired: closed, ...result }, 200);
+    await logRun(db, sourceId, result, result.quota ? 'd1_quota' : null, 0);
+    return json({ ok: !result.quota, source: sourceId, closed_expired: 0, ...result }, result.quota ? 503 : 200);
   }
 
   const adapters = sourceParam
@@ -108,9 +118,19 @@ async function handleIngest(ctx: Parameters<APIRoute>[0]): Promise<Response> {
       console.error(`[ingest] ${adapter.sourceId} fetch failed:`, err);
     }
 
-    const writeResult = errorMessage
-      ? { items_found: 0, items_new: 0, items_updated: 0 }
-      : await writeTenders(db, adapter.sourceId, tenders.slice(0, MAX_PER_RUN));
+    let writeResult = { items_found: 0, items_new: 0, items_updated: 0, quota: false };
+    if (!errorMessage) {
+      try {
+        writeResult = await writeTenders(db, adapter.sourceId, tenders.slice(0, MAX_PER_RUN));
+      } catch (err) {
+        if (isQuota(err)) {
+          errorMessage = 'd1_quota';
+          writeResult.quota = true;
+        } else {
+          errorMessage = String(err);
+        }
+      }
+    }
 
     const duration = Date.now() - adapterStart;
     await logRun(db, adapter.sourceId, writeResult, errorMessage, duration);
@@ -120,18 +140,26 @@ async function handleIngest(ctx: Parameters<APIRoute>[0]): Promise<Response> {
       duration_ms: duration,
       error: errorMessage,
     };
+
+    if (writeResult.quota || errorMessage === 'd1_quota') break;
   }
 
-  const closed = await closeExpired(db);
+  let closed = 0;
+  try {
+    closed = await closeExpired(db);
+  } catch (err) {
+    if (!isQuota(err)) console.error('[ingest] closeExpired', err);
+  }
   return json({ ok: true, results, closed_expired: closed, total_ms: Date.now() - globalStart }, 200);
 }
 
 async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
-  if (tenders.length === 0) return { items_found: 0, items_new: 0, items_updated: 0 };
+  if (tenders.length === 0) return { items_found: 0, items_new: 0, items_updated: 0, quota: false };
 
   const itemsFound = tenders.length;
   let itemsNew = 0;
   let itemsUpdated = 0;
+  let quota = false;
 
   const withFp = await Promise.all(
     tenders.map(async (t) => ({
@@ -142,14 +170,19 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
 
   const refs = tenders.map(t => t.externalId);
   const existingMap = new Map<string, { id: string; fingerprint: string }>();
-  for (let i = 0; i < refs.length; i += 50) {
-    const chunk = refs.slice(i, i + 50);
-    const ph = chunk.map(() => '?').join(',');
-    const rows = await db
-      .prepare(`SELECT id, source_ref, fingerprint FROM tenders WHERE source_id=? AND source_ref IN (${ph})`)
-      .bind(sourceId, ...chunk)
-      .all<{ id: string; source_ref: string; fingerprint: string }>();
-    for (const r of rows.results ?? []) existingMap.set(r.source_ref, r);
+  try {
+    for (let i = 0; i < refs.length; i += 50) {
+      const chunk = refs.slice(i, i + 50);
+      const ph = chunk.map(() => '?').join(',');
+      const rows = await db
+        .prepare(`SELECT id, source_ref, fingerprint FROM tenders WHERE source_id=? AND source_ref IN (${ph})`)
+        .bind(sourceId, ...chunk)
+        .all<{ id: string; source_ref: string; fingerprint: string }>();
+      for (const r of rows.results ?? []) existingMap.set(r.source_ref, r);
+    }
+  } catch (err) {
+    if (isQuota(err)) return { items_found: itemsFound, items_new: 0, items_updated: 0, quota: true };
+    throw err;
   }
 
   const toInsert = withFp.filter(({ t }) => !existingMap.has(t.externalId));
@@ -204,13 +237,18 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
         now(), now(),
       );
     });
-    for (let i = 0; i < stmts.length; i += 100) {
-      await db.batch(stmts.slice(i, i + 100));
+    try {
+      for (let i = 0; i < stmts.length; i += 50) {
+        await db.batch(stmts.slice(i, i + 50));
+      }
+      itemsNew = toInsert.length;
+    } catch (err) {
+      if (isQuota(err)) quota = true;
+      else throw err;
     }
-    itemsNew = toInsert.length;
   }
 
-  if (toUpdate.length > 0) {
+  if (!quota && toUpdate.length > 0) {
     const stmts = toUpdate.map(({ t, fp }) => {
       const ex = existingMap.get(t.externalId)!;
       const status = toOpenStatus(t.status);
@@ -257,37 +295,48 @@ async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
         fp, now(), ex.id,
       );
     });
-    for (let i = 0; i < stmts.length; i += 100) {
-      await db.batch(stmts.slice(i, i + 100));
-    }
-    itemsUpdated = toUpdate.length;
-  }
-
-  for (const row of archived.slice(0, 80)) {
     try {
-      await archiveTender(db, {
-        id: row.id,
-        title: row.t.title,
-        description: row.t.description ?? null,
-        procuring_entity: row.t.buyer ?? null,
-        briefing_location: row.t.briefingVenue ?? null,
-        province: row.t.province ?? null,
-        source_ref: row.t.externalId ?? null,
-        source_url: row.t.sourceUrl ?? null,
-        sector: row.t.sector ?? null,
-        published_date: row.t.openingDate ?? null,
-        closing_date: (row.t.closingDate || '').slice(0, 10) || null,
-        closing_time: clockFromIso(row.t.closingDate),
-        briefing_date: row.t.briefingDate ?? null,
-        briefing_compulsory: row.t.briefingCompulsory ? 1 : 0,
-        documents_json: row.t.documents_json ?? null,
-      });
-    } catch {
-      break;
+      for (let i = 0; i < stmts.length; i += 50) {
+        await db.batch(stmts.slice(i, i + 50));
+      }
+      itemsUpdated = toUpdate.length;
+    } catch (err) {
+      if (isQuota(err)) quota = true;
+      else throw err;
     }
   }
 
-  return { items_found: itemsFound, items_new: itemsNew, items_updated: itemsUpdated };
+  if (!quota) {
+    for (const row of archived.slice(0, ARCHIVE_CAP)) {
+      try {
+        await archiveTender(db, {
+          id: row.id,
+          title: row.t.title,
+          description: row.t.description ?? null,
+          procuring_entity: row.t.buyer ?? null,
+          briefing_location: row.t.briefingVenue ?? null,
+          province: row.t.province ?? null,
+          source_ref: row.t.externalId ?? null,
+          source_url: row.t.sourceUrl ?? null,
+          sector: row.t.sector ?? null,
+          published_date: row.t.openingDate ?? null,
+          closing_date: (row.t.closingDate || '').slice(0, 10) || null,
+          closing_time: clockFromIso(row.t.closingDate),
+          briefing_date: row.t.briefingDate ?? null,
+          briefing_compulsory: row.t.briefingCompulsory ? 1 : 0,
+          documents_json: row.t.documents_json ?? null,
+        });
+      } catch (err) {
+        if (isQuota(err)) {
+          quota = true;
+          break;
+        }
+        break;
+      }
+    }
+  }
+
+  return { items_found: itemsFound, items_new: itemsNew, items_updated: itemsUpdated, quota };
 }
 
 async function logRun(

@@ -5,14 +5,13 @@
  * VERIFIED URLs (checked against live OCP Data Registry page 2026-05-19):
  *   https://data.open-contracting.org/en/publication/143/download?name=2026.jsonl.gz
  *   https://data.open-contracting.org/en/publication/143/download?name=2025.jsonl.gz
- *   ...etc
  *
  * Strategy:
  *   1. Try current year first (small file, freshest data)
  *   2. Fall back to previous year if current year is empty/missing
  *   3. Stream-decompress gzip and parse JSONL line by line
  *   4. Filter to releases from last 90 days
- *   5. Push to ingest endpoint in batches of 100
+ *   5. Push to ingest endpoint in small batches so a D1 quota hit stops early
  */
 
 import { createGunzip } from 'node:zlib';
@@ -20,8 +19,9 @@ import { Readable } from 'node:stream';
 
 const REGISTRY_BASE = 'https://data.open-contracting.org/en/publication/143/download';
 const FETCH_TIMEOUT_MS = 120_000;
-const MAX_RELEASES = 500;
+const MAX_RELEASES = 200;
 const LOOKBACK_DAYS = 90;
+const BATCH_SIZE = 25;
 
 const PROVINCE_MAP = {
   'Eastern Cape': 'eastern-cape', 'Free State': 'free-state',
@@ -251,7 +251,6 @@ async function main() {
     process.exit(0);
   }
 
-  const BATCH_SIZE = 100;
   let totalNew = 0;
   let totalUpdated = 0;
   let totalErrors = 0;
@@ -270,19 +269,25 @@ async function main() {
       if (status !== 200) {
         console.log(`  Response: ${body.slice(0, 500)}`);
         totalErrors++;
-        continue;
+        console.log('Stopping further dump batches (site/D1 not accepting writes).');
+        break;
       }
       try {
         const parsed = JSON.parse(body);
         totalNew += parsed.items_new ?? 0;
         totalUpdated += parsed.items_updated ?? 0;
         console.log(`  New: ${parsed.items_new ?? 0}  Updated: ${parsed.items_updated ?? 0}`);
+        if (parsed.quota) {
+          console.log('D1 quota flagged. Stopping dump batches.');
+          break;
+        }
       } catch {
         console.log(`  Response: ${body.slice(0, 200)}`);
       }
     } catch (err) {
       console.log(`  Error: ${err.message}`);
       totalErrors++;
+      break;
     }
   }
 
@@ -291,8 +296,8 @@ async function main() {
 
   if (totalErrors > 0 && totalNew === 0 && totalUpdated === 0) {
     console.error('Site push failed after a good fetch (often D1 quota or Worker 500). Next cron will retry.');
-    process.exit(0);
   }
+  process.exit(0);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
