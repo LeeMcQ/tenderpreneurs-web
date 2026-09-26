@@ -232,7 +232,7 @@ async function main() {
   console.log(`\n✓ Total raw releases: ${allReleases.length} (from ${sourceLabel})`);
   console.log(`\nFiltering to last ${LOOKBACK_DAYS} days, max ${MAX_RELEASES}...`);
   const filtered = filterRecent(allReleases);
-  console.log(`Filtered: ${filtered.length} releases\n');
+  console.log(`Filtered: ${filtered.length} releases\n`);
 
   if (filtered.length === 0) {
     console.log('No releases match recency window. Exiting cleanly.');
@@ -244,7 +244,7 @@ async function main() {
     const mapped = mapRelease(r);
     if (mapped) tenders.push(mapped);
   }
-  console.log(`Mapped: ${tenders.length} valid tenders\n');
+  console.log(`Mapped: ${tenders.length} valid tenders\n`);
 
   if (tenders.length === 0) {
     console.log('No mappable tenders. Exiting.');
@@ -256,7 +256,7 @@ async function main() {
   let totalUpdated = 0;
   let totalErrors = 0;
 
-  console.log(`Pushing to ${SITE_URL} in batches of ${BATCH_SIZE}...\n');
+  console.log(`Pushing to ${SITE_URL} in batches of ${BATCH_SIZE}...\n`);
 
   for (let i = 0; i < tenders.length; i += BATCH_SIZE) {
     const batch = tenders.slice(i, i + BATCH_SIZE);
