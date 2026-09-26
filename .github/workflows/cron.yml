@@ -33,15 +33,17 @@ jobs:
           SITE_URL: ${{ secrets.SITE_URL || 'https://tenderpreneurs.co.za' }}
         run: node .github/scripts/fetch-etenders-ocds.js
       - name: Fetch eTenders OCP dump + push (backfill)
+        continue-on-error: true
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: ${{ secrets.SITE_URL || 'https://tenderpreneurs.co.za' }}
         run: node .github/scripts/fetch-etenders.js
       - name: Ingest public SOE and metro adapters
+        if: always()
         env:
           SITE_URL: ${{ secrets.SITE_URL || 'https://tenderpreneurs.co.za' }}
         run: |
-          fail=0
+          ok=0
           for source in sanral eskom transnet cct acsa dbsa coj tshwane ekurhuleni; do
             HTTP=$(curl -s -o "/tmp/${source}.txt" -w "%{http_code}" \
               -X POST \
@@ -51,9 +53,12 @@ jobs:
             echo "${source} HTTP $HTTP"
             cat "/tmp/${source}.txt"
             echo
-            [ "$HTTP" -eq 200 ] || fail=1
+            if [ "$HTTP" = "200" ]; then ok=1; else echo "::warning::$source ingest HTTP $HTTP"; fi
           done
-          exit $fail
+          if [ "$ok" != "1" ]; then
+            echo "::warning::No adapter returned 200. Site or D1 is down; next run will retry."
+          fi
+          exit 0
 
   audit:
     name: Daily audit
@@ -73,7 +78,10 @@ jobs:
             --max-time 30 \
             "${SITE_URL}/api/cron/audit")
           echo "HTTP $HTTP"; cat /tmp/body.txt
-          [ "$HTTP" -eq 200 ] || exit 1
+          if [ "$HTTP" != "200" ]; then
+            echo "::warning::audit HTTP $HTTP"
+          fi
+          exit 0
 
   alerts:
     name: Closing alerts
@@ -93,4 +101,7 @@ jobs:
             --max-time 45 \
             "${SITE_URL}/api/cron/closing-alerts")
           echo "HTTP $HTTP"; cat /tmp/body.txt
-          [ "$HTTP" -eq 200 ] || exit 1
+          if [ "$HTTP" != "200" ]; then
+            echo "::warning::alerts HTTP $HTTP"
+          fi
+          exit 0
