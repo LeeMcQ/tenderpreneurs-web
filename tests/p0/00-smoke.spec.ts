@@ -1,4 +1,4 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 const CRITICAL_ROUTES = [
   '/', 
@@ -23,8 +23,9 @@ for (const route of CRITICAL_ROUTES) {
   });
 }
 
-// Deep internal link checker (fast, safe, no timeout)
+// Deep internal link checker — many sequential GETs against live site need >30s
 test('all internal links work (deep check)', async ({ page }) => {
+  test.setTimeout(120_000);
   const pagesToScan = ['/', '/tenders', '/blog'];
   let brokenCount = 0;
 
