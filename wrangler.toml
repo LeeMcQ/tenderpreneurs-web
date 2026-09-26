@@ -13,9 +13,6 @@ migrations_dir = "migrations"
 binding = "TENDERPRENEURS_TENDERS"
 bucket_name = "tenderpreneurs-tenders"
 
-[triggers]
-crons = ["0 */6 * * *", "30 7 * * *", "0 8 * * *"]
-
 [vars]
 PUBLIC_SITE_URL    = "https://tenderpreneurs.co.za"
 SESSION_TTL_DAYS   = "30"
