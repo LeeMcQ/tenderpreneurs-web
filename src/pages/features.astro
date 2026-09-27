@@ -1,15 +1,12 @@
 ---
 // src/pages/features.astro
-// Dedicated features page — fixes the broken /#features footer anchor
-// (which only worked from the homepage). Now every page can link here.
-
 import BaseLayout from "../layouts/BaseLayout.astro";
 import StatusBadge from "../components/StatusBadge.astro";
 import { CTA, FEATURES } from "../config/site";
 
 const title = "Features — Tenderpreneurs";
 const description =
-  "Everything Tenderpreneurs offers: PFMA knowledge base, AI Assistant, live tender feed, win-probability scoring, and B-BBEE tools. Honest status labels on every feature.";
+  "Everything Tenderpreneurs offers: PFMA knowledge base, AI Assistant, live tender feed, Create and Review tools, and B-BBEE guides. Honest status labels on every feature.";
 ---
 
 <BaseLayout title={title} description={description}>
@@ -32,7 +29,7 @@ const description =
     </header>
 
     <section class="feature-group" aria-labelledby="research-h">
-      <h2 id="research-h">PFMA research &amp; compliance</h2>
+      <h2 id="research-h">PFMA research & compliance</h2>
       <p class="group-intro">Free, forever. The foundation of Tenderpreneurs.</p>
       <ul class="feature-list">
         <li>
@@ -104,16 +101,9 @@ const description =
     </section>
 
     <section class="feature-group" aria-labelledby="ai-h">
-      <h2 id="ai-h">AI scoring &amp; analysis</h2>
-      <p class="group-intro">The competitive edge. Know whether to bid before you spend a week preparing.</p>
+      <h2 id="ai-h">Buyer tools & analysis</h2>
+      <p class="group-intro">Draft a notice, review it before it goes live, and check PPPFA preference points.</p>
       <ul class="feature-list">
-        <li>
-          <div class="feature-row">
-            <span class="feature-name">{FEATURES.winProbability.label}</span>
-            <StatusBadge status={FEATURES.winProbability.status} eta={FEATURES.winProbability.eta} />
-          </div>
-          <p>Score across 6 dimensions: B-BBEE, CSD status, technical capability, experience, financial standing, and pricing. Get a bid/no-bid recommendation in under 60 seconds.</p>
-        </li>
         <li>
           <div class="feature-row">
             <span class="feature-name">{FEATURES.bbbeeCalculator.label}</span>
@@ -132,7 +122,7 @@ const description =
     </section>
 
     <section class="feature-group" aria-labelledby="team-h">
-      <h2 id="team-h">For teams &amp; advisors</h2>
+      <h2 id="team-h">For teams & advisors</h2>
       <p class="group-intro">Enterprise plan only.</p>
       <ul class="feature-list">
         <li>
@@ -147,14 +137,14 @@ const description =
             <span class="feature-name">{FEATURES.apiAccess.label}</span>
             <StatusBadge status={FEATURES.apiAccess.status} eta={FEATURES.apiAccess.eta} />
           </div>
-          <p>Programmatic access to the tender feed and scoring engine.</p>
+          <p>Programmatic access to the tender feed.</p>
         </li>
       </ul>
     </section>
 
     <section class="features-cta">
       <h2>Start with the free PFMA toolkit</h2>
-      <p>No credit card required. Upgrade to Professional once the tender feed and AI scoring are live.</p>
+      <p>No credit card required. Upgrade to Professional once the tender feed and alerts are live.</p>
       <div class="cta-row">
         <a href={CTA.signup} class="btn-primary">Get started free</a>
         <a href={CTA.pricing} class="btn-secondary">See pricing</a>
@@ -162,123 +152,3 @@ const description =
     </section>
   </main>
 </BaseLayout>
-
-<style>
-  main {
-    max-width: 920px;
-    margin: 0 auto;
-    padding: 32px 20px 80px;
-  }
-  .breadcrumb ol {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 24px;
-    display: flex;
-    gap: 8px;
-    font-size: 14px;
-    color: #6b7280;
-  }
-  .breadcrumb a { color: #0C1B33; }
-  .features-hero {
-    padding: 32px 0 24px;
-    border-bottom: 1px solid #e5e7eb;
-    margin-bottom: 32px;
-  }
-  .eyebrow {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #6b7280;
-    margin-bottom: 8px;
-  }
-  .features-hero h1 {
-    font-size: clamp(28px, 5vw, 42px);
-    line-height: 1.15;
-    margin: 0 0 12px;
-    color: #0C1B33;
-  }
-  .lede {
-    font-size: 17px;
-    color: #4b5563;
-    max-width: 640px;
-    line-height: 1.5;
-  }
-  .feature-group {
-    margin: 48px 0;
-  }
-  .feature-group h2 {
-    font-size: 22px;
-    margin: 0 0 4px;
-    color: #0C1B33;
-  }
-  .group-intro {
-    color: #6b7280;
-    margin: 0 0 20px;
-    font-size: 14px;
-  }
-  .feature-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 16px;
-  }
-  .feature-list li {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 18px 20px;
-  }
-  .feature-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 6px;
-  }
-  .feature-name {
-    font-weight: 600;
-    color: #0C1B33;
-    font-size: 16px;
-  }
-  .feature-list p {
-    margin: 4px 0 8px;
-    color: #4b5563;
-    font-size: 15px;
-    line-height: 1.5;
-  }
-  .feature-link {
-    font-size: 14px;
-    color: #0C1B33;
-    font-weight: 600;
-    text-decoration: none;
-  }
-  .feature-link:hover { text-decoration: underline; }
-  .features-cta {
-    margin-top: 64px;
-    padding: 32px;
-    background: #0C1B33;
-    color: #fff;
-    border-radius: 16px;
-    text-align: center;
-  }
-  .features-cta h2 { color: #fff; margin: 0 0 8px; }
-  .features-cta p { color: #cbd5e1; margin: 0 0 20px; }
-  .cta-row {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .btn-primary, .btn-secondary {
-    padding: 12px 22px;
-    border-radius: 8px;
-    font-weight: 600;
-    text-decoration: none;
-    display: inline-block;
-  }
-  .btn-primary { background: #fff; color: #0C1B33; }
-  .btn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
-  .btn-primary:hover { opacity: 0.92; }
-  .btn-secondary:hover { background: rgba(255,255,255,0.08); }
-</style>
