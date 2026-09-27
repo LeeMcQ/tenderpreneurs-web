@@ -23,20 +23,12 @@ export const CTA = {
   about: "/about",
 } as const;
 
-// ─────────────────────────────────────────────────────────────
-// Feature status — drives the "Live / Beta / Coming Soon" badge
-// on Pricing, Features, and Tenders pages. Update one place,
-// every page reflects it. Keep this honest — it's your legal
-// shield against misleading-advertising claims.
-// ─────────────────────────────────────────────────────────────
-
 export type FeatureStatus = "live" | "beta" | "coming-soon";
 
 export interface FeatureFlag {
   id: string;
   label: string;
   status: FeatureStatus;
-  // Optional: when "coming-soon", show an estimated date
   eta?: string;
 }
 
@@ -79,12 +71,6 @@ export const FEATURES: Record<string, FeatureFlag> = {
     status: "coming-soon",
     eta: "Q1 2026",
   },
-  winProbability: {
-    id: "win-probability",
-    label: "AI win-probability scoring",
-    status: "coming-soon",
-    eta: "Q2 2026",
-  },
   bbbeeCalculator: {
     id: "bbbee-calc",
     label: "B-BBEE preference calculator",
@@ -116,11 +102,9 @@ export const FEATURES: Record<string, FeatureFlag> = {
   },
 };
 
-// Honest counter — replace with a real DB query in Phase 2.
-// Until then, keep the figure conservative and label it as "tracking", not "live".
 export const TENDER_STATS = {
-  tracking: 7841,        // Total tenders we have ingested historically
-  isLive: false,         // Flip to true once /api/tenders returns real data
+  tracking: 7841,
+  isLive: false,
   lastUpdated: "2026-01-15",
-  refreshHours: 6,       // single source of truth for the refresh cadence shown on the site
+  refreshHours: 6,
 };
