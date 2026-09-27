@@ -40,7 +40,7 @@ const tableRows = [
   { feature: 'Live tender feed (7,841+ tenders)',      free: false, pro: true,  ent: true  },
   { feature: 'Province & sector filters',             free: false, pro: true,  ent: true  },
   { feature: 'Save searches + email alerts',          free: false, pro: true,  ent: true  },
-  { feature: 'AI win-probability scoring',            free: false, pro: true,  ent: true  },
+  { feature: 'Create notice + pre-publish review',     free: true,  pro: true,  ent: true  },
   { feature: 'B-BBEE preference calculator',          free: false, pro: true,  ent: true  },
   { feature: 'Tender document downloads',             free: false, pro: true,  ent: true  },
   { feature: 'Unlimited AI assistant queries',        free: false, pro: true,  ent: true  },
@@ -54,11 +54,10 @@ const tableRows = [
 
 <BaseLayout
   title="Pricing — Tenderpreneurs | Free PFMA Tools + Professional Tender Tracking"
-  description="Free forever for PFMA research and compliance guidance. Upgrade to Professional (R299/mo) for live tender tracking, AI win-probability scoring, and email alerts."
+  description="Free forever for PFMA research and compliance guidance. Upgrade to Professional (R299/mo) for live tender tracking, saved searches, and email alerts."
   ogImage="/og-pricing.png"
 >
 
-  <!-- Page hero -->
   <section class="page-hero">
     <div class="wrap text-center">
       <div class="eyebrow eyebrow-center">Pricing</div>
@@ -69,7 +68,6 @@ const tableRows = [
     </div>
   </section>
 
-  <!-- Pricing cards -->
   <section class="section-sm">
     <div class="wrap">
       <div class="grid-3">
@@ -97,7 +95,7 @@ const tableRows = [
             'Live tender feed (7,841+ tenders)',
             'Province & sector filters',
             'Save searches + email alerts',
-            'AI win-probability scoring',
+            'Create notice + pre-publish review',
             'B-BBEE preference calculator',
             'Tender document downloads',
             'Unlimited AI assistant queries',
@@ -134,7 +132,6 @@ const tableRows = [
 
   <div class="divider"></div>
 
-  <!-- Feature comparison table -->
   <section class="section-sm">
     <div class="wrap">
       <div class="eyebrow">Full comparison</div>
@@ -185,7 +182,6 @@ const tableRows = [
 
   <div class="divider"></div>
 
-  <!-- FAQ -->
   <section class="section-sm">
     <div class="wrap">
       <div class="eyebrow">FAQ</div>
@@ -196,7 +192,6 @@ const tableRows = [
     </div>
   </section>
 
-  <!-- CTA -->
   <CtaBanner
     eyebrow="No credit card needed"
     heading={`Start free, upgrade<br><span class="txt-gold">when you're ready</span>`}
@@ -208,79 +203,3 @@ const tableRows = [
   />
 
 </BaseLayout>
-
-<style>
-.page-hero {
-  padding: calc(var(--nav-h) + var(--safe-t) + var(--sp-12)) 0 var(--sp-10);
-  border-bottom: 1px solid var(--brd);
-}
-.page-title { margin-bottom: var(--sp-3); }
-.page-sub   { font-size: 1rem; max-width: 460px; line-height: 1.7; }
-
-/* Comparison table */
-.compare-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  margin-inline: calc(-1 * var(--sp-4, 1rem));
-  padding-inline: var(--sp-4, 1rem);
-  border:        1px solid var(--brd);
-  border-radius: var(--r-lg);
-}
-
-.compare-table {
-  min-width: 640px;
-  width:           100%;
-  border-collapse: collapse;
-  font-size:       .875rem;
-  min-width:       560px;
-}
-
-.compare-table thead tr {
-  background:    var(--srf-1);
-  border-bottom: 1px solid var(--brd);
-}
-
-.compare-table th {
-  padding:    var(--sp-4) var(--sp-5);
-  font-size:  .8125rem;
-  font-weight: 700;
-  color:      var(--txt-primary);
-  text-align: center;
-  white-space: nowrap;
-  position:   relative;
-}
-.th-feature { text-align: left; width: 50%; }
-
-.th-badge {
-  display:       inline-block;
-  margin-left:   var(--sp-2);
-  background:    var(--clr-teal);
-  color:         var(--txt-inverse);
-  font-size:     10px;
-  padding:       1px 6px;
-  border-radius: var(--r-full);
-  vertical-align: middle;
-}
-
-.compare-table tbody tr {
-  border-bottom: 1px solid var(--brd);
-  transition:    background .12s;
-}
-.compare-table tbody tr:last-child { border-bottom: none; }
-.compare-table tbody tr:hover      { background: rgba(255,255,255,.03); }
-
-.td-feature {
-  padding:    var(--sp-3) var(--sp-5);
-  color:      var(--txt-secondary);
-  text-align: left;
-}
-.td-check {
-  padding:    var(--sp-3) var(--sp-5);
-  text-align: center;
-}
-
-.check-yes { color: var(--clr-teal); font-size: 1rem; font-weight: 700; }
-.check-no  { color: var(--txt-tertiary); font-size: .875rem; }
-
-.faq-wrap { max-width: 680px; }
-</style>
