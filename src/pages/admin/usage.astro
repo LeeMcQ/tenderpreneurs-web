@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { peekEnv } from '../../lib/db';
+import { getSessionUser } from '../../lib/auth/magic-link';
+import { isAdminEmail } from '../../lib/admin';
+import { coverageSentence } from '../../lib/coverage';
+
+export const prerender = false;
+
+const env = peekEnv(Astro);
+let user: any = null;
+try { if (env?.DB) user = await getSessionUser(env.DB, Astro.request.headers.get('cookie')); } catch {}
+const admin = isAdminEmail(user?.email, env);
+
+let events: any[] = [];
+let health: any[] = [];
+let thin = 0;
+let searches = 0;
+let digests = 0;
+if (admin && env?.DB) {
+  try {
+    events = (await env.DB.prepare(
+      `SELECT name, COUNT(*) AS n FROM usage_events WHERE at >= datetime('now','-7 days') GROUP BY name ORDER BY n DESC LIMIT 20`,
+    ).all()).results ?? [];
+  } catch {}
+  try {
+    health = (await env.DB.prepare(`SELECT source, last_ok_at, last_fail_at, last_error, items_ok FROM source_health`).all()).results ?? [];
+  } catch {}
+  try { thin = Number((await env.DB.prepare(`SELECT COUNT(*) AS n FROM thin_notices`).first<{ n: number }>())?.n ?? 0); } catch {}
+  try { searches = Number((await env.DB.prepare(`SELECT COUNT(*) AS n FROM saved_searches`).first<{ n: number }>())?.n ?? 0); } catch {}
+  try { digests = Number((await env.DB.prepare(`SELECT COUNT(*) AS n FROM digest_log WHERE sent_at >= datetime('now','-7 days')`).first<{ n: number }>())?.n ?? 0); } catch {}
+}
+---
+<BaseLayout title="Usage | Tenderpreneurs" description="First-party usage and source health.">
+  <div style="max-width:840px;margin:0 auto;padding:28px 20px 80px">
+    {!admin ? (
+      <p>Admin access required.</p>
+    ) : (
+      <>
+        <h1>Usage</h1>
+        <p>{coverageSentence(health)} · {searches} saved searches · {digests} digests / 7d · {thin} thin notices</p>
+        <h2>Events last 7 days</h2>
+        {events.length === 0 ? <p>No events yet.</p> : (
+          <ul>
+            {events.map((e) => <li>{e.name}: {e.n}</li>)}
+          </ul>
+        )}
+      </>
+    )}
+  </div>
+</BaseLayout>

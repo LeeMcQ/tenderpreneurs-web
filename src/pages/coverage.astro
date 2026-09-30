@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { peekEnv } from '../lib/db';
+import { coverageSentence, healthStatus, sourceLabel } from '../lib/coverage';
+
+export const prerender = false;
+
+let rows: any[] = [];
+try {
+  const env = peekEnv(Astro);
+  if (env?.DB) {
+    const res = await env.DB.prepare(
+      `SELECT source, last_ok_at, last_fail_at, last_http, last_error, items_ok, items_fail, note
+       FROM source_health ORDER BY source`,
+    ).all();
+    rows = res.results ?? [];
+  }
+} catch {}
+const line = coverageSentence(rows);
+---
+<BaseLayout title="Coverage | Tenderpreneurs" description="Honest status of the sources we ingest. Not a claim that we have every South African tender.">
+  <div class="pub" style="max-width:840px;margin:0 auto;padding:28px 20px 80px">
+    <p class="pub-kicker" style="text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:#b45309">Sources</p>
+    <h1>Coverage</h1>
+    <p>{line}</p>
+    <p>We only list sources we actually poll. A healthy source means the last ingest succeeded in the last 36 hours. It does not mean every notice in South Africa is here.</p>
+    {rows.length === 0 ? (
+      <p>No health rows yet. The next ingest run writes them.</p>
+    ) : (
+      <table style="width:100%;border-collapse:collapse;margin-top:20px">
+        <thead><tr><th align="left">Source</th><th>Status</th><th>Last ok</th><th>Note</th></tr></thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr>
+              <td>{sourceLabel(r.source)}</td>
+              <td>{healthStatus(r)}</td>
+              <td>{r.last_ok_at ? String(r.last_ok_at).slice(0, 16) : '—'}</td>
+              <td>{r.last_error || r.note || ''}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+</BaseLayout>
