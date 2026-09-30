@@ -88,7 +88,37 @@ const description =
             <span class="feature-name">{FEATURES.emailAlerts.label}</span>
             <StatusBadge status={FEATURES.emailAlerts.status} eta={FEATURES.emailAlerts.eta} />
           </div>
-          <p>Save your filter combinations and get instant email alerts when a matching tender is published.</p>
+          <p>Save your filter combinations. Daily digest email uses the same search. WhatsApp is an opt-in preference only until send is wired.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.briefingCalendar.label}</span>
+            <StatusBadge status={FEATURES.briefingCalendar.status} />
+          </div>
+          <p>Upcoming site briefings grouped by date. Compulsory ones sit at the top of the decision list on each notice.</p>
+          <a href="/briefings" class="feature-link">Open the calendar →</a>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.coverageBoard.label}</span>
+            <StatusBadge status={FEATURES.coverageBoard.status} />
+          </div>
+          <p>Honest source health: how many feeds last succeeded, not a vanity “all portals covered” claim.</p>
+          <a href="/coverage" class="feature-link">See coverage →</a>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.goNoGo.label}</span>
+            <StatusBadge status={FEATURES.goNoGo.status} />
+          </div>
+          <p>Hard gates on every tender page. Closing date, briefing, CIDB, official URL, bid pack. Not a win chance.</p>
+        </li>
+        <li>
+          <div class="feature-row">
+            <span class="feature-name">{FEATURES.plainExtract.label}</span>
+            <StatusBadge status={FEATURES.plainExtract.status} />
+          </div>
+          <p>One paragraph of what they are buying, plus close date, briefing, CIDB and preference points pulled from the notice.</p>
         </li>
         <li>
           <div class="feature-row">
@@ -144,7 +174,7 @@ const description =
 
     <section class="features-cta">
       <h2>Start with the free PFMA toolkit</h2>
-      <p>No credit card required. Upgrade to Professional once the tender feed and alerts are live.</p>
+      <p>No credit card required. Upgrade to Professional when you want saved searches and a daily digest.</p>
       <div class="cta-row">
         <a href={CTA.signup} class="btn-primary">Get started free</a>
         <a href={CTA.pricing} class="btn-secondary">See pricing</a>
