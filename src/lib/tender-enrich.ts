@@ -255,8 +255,15 @@ export function patchFromRelease(release: Release, current: Record<string, unkno
   return patch;
 }
 
+export function thinReasons(row: Record<string, unknown>): string[] {
+  const reasons: string[] = [];
+  if (String(row.description || '').length < 80) reasons.push('short_description');
+  if (!row.closing_time) reasons.push('no_closing_time');
+  if (!String(row.documents_json || '')) reasons.push('no_documents');
+  if (!row.contact_email) reasons.push('no_contact_email');
+  return reasons;
+}
+
 export function isThinRow(row: Record<string, unknown>): boolean {
-  const desc = String(row.description || '');
-  const docs = String(row.documents_json || '');
-  return desc.length < 80 || !row.closing_time || !docs || !row.contact_email;
+  return thinReasons(row).length > 0;
 }
