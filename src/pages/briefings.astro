@@ -36,7 +36,7 @@ for (const row of rows) {
   <div class="cal">
     <p class="kicker">Do not miss a compulsory briefing</p>
     <h1>Briefing calendar</h1>
-    <p class="lede">Dates taken from published notices. Always confirm on the official pack — venues move.</p>
+    <p class="lede">Dates taken from published notices. Closing dates stay public. Always confirm venue and time on the official pack — they move. See <a href="/coverage">source coverage</a>.</p>
     {!ok && <p class="empty">Calendar unavailable while the catalogue is offline.</p>}
     {ok && !rows.length && <p class="empty">No upcoming briefings recovered on open notices.</p>}
     {[...groups.entries()].map(([day, items]) => (
