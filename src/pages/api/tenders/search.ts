@@ -6,6 +6,8 @@ import { peekEnv, d1Fail } from '../../../lib/db.js';
 import { getSessionUser } from '../../../lib/auth/magic-link.js';
 import { GUEST_LIST_LIMIT } from '../../../lib/tender-display.js';
 import { resolveLocation } from '../../../lib/tender-location.js';
+import { hashUser } from '../../../lib/events.js';
+import { ensureOpsSchema } from '../../../lib/ops-schema.js';
 
 export const prerender = false;
 
@@ -138,6 +140,18 @@ export const GET: APIRoute = async (ctx) => {
 
     const shown = tenders.length;
     const gated = !user && !ids.length && total > GUEST_LIST_LIMIT;
+
+    try {
+      await ensureOpsSchema(env.DB);
+      await env.DB.prepare(
+        `INSERT INTO usage_events (name, user_hash, props_json, path) VALUES (?,?,?,?)`,
+      ).bind(
+        'search_run',
+        hashUser(user?.id ?? null),
+        JSON.stringify({ q: (q || '').slice(0, 80), province, sector, within, shown, total }),
+        '/tenders',
+      ).run();
+    } catch {}
 
     return new Response(
       JSON.stringify({
