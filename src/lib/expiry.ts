@@ -45,6 +45,20 @@ export function parseExpiry(raw: string | null | undefined, now = new Date()): E
   return items;
 }
 
+export const EXPIRY_KEYS = ['tax_pin', 'csd', 'bbbee', 'coid', 'cidb', 'bank'] as const;
+
+/** Keep only dated YYYY-MM-DD values for known document keys. */
+export function expiryFromForm(raw: unknown): string {
+  const src = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
+  const out: Record<string, string> = {};
+  for (const key of EXPIRY_KEYS) {
+    const val = src[key];
+    const date = typeof val === 'string' ? val.slice(0, 10) : '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) out[key] = date;
+  }
+  return JSON.stringify(out);
+}
+
 export function expiryHeadline(items: ExpiryItem[]): string {
   const expired = items.filter((i) => i.state === 'expired');
   const soon = items.filter((i) => i.state === 'soon');

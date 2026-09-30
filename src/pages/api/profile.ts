@@ -6,6 +6,7 @@ import type { APIRoute } from 'astro';
 import { getEnv, now } from '../../lib/db.js';
 import { getSessionUser } from '../../lib/auth/magic-link.js';
 import { normaliseProfileInput, type RawProfileInput } from '../../lib/profile.js';
+import { expiryFromForm } from '../../lib/expiry.js';
 
 export const prerender = false;
 
@@ -18,8 +19,8 @@ export const POST: APIRoute = async (ctx) => {
   if (!user) return json({ ok: false, error: 'auth required' }, 401);
 
   let raw: RawProfileInput;
-  try { raw = await ctx.request.json(); }
-  catch { return json({ ok: false, error: 'invalid JSON body' }, 400); }
+  try { raw = await ctx.request.json();
+  } catch { return json({ ok: false, error: 'invalid JSON body' }, 400); }
 
   const p = normaliseProfileInput(raw);
 
@@ -71,6 +72,16 @@ export const POST: APIRoute = async (ctx) => {
     await env.DB.prepare(
       `UPDATE users SET province = ?, sectors_json = ? WHERE id = ?`
     ).bind(provinces[0] ?? null, p.sectors_json, user.id).run();
+
+    const expiryJson = expiryFromForm((raw as any).doc_expiry);
+    try {
+      await env.DB.prepare(`ALTER TABLE supplier_profiles ADD COLUMN doc_expiry_json TEXT`).run();
+    } catch { /* already added */ }
+    try {
+      await env.DB.prepare(
+        `UPDATE supplier_profiles SET doc_expiry_json = ? WHERE user_id = ?`,
+      ).bind(expiryJson, user.id).run();
+    } catch { /* quota */ }
 
     return json({ ok: true, saved: true });
   } catch (err) {

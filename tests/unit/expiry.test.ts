@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseExpiry, expiryHeadline } from '../../src/lib/expiry.ts';
+import { parseExpiry, expiryHeadline, expiryFromForm } from '../../src/lib/expiry.ts';
 
 const now = new Date('2026-09-30T10:00:00');
 
@@ -29,5 +29,21 @@ describe('parseExpiry', () => {
   it('handles empty json', () => {
     assert.deepEqual(parseExpiry(null), []);
     assert.match(expiryHeadline([]), /No document dates/i);
+  });
+});
+
+describe('expiryFromForm', () => {
+  it('keeps only dated known keys', () => {
+    const json = expiryFromForm({
+      tax_pin: '2026-12-01',
+      csd: 'not-a-date',
+      email: 'a@b.c',
+      bank: '2027-01-15',
+    });
+    const obj = JSON.parse(json);
+    assert.equal(obj.tax_pin, '2026-12-01');
+    assert.equal(obj.bank, '2027-01-15');
+    assert.equal('csd' in obj, false);
+    assert.equal('email' in obj, false);
   });
 });

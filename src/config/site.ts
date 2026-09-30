@@ -56,20 +56,37 @@ export const FEATURES: Record<string, FeatureFlag> = {
   liveTenderFeed: {
     id: "tender-feed",
     label: "Live tender feed",
-    status: "coming-soon",
-    eta: "Q1 2026",
+    status: "live",
   },
   provinceFilters: {
     id: "province-filters",
     label: "Province & sector filters",
-    status: "coming-soon",
-    eta: "Q1 2026",
+    status: "live",
+  },
+  goNoGo: {
+    id: "go-nogo",
+    label: "Go / no-go checklist",
+    status: "live",
+  },
+  plainExtract: {
+    id: "plain-extract",
+    label: "Plain-English extract",
+    status: "live",
   },
   emailAlerts: {
     id: "email-alerts",
     label: "Save searches + email alerts",
-    status: "coming-soon",
-    eta: "Q1 2026",
+    status: "beta",
+  },
+  briefingCalendar: {
+    id: "briefing-calendar",
+    label: "Briefing calendar",
+    status: "live",
+  },
+  coverageBoard: {
+    id: "coverage-board",
+    label: "Honest source coverage",
+    status: "live",
   },
   bbbeeCalculator: {
     id: "bbbee-calc",
