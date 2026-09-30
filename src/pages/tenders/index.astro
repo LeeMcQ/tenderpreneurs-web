@@ -5,7 +5,7 @@
  * Scan-first public list:
  *  - Human title first; bid number is an eyebrow.
  *  - SSR first page; client hydrates filters / search / load-more.
- *  - Guests see 20 rows; documents, score, and the rest of the catalogue stay gated.
+ *  - Guests see 20 rows; documents and the rest of the catalogue stay gated.
  *  - Decision chips when data exists (value, CIDB, briefing, B-BBEE, sector).
  */
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -44,7 +44,7 @@ try {
   try { user = await getSessionUser(env.DB, Astro.request.headers.get('cookie')); } catch {}
   const limit = user ? 20 : GUEST_LIST_LIMIT;
   const rows = await env.DB.prepare(
-    `SELECT id, title, source_ref, description, procuring_entity, province, sector,
+    `SELECT id, title, source_ref, procuring_entity, province, sector,
             closing_date, closing_time, cidb_grade, estimated_value, bbbee_required,
             briefing_compulsory, briefing_location, last_seen_at
      FROM tenders
@@ -190,7 +190,7 @@ const ssrUpdated = fmtUpdatedAgo(
     <div id="gate-banner" class={`gate-banner ${ssrGated ? '' : 'hidden'}`} role="alert">
       <div class="gate-inner">
         <strong>Sign in to see every tender</strong>
-        <p>Free account unlocks the rest of the catalogue, win-probability, saved searches, and email alerts. Bid documents stay on the tender page after you sign in.</p>
+        <p>Free account unlocks the rest of the catalogue, saved searches, and email alerts. Bid documents stay on the tender page after you sign in.</p>
         <a href="/auth/login" class="btn-primary">Sign in free</a>
       </div>
     </div>
