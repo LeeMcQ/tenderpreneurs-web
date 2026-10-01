@@ -5,6 +5,7 @@ import "../styles/tender-list.css";
 import { getSessionUser } from "../lib/auth/magic-link";
 import { displayTitle, fmtCloseLong, urgency, PROVINCE_LABELS } from "../lib/tender-display";
 import { SECTOR_SLUGS } from "../lib/profile";
+import { parseExpiry, expiryHeadline } from "../lib/expiry";
 
 export const prerender = false;
 
@@ -33,7 +34,7 @@ await env.DB.prepare(
 ).run().catch(() => null);
 
 const profile = await env.DB.prepare(
-  `SELECT cidb_grades_json, bbbee_level, capacity_value_max, provinces_json, sectors_json, csd_number
+  `SELECT cidb_grades_json, bbbee_level, capacity_value_max, provinces_json, sectors_json, csd_number, doc_expiry_json
    FROM supplier_profiles WHERE user_id = ?`,
 ).bind(user.id).first().catch(() => null);
 
@@ -47,6 +48,9 @@ const heldProvinces = parseList(profile?.provinces_json);
 const heldSectors = parseList(profile?.sectors_json);
 const cidbText = heldGrades.join(', ');
 const capRand = profile?.capacity_value_max ? Math.round(Number(profile.capacity_value_max) / 100) : '';
+const expiryItems = parseExpiry((profile as any)?.doc_expiry_json);
+const expiryByKey = Object.fromEntries(expiryItems.map((i) => [i.key, i.date]));
+const tape = expiryHeadline(expiryItems);
 
 let saved: any[] = [];
 try {
@@ -83,7 +87,7 @@ try {
 
       <section class="acct-card" style="margin-bottom:20px">
         <h2>Can you bid?</h2>
-        <p class="lede">CIDB, B-BBEE, provinces and sectors feed the score on every tender page.</p>
+        <p class="lede">CIDB, B-BBEE, provinces and sectors sit on your profile. Document dates are a tape, not a score.</p>
         <form id="profile-form" class="prof-form">
           <label>CIDB grades <input class="control" name="cidb" value={cidbText} placeholder="5CE, 4GB" /></label>
           <label>B-BBEE level
@@ -105,6 +109,16 @@ try {
             {SECTOR_SLUGS.map((slug) => (
               <label class="chk"><input type="checkbox" name="sector" value={slug} checked={heldSectors.includes(slug)} /> {slug}</label>
             ))}
+          </fieldset>
+          <p class="lede" id="expiry-tape">{tape}</p>
+          <fieldset>
+            <legend>Document expiry dates</legend>
+            <label>SARS tax PIN <input class="control" type="date" name="exp_tax_pin" value={expiryByKey.tax_pin || ''} /></label>
+            <label>CSD report <input class="control" type="date" name="exp_csd" value={expiryByKey.csd || ''} /></label>
+            <label>B-BBEE <input class="control" type="date" name="exp_bbbee" value={expiryByKey.bbbee || ''} /></label>
+            <label>COID <input class="control" type="date" name="exp_coid" value={expiryByKey.coid || ''} /></label>
+            <label>CIDB registration <input class="control" type="date" name="exp_cidb" value={expiryByKey.cidb || ''} /></label>
+            <label>Bank letter <input class="control" type="date" name="exp_bank" value={expiryByKey.bank || ''} /></label>
           </fieldset>
           <button class="btn-search" type="submit">Save profile</button>
           <p id="prof-status" class="lede"></p>
@@ -163,9 +177,17 @@ try {
         sectors: sectors,
         capacityValueMaxRand: form.capacity.value ? Number(form.capacity.value) : null,
         csdNumber: form.csd.value || null,
+        doc_expiry: {
+          tax_pin: form.exp_tax_pin && form.exp_tax_pin.value,
+          csd: form.exp_csd && form.exp_csd.value,
+          bbbee: form.exp_bbbee && form.exp_bbbee.value,
+          coid: form.exp_coid && form.exp_coid.value,
+          cidb: form.exp_cidb && form.exp_cidb.value,
+          bank: form.exp_bank && form.exp_bank.value,
+        },
       }),
     }).then(function (r) { return r.json(); }).then(function (d) {
-      status.textContent = d && d.ok ? 'Saved. Open a tender to see Can you bid.' : 'Could not save right now.';
+      status.textContent = d && d.ok ? 'Saved. Document dates stay on this account.' : 'Could not save right now.';
     }).catch(function () { status.textContent = 'Could not save right now.'; });
   });
 })();

@@ -33,6 +33,17 @@ try {
   saved = [];
 }
 
+let searches: any[] = [];
+try {
+  const s = await env.DB.prepare(
+    `SELECT id, label, q, province, sector, within_days, channel, last_sent_at
+     FROM saved_searches WHERE user_id = ? ORDER BY created_at DESC LIMIT 20`,
+  ).bind(user.id).all();
+  searches = s.results ?? [];
+} catch {
+  searches = [];
+}
+
 let rules: any[] = [];
 try {
   await env.DB.prepare(
@@ -112,6 +123,24 @@ try {
         </section>
       )}
 
+      <section class="acct-card" style="background:#fff;border:1px solid rgba(12,27,51,.12);border-radius:14px;padding:20px;margin-bottom:20px">
+        <h2>Saved searches for the daily digest</h2>
+        <p class="lede">Same filters as the alert. Channel is email unless you add a WhatsApp number — we store the preference, we do not send WhatsApp yet.</p>
+        {searches.length === 0 ? (
+          <p class="lede">None yet. Save the form above.</p>
+        ) : (
+          <ul id="saved-search-list">
+            {searches.map((s) => (
+              <li>
+                {s.label || [s.province, s.sector, s.within_days ? `${s.within_days}d` : ''].filter(Boolean).join(' · ')}
+                {' · '}{s.channel || 'email'}
+                <button type="button" class="src-btn" data-del-search={s.id} style="margin-left:8px">Remove</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <h2>Saved tenders</h2>
       {saved.length === 0 ? (
         <p class="lede">Nothing saved yet. Open a tender and tap Save.</p>
@@ -172,8 +201,33 @@ try {
         phone: document.getElementById('al-phone').value,
       }),
     }).then(function (r) { return r.json(); }).then(function (d) {
-      status.textContent = d && d.ok ? 'Saved. You will get that sentence by email once a day when matches exist.' : (d && d.error === 'auth_required' ? 'Sign in again.' : 'Could not save right now.');
+      if (!d || !d.ok) {
+        status.textContent = d && d.error === 'auth_required' ? 'Sign in again.' : 'Could not save right now.';
+        return;
+      }
+      return fetch('/api/searches', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          province: document.getElementById('al-province').value,
+          sector: document.getElementById('al-sector').value,
+          within: document.getElementById('al-within').value,
+          channel: document.getElementById('al-phone').value ? 'whatsapp' : 'email',
+          label: labels(),
+        }),
+      }).then(function () {
+        status.textContent = 'Saved. Daily digest uses this search. WhatsApp Business send is not wired.';
+        location.reload();
+      });
     }).catch(function () { status.textContent = 'Could not save right now.'; });
+  });
+  document.querySelectorAll('[data-del-search]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-del-search');
+      if (!id) return;
+      fetch('/api/searches?id=' + encodeURIComponent(id), { method: 'DELETE' })
+        .then(function () { location.reload(); });
+    });
   });
 })();
 </script>
