@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { peekEnv } from '../../../../lib/db';
+import { getEnv } from '../../../../lib/db';
 
 export const prerender = false;
 
@@ -10,22 +10,23 @@ function iso(v: unknown) {
 }
 
 export const GET: APIRoute = async (context) => {
-  const env = peekEnv(context);
+  const env = getEnv(context);
   const id = context.params.id;
-  if (!env?.DB || !id) return new Response(JSON.stringify({ ok: false }), { status: 404 });
+  if (!id) return new Response(JSON.stringify({ ok: false }), { status: 404, headers: { 'content-type': 'application/json' } });
+  if (!env?.DB) return new Response(JSON.stringify({ ok: false, error: 'no_db' }), { status: 503, headers: { 'content-type': 'application/json' } });
   const row = await env.DB.prepare(
     `SELECT id, published_date, briefing_date, briefing_time, briefing_location, briefing_compulsory,
             closing_date, closing_time, source_url, description, cidb_grade, estimated_value, source_ref
      FROM tenders WHERE id = ?`,
   ).bind(id).first<any>();
-  if (!row) return new Response(JSON.stringify({ ok: false }), { status: 404 });
+  if (!row) return new Response(JSON.stringify({ ok: false }), { status: 404, headers: { 'content-type': 'application/json' } });
   const published = iso(row.published_date);
   const briefing = iso(row.briefing_date);
   const closing = iso(row.closing_date);
   const events = [
-    { key: 'advert', label: 'Advertised', date: published, detail: 'Notice published. An open tender is usually at least 21 working days.' },
-    { key: 'briefing', label: row.briefing_compulsory ? 'Compulsory briefing' : 'Briefing', date: briefing, detail: [row.briefing_time, row.briefing_location].filter(Boolean).join(' · ') || 'Venue and time are on the official pack. Sign the register in the bidding entity name.' },
-    { key: 'questions', label: 'Questions / addenda', date: null, detail: 'Clarifications usually close before the bid. A late addendum can move the closing date.' },
+    { key: 'advert', label: 'Advertised', date: published, detail: 'Notice published. Minimum open window is usually 21 working days.' },
+    { key: 'briefing', label: row.briefing_compulsory ? 'Compulsory briefing' : 'Briefing', date: briefing, detail: [row.briefing_time, row.briefing_location].filter(Boolean).join(' · ') || 'Venue and time are on the official pack.' },
+    { key: 'questions', label: 'Questions / addenda', date: null, detail: 'Clarifications usually close before the bid. Late addenda can move the closing date.' },
     { key: 'close', label: 'Closing', date: closing, detail: row.closing_time ? `${row.closing_time} SAST` : 'Time on the official notice.' },
   ];
   const fields = [
