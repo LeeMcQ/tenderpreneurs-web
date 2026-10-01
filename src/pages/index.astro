@@ -1,1 +1,58 @@
-SEE_FILE
+---
+/**
+ * index.astro
+ * src/pages/index.astro
+ *
+ * Homepage — assembles all hero sections using Astro components.
+ */
+
+import BaseLayout       from '../layouts/BaseLayout.astro';
+import LiveFeedCard     from '../components/LiveFeedCard.astro';
+import FeatureCard      from '../components/FeatureCard.astro';
+import BlogCard         from '../components/BlogCard.astro';
+import TestimonialCard  from '../components/TestimonialCard.astro';
+import FaqAccordion     from '../components/FaqAccordion.astro';
+import PricingCard      from '../components/PricingCard.astro';
+import CtaBanner        from '../components/CtaBanner.astro';
+
+type IconVariant = 'teal' | 'gold' | 'blue';
+type TagVariant  = 'teal' | 'gold';
+
+interface FeatureItem {
+  icon: string; iconVariant: IconVariant; title: string;
+  description: string; checks: string[]; linkHref: string; linkLabel: string;
+}
+interface BlogPost {
+  href: string; tag: string; tagVariant: TagVariant; emoji: string;
+  thumbBg: string; title: string; excerpt: string; readTime: string; date: string;
+}
+
+const features: FeatureItem[] = [
+  {
+    icon:        '🔍',
+    iconVariant: 'teal',
+    title:       'Browse All Tenders',
+    description: 'Tenders from etenders.gov.za, refreshed regularly — filter by province, sector, and closing date. Filter by province, sector, value, B-BBEE level, and closing date.',
+    checks:      ['All 9 provinces covered', '12 industry sectors', 'Real-time updates'],
+    linkHref:    '/tenders',
+    linkLabel:   'Browse Tenders',
+  },
+  {
+    icon:        '🎯',
+    iconVariant: 'gold',
+    title:       'Go / no-go gates',
+    description: 'Hard gates only — closing date, compulsory briefing, CIDB, official link, bid pack. Plain-English extract of what they are buying. No fake win percentage.',
+    checks:      ['Closing and briefing gates', 'CIDB and official-source check', 'Plain-English extract'],
+    linkHref:    '/tenders',
+    linkLabel:   'Open a tender',
+  },
+  {
+    icon:        '📚',
+    iconVariant: 'blue',
+    title:       'PFMA Assistant',
+    description: 'Ask anything about PFMA, PPPFA, B-BBEE, or Treasury Regs. Instant answers with legislative citations. Always free.',
+    checks:      ['Instant answers with citations', 'PFMA, MFMA & B-BBEE covered', 'Always free'],
+    linkHref:    '/pfma',
+    linkLabel:   'Explore PFMA Guide',
+  },
+];
