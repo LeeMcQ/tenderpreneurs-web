@@ -1,58 +1,150 @@
 ---
-/**
- * index.astro
- * src/pages/index.astro
- *
- * Homepage — assembles all hero sections using Astro components.
- */
-
-import BaseLayout       from '../layouts/BaseLayout.astro';
-import LiveFeedCard     from '../components/LiveFeedCard.astro';
-import FeatureCard      from '../components/FeatureCard.astro';
-import BlogCard         from '../components/BlogCard.astro';
-import TestimonialCard  from '../components/TestimonialCard.astro';
-import FaqAccordion     from '../components/FaqAccordion.astro';
-import PricingCard      from '../components/PricingCard.astro';
-import CtaBanner        from '../components/CtaBanner.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LiveFeedCard from '../components/LiveFeedCard.astro';
+import FeatureCard from '../components/FeatureCard.astro';
+import TestimonialCard from '../components/TestimonialCard.astro';
+import FaqAccordion from '../components/FaqAccordion.astro';
+import PricingCard from '../components/PricingCard.astro';
+import CtaBanner from '../components/CtaBanner.astro';
 
 type IconVariant = 'teal' | 'gold' | 'blue';
-type TagVariant  = 'teal' | 'gold';
-
 interface FeatureItem {
   icon: string; iconVariant: IconVariant; title: string;
   description: string; checks: string[]; linkHref: string; linkLabel: string;
 }
-interface BlogPost {
-  href: string; tag: string; tagVariant: TagVariant; emoji: string;
-  thumbBg: string; title: string; excerpt: string; readTime: string; date: string;
-}
 
 const features: FeatureItem[] = [
   {
-    icon:        '🔍',
-    iconVariant: 'teal',
-    title:       'Browse All Tenders',
-    description: 'Tenders from etenders.gov.za, refreshed regularly — filter by province, sector, and closing date. Filter by province, sector, value, B-BBEE level, and closing date.',
-    checks:      ['All 9 provinces covered', '12 industry sectors', 'Real-time updates'],
-    linkHref:    '/tenders',
-    linkLabel:   'Browse Tenders',
+    icon: '🔍', iconVariant: 'teal', title: 'Browse All Tenders',
+    description: 'Tenders from etenders.gov.za, refreshed regularly — filter by province, sector, and closing date.',
+    checks: ['All 9 provinces covered', '12 industry sectors', 'Real-time updates'],
+    linkHref: '/tenders', linkLabel: 'Browse Tenders',
   },
   {
-    icon:        '🎯',
-    iconVariant: 'gold',
-    title:       'Go / no-go gates',
-    description: 'Hard gates only — closing date, compulsory briefing, CIDB, official link, bid pack. Plain-English extract of what they are buying. No fake win percentage.',
-    checks:      ['Closing and briefing gates', 'CIDB and official-source check', 'Plain-English extract'],
-    linkHref:    '/tenders',
-    linkLabel:   'Open a tender',
+    icon: '🎯', iconVariant: 'gold', title: 'Go / no-go gates',
+    description: 'Hard gates only — closing date, compulsory briefing, CIDB, official link, bid pack. No fake win percentage.',
+    checks: ['Closing and briefing gates', 'CIDB and official-source check', 'Plain-English extract'],
+    linkHref: '/tenders', linkLabel: 'Open a tender',
   },
   {
-    icon:        '📚',
-    iconVariant: 'blue',
-    title:       'PFMA Assistant',
+    icon: '📚', iconVariant: 'blue', title: 'PFMA Assistant',
     description: 'Ask anything about PFMA, PPPFA, B-BBEE, or Treasury Regs. Instant answers with legislative citations. Always free.',
-    checks:      ['Instant answers with citations', 'PFMA, MFMA & B-BBEE covered', 'Always free'],
-    linkHref:    '/pfma',
-    linkLabel:   'Explore PFMA Guide',
+    checks: ['Instant answers with citations', 'PFMA, MFMA & B-BBEE covered', 'Always free'],
+    linkHref: '/pfma', linkLabel: 'Explore PFMA Guide',
   },
 ];
+
+const testimonials = [
+  {
+    quote: 'The go / no-go list stopped us wasting three weeks on a notice that already had a compulsory briefing we had missed.',
+    initials: 'NM', name: 'Nomsa Mkhize', business: 'Director, Khulisa Facilities · Durban',
+  },
+  {
+    quote: 'Before Tenderpreneurs I was checking five different websites every morning. Now one dashboard.',
+    initials: 'PT', name: 'Pieter Theron', business: 'Owner, Theron IT Solutions · Cape Town',
+  },
+  {
+    quote: 'The PFMA Assistant answered a Treasury Reg question in 30 seconds that my consultant charged R800 to look up.',
+    initials: 'ZS', name: 'Zanele Sithole', business: 'MD, Ukwanda Cleaning Services · Johannesburg',
+  },
+];
+
+const faqItems = [
+  {
+    question: 'How do I find government tenders in South Africa?',
+    answer: 'Tenders are published across etenders.gov.za, 9 provincial portals, and municipal websites. Tenderpreneurs aggregates them into one dashboard.',
+  },
+  {
+    question: 'How do you decide if I should bid?',
+    answer: 'We do not invent a win percentage. Each notice gets hard go / no-go gates and a plain-English extract. You still read the official pack.',
+  },
+  {
+    question: 'Is the PFMA Assistant really free?',
+    answer: 'Yes — completely free with no account required.',
+  },
+];
+---
+<BaseLayout
+  title="Tenderpreneurs — Find government tenders without the fake score"
+  description="South African government tenders with honest source coverage, go/no-go gates, a briefing calendar, and PFMA guidance. Free to start."
+  ogImage="/og-home.png"
+>
+  <section class="hero" aria-label="Hero">
+    <div class="hero-inner wrap">
+      <div class="hero-copy">
+        <div class="hero-pill">🇿🇦 Built for SA SMMEs · Live tender data</div>
+        <h1>Win More<br>Government Tenders<br><em class="txt-gold txt-italic">without a fake score</em></h1>
+        <p class="hero-sub txt-secondary">Live notices, honest coverage, go / no-go gates, and PFMA guidance.</p>
+        <div class="hero-actions">
+          <a href="/auth/login" class="btn btn-gold btn-lg">Get Started Free</a>
+          <a href="/tenders" class="btn btn-ghost btn-lg">Browse Live Tenders</a>
+        </div>
+      </div>
+      <LiveFeedCard />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="eyebrow">Platform Features</div>
+      <h2>Everything you need to <span class="txt-teal">decide on a notice</span></h2>
+      <div class="grid-3 mt-10">
+        {features.map((f) => <FeatureCard {...f} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="eyebrow">Testimonials</div>
+      <h2>Trusted by SA businesses</h2>
+      <div class="grid-3 mt-10">
+        {testimonials.map((t) => <TestimonialCard {...t} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pricing">
+    <div class="wrap">
+      <div class="text-center">
+        <div class="eyebrow eyebrow-center">Pricing</div>
+        <h2>Simple, transparent pricing</h2>
+      </div>
+      <div class="grid-3 mt-10">
+        <PricingCard
+          plan="Free" price="R0" period="forever free"
+          features={['PFMA knowledge base (11 topics)', 'SBD form library', 'Compliance checklist', 'PFMA AI Assistant (basic)', 'CSD registration guide']}
+          ctaLabel="Create free account" ctaHref="/auth/login" ctaVariant="ghost"
+        />
+        <PricingCard
+          plan="Professional" price="R299" period="per month"
+          features={['Everything in Free', 'Live tender feed', 'Province & sector filters', 'Save searches + email alerts', 'Go / no-go checklist + plain extract', 'B-BBEE preference calculator']}
+          ctaLabel="Start 14-day free trial" ctaHref="/auth/login?plan=pro" ctaVariant="teal" featured={true} badge="Most Popular"
+        />
+        <PricingCard
+          plan="Enterprise" price="Custom" period="contact us"
+          features={['Everything in Professional', 'Team seats', 'API access', 'Dedicated account manager']}
+          ctaLabel="Contact sales" ctaHref="mailto:sales@tenderpreneurs.co.za" ctaVariant="ghost"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="eyebrow">FAQ</div>
+      <h2>Frequently asked questions</h2>
+      <FaqAccordion items={faqItems} />
+    </div>
+  </section>
+
+  <CtaBanner
+    eyebrow="Get started today"
+    heading='Ready to find the next notice?'
+    body="Join SA SMMEs using Tenderpreneurs to find and decide on public sector bids. Free to start."
+    primaryLabel="Get Started Free"
+    primaryHref="/auth/login"
+    secondLabel="Browse Live Tenders"
+    secondHref="/tenders"
+  />
+</BaseLayout>
