@@ -182,6 +182,32 @@ const canonUrl = canonical
     });
   </script>
 
+  <script is:inline>
+    (function () {
+      var path = location.pathname;
+      var name = path.indexOf('/tenders/t/') === 0 ? 'tender_view' : 'session_start';
+      var tid = null;
+      var m = path.match(/\/tenders\/t\/([0-9A-Z]{26})/);
+      if (m) tid = m[1];
+      function send(payload) {
+        var raw = JSON.stringify(payload);
+        try {
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/events', new Blob([raw], { type: 'application/json' }));
+          } else {
+            fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body: raw, keepalive: true }).catch(function () {});
+          }
+        } catch (e) {}
+      }
+      send({ name: name, path: path, tender_id: tid });
+      document.addEventListener('click', function (ev) {
+        var el = ev.target && ev.target.closest ? ev.target.closest('[data-evt]') : null;
+        if (!el) return;
+        send({ name: el.getAttribute('data-evt'), path: path, tender_id: tid || el.getAttribute('data-tender-id') });
+      });
+    })();
+  </script>
+
   <slot name="scripts" />
 </body>
 </html>
