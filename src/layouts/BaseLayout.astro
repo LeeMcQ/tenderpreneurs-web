@@ -1,14 +1,6 @@
 ---
 /**
  * BaseLayout.astro
- * src/layouts/BaseLayout.astro
- *
- * Root HTML shell used by every page.
- * Props:
- *   title       — <title> tag content
- *   description — meta description
- *   ogImage     — Open Graph image URL (optional, defaults to /og-default.png)
- *   canonical   — canonical URL (optional)
  */
 
 import '../styles/global.css';
@@ -42,62 +34,31 @@ const canonUrl = canonical
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
-  <meta name="theme-color"                        content="#0C1B33" />
-  <meta name="apple-mobile-web-app-capable"        content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="mobile-web-app-capable"             content="yes" />
-
+  <meta name="theme-color" content="#0C1B33" />
   <title>{title}</title>
   <meta name="description"  content={description} />
-  <meta name="author"       content="Tenderpreneurs" />
-  <meta name="robots"       content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
   <link rel="canonical"     href={canonUrl} />
-
-  <meta name="geo.country"  content="South Africa" />
-  <meta name="geo.region"   content="ZA" />
-  <meta name="language"     content="English" />
-
   <meta property="og:type"        content="website" />
   <meta property="og:site_name"   content="Tenderpreneurs" />
   <meta property="og:url"         content={canonUrl} />
   <meta property="og:title"       content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:image"       content={`${siteUrl}${ogImage}`} />
-  <meta property="og:image:width"  content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:locale"      content="en_ZA" />
-
-  <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content={title} />
-  <meta name="twitter:description" content={description} />
-  <meta name="twitter:image"       content={`${siteUrl}${ogImage}`} />
-
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&family=JetBrains+Mono:wght@400;500&display=swap"
-    rel="stylesheet"
-  />
-
-  <link rel="icon"             type="image/svg+xml" href="/favicon.svg" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="manifest"         href="/manifest.json" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <slot name="head" />
 </head>
-
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
-
   <Nav />
-
   <main id="main-content" tabindex="-1">
     <slot />
   </main>
-
   <Footer />
-
   <div id="pwa-install" class="pwa-install" hidden>
     <p><strong>Install Tenderpreneurs</strong>Add to your home screen. Works offline for pages you have opened.</p>
     <div class="pwa-actions">
@@ -105,7 +66,6 @@ const canonUrl = canonical
       <button type="button" class="pwa-skip" id="pwa-skip">Not now</button>
     </div>
   </div>
-
   <script is:inline>
     document.addEventListener('DOMContentLoaded', function () {
       var nav = document.querySelector('.nav');
@@ -114,74 +74,19 @@ const canonUrl = canonical
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
       }
-
-      var ham    = document.getElementById('tp-ham');
+      var ham = document.getElementById('tp-ham');
       var drawer = document.getElementById('tp-drawer');
       if (ham && drawer) {
         ham.addEventListener('click', function () {
           var open = document.body.classList.toggle('nav-open');
           ham.setAttribute('aria-expanded', String(open));
-          ham.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-          document.body.style.overflow = open ? 'hidden' : '';
-        });
-        drawer.querySelectorAll('a').forEach(function (a) {
-          a.addEventListener('click', function () {
-            document.body.classList.remove('nav-open');
-            document.body.style.overflow = '';
-            ham.setAttribute('aria-expanded', 'false');
-            ham.setAttribute('aria-label', 'Open menu');
-          });
         });
       }
-
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(function () {});
-      }
-
-      var currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-      document.querySelectorAll('.nav-links a, .nav-drawer a').forEach(function (link) {
-        var href = (link.getAttribute('href') || '').replace(/\/$/, '');
-        if (href && href !== '/' && currentPath.startsWith(href)) {
-          link.setAttribute('aria-current', 'page');
-        } else if (href === '/' && currentPath === '/') {
-          link.setAttribute('aria-current', 'page');
-        }
-      });
-
-      var banner = document.getElementById('pwa-install');
-      var go = document.getElementById('pwa-go');
-      var skip = document.getElementById('pwa-skip');
-      var deferred = null;
-      var dismissed = false;
-      try { dismissed = localStorage.getItem('tp-pwa-skip') === '1'; } catch (e) {}
-      var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      window.addEventListener('beforeinstallprompt', function (e) {
-        e.preventDefault();
-        deferred = e;
-        if (!dismissed && !standalone && banner) banner.hidden = false;
-      });
-      go && go.addEventListener('click', function () {
-        if (!deferred) return;
-        deferred.prompt();
-        deferred.userChoice.finally(function () {
-          deferred = null;
-          if (banner) banner.hidden = true;
-        });
-      });
-      skip && skip.addEventListener('click', function () {
-        if (banner) banner.hidden = true;
-        try { localStorage.setItem('tp-pwa-skip', '1'); } catch (e) {}
-      });
-      if (!standalone && !dismissed && /iPhone|iPad|iPod/i.test(navigator.userAgent) && banner) {
-        banner.hidden = false;
-        if (go) go.textContent = 'How';
-        go && go.addEventListener('click', function () {
-          banner.querySelector('p').innerHTML = '<strong>On iPhone</strong>Tap Share, then Add to Home Screen.';
-        }, { once: true });
-      }
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function () {});
     });
   </script>
-
+  <script src="/notice-timeline.js" defer></script>
+  <script src="/desk-loop.js" defer></script>
   <script is:inline>
     (function () {
       var path = location.pathname;
@@ -192,22 +97,13 @@ const canonUrl = canonical
       function send(payload) {
         var raw = JSON.stringify(payload);
         try {
-          if (navigator.sendBeacon) {
-            navigator.sendBeacon('/api/events', new Blob([raw], { type: 'application/json' }));
-          } else {
-            fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body: raw, keepalive: true }).catch(function () {});
-          }
+          if (navigator.sendBeacon) navigator.sendBeacon('/api/events', new Blob([raw], { type: 'application/json' }));
+          else fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body: raw, keepalive: true }).catch(function () {});
         } catch (e) {}
       }
       send({ name: name, path: path, tender_id: tid });
-      document.addEventListener('click', function (ev) {
-        var el = ev.target && ev.target.closest ? ev.target.closest('[data-evt]') : null;
-        if (!el) return;
-        send({ name: el.getAttribute('data-evt'), path: path, tender_id: tid || el.getAttribute('data-tender-id') });
-      });
     })();
   </script>
-
   <slot name="scripts" />
 </body>
 </html>
