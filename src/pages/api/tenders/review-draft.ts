@@ -46,9 +46,44 @@ export const POST: APIRoute = async (ctx) => {
     return json({ ok: false, error: 'Paste a title or the draft notice text.' }, 400);
   }
 
+  const extra: ReturnType<typeof scanTextFindings> = [];
+  const blob = `${subject.title}\n${subject.description}`.toLowerCase();
+  if (body.source_url) {
+    extra.push({
+      id: 'source-link',
+      severity: 'info',
+      message: 'A published link was given. We review the text you pasted, not the live page (avoids fetching third-party sites). Paste the notice wording so gaps and loopholes can be checked.',
+      suggested_action: 'Copy the invitation to bid into the text box, then run review again.',
+    } as any);
+  }
+  if (/\bor equivalent\b/.test(blob) === false && /\bbrand\b|\bmake\b|\bmodel\b/.test(blob)) {
+    extra.push({
+      id: 'brand-lock',
+      severity: 'warning',
+      message: 'Brand or model language without or equivalent can be challenged as an unfair specification.',
+      suggested_action: 'Name the performance required, or add or equivalent with measurable criteria.',
+    } as any);
+  }
+  if (/\bat our discretion\b|\bas and when required\b|\bto be advised\b/.test(blob)) {
+    extra.push({
+      id: 'open-ended',
+      severity: 'warning',
+      message: 'Open-ended phrases let a bidder price a loophole or later claim variation.',
+      suggested_action: 'Replace with a quantity, period, or measurable deliverable.',
+    } as any);
+  }
+  if (subject.briefing_compulsory && !subject.briefing_date) {
+    extra.push({
+      id: 'briefing-gate',
+      severity: 'critical',
+      message: 'Compulsory briefing is marked but no date is set. Bidders will miss the gate or the notice will be set aside.',
+      suggested_action: 'Publish date, time, venue, and whether attendance is compulsory.',
+    } as any);
+  }
+
   const findings = mergeFindings(
     findingsFromFlags(runRuleChecks(subject)),
-    scanTextFindings(subject),
+    [...scanTextFindings(subject), ...extra] as any,
   );
   const checklist = buildChecklist(subject, findings);
   const readiness = readinessScore(findings, checklist);
