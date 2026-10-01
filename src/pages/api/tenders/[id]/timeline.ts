@@ -1,5 +1,4 @@
 import type { APIRoute } from 'astro';
-import { getEnv, peekEnv } from '../../../../lib/db.js';
 
 export const prerender = false;
 
@@ -16,9 +15,14 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function envOf(context: any) {
+  const locals = context?.locals;
+  return locals?.runtime?.env ?? locals?.env ?? null;
+}
+
 export const GET: APIRoute = async (context) => {
   try {
-    const env = peekEnv(context) || getEnv(context);
+    const env = envOf(context);
     const id = context.params.id;
     if (!id) return json({ ok: false, error: 'missing_id' }, 404);
     if (!env?.DB) return json({ ok: false, error: 'no_db' }, 503);
@@ -26,7 +30,7 @@ export const GET: APIRoute = async (context) => {
       `SELECT id, published_date, briefing_date, briefing_time, briefing_location, briefing_compulsory,
               closing_date, closing_time, source_url, description, cidb_grade, estimated_value, source_ref
        FROM tenders WHERE id = ?`,
-    ).bind(id).first<any>();
+    ).bind(id).first();
     if (!row) return json({ ok: false, error: 'not_found' }, 404);
     const published = iso(row.published_date);
     const briefing = iso(row.briefing_date);
@@ -35,7 +39,7 @@ export const GET: APIRoute = async (context) => {
       { key: 'advert', label: 'Advertised', date: published, detail: 'Notice published. Minimum open window is usually 21 working days.' },
       { key: 'briefing', label: row.briefing_compulsory ? 'Compulsory briefing' : 'Briefing', date: briefing, detail: [row.briefing_time, row.briefing_location].filter(Boolean).join(' · ') || 'Venue and time are on the official pack.' },
       { key: 'questions', label: 'Questions / addenda', date: null, detail: 'Clarifications usually close before the bid. Late addenda can move the closing date.' },
-      { key: 'close', label: 'Closing', date: closing, detail: row.closing_time ? `${row.closing_time} SAST` : 'Time on the official notice.' },
+      { key: 'close', label: 'Closing', date: closing, detail: row.closing_time ? row.closing_time + ' SAST' : 'Time on the official notice.' },
     ];
     const fields = [
       ['Closing date', !!closing],
