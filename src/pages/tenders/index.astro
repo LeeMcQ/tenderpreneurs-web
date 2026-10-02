@@ -1,47 +1,32 @@
 ---
-/**
- * src/pages/tenders/index.astro
- *
- * Scan-first public list:
- *  - Human title first; bid number is an eyebrow.
- *  - SSR first page; client hydrates filters / search / load-more.
- *  - Guests see 20 rows; documents and the rest of the catalogue stay gated.
- *  - Decision chips when data exists (value, CIDB, briefing, B-BBEE, sector).
- */
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { peekEnv } from "../../lib/db";
-import { getSessionUser } from "../../lib/auth/magic-link";
+import { getSession } from "../../lib/auth/session";
 import {
-  GUEST_LIST_LIMIT,
-  bidNumber,
-  closeWeekdayChip,
-  displayTitle,
-  fmtCloseLong,
-  fmtCloseTime,
-  fmtUpdatedAgo,
-  fmtValue,
-  provinceLabel,
-  urgency,
+  GUEST_LIST_LIMIT, bidNumber, closeWeekdayChip, displayTitle, fmtCloseLong, fmtCloseTime,
+  fmtUpdatedAgo, fmtValue, provinceLabel, urgency,
 } from "../../lib/tender-display";
 import { resolveLocation } from "../../lib/tender-location";
 import "../../styles/tender-list.css";
 import "../../styles/tender-card.css";
 import "../../styles/tender-map.css";
-
 export const prerender = false;
-
 const title = "Browse Government Tenders | Tenderpreneurs";
 const description = 'Browse South African government tenders from eTenders, filtered by province, sector, and closing date.';
-
 let ssrTenders: any[] = [];
 let ssrTotal = 0;
 let ssrGated = false;
 let ssrOk = false;
+let paid = false;
 try {
   const env = peekEnv(Astro);
   if (!env?.DB) throw new Error('DB unbound');
   let user: any = null;
-  try { user = await getSessionUser(env.DB, Astro.request.headers.get('cookie')); } catch {}
+  try {
+    const session = await getSession(Astro);
+    user = session.user;
+    paid = !!session.subscription;
+  } catch {}
   const limit = user ? 20 : GUEST_LIST_LIMIT;
   const rows = await env.DB.prepare(
     `SELECT id, title, source_ref, procuring_entity, province, sector,
@@ -57,151 +42,43 @@ try {
   ssrTotal = ssrTenders.length;
   ssrGated = !user && ssrTenders.length >= GUEST_LIST_LIMIT;
   ssrOk = true;
-} catch (e) {
-  ssrOk = false;
-}
-const ssrUpdated = fmtUpdatedAgo(
-  ssrTenders.map((t) => t.last_seen_at).filter(Boolean).sort().at(-1) as string | undefined,
-);
+} catch { ssrOk = false; }
+const ssrUpdated = fmtUpdatedAgo(ssrTenders.map((t) => t.last_seen_at).filter(Boolean).sort().at(-1) as string | undefined);
 ---
-
 <BaseLayout title={title} description={description}>
-  <div class="tenders-workspace">
-  <div class="tenders-main">
-    <nav aria-label="Breadcrumb" class="breadcrumb">
-      <ol>
-        <li><a href="/">Home</a></li>
-        <li aria-hidden="true">›</li>
-        <li aria-current="page">Tenders</li>
-      </ol>
-    </nav>
-
-    <header class="tenders-hero">
-      <div>
-        <h1>Open tenders</h1>
-        <p class="lede">Live notices from eTenders, sorted by who closes first. Zoom the map to split area bubbles into towns.</p>
-      </div>
-      <button id="map-toggle" class="map-toggle" type="button" aria-expanded="false" aria-controls="map-panel">Show map</button>
-    </header>
-
+  <div class="tenders-workspace"><div class="tenders-main">
+    <nav aria-label="Breadcrumb" class="breadcrumb"><ol><li><a href="/">Home</a></li><li aria-hidden="true">\u203a</li><li aria-current="page">Tenders</li></ol></nav>
+    <header class="tenders-hero"><div><h1>Open tenders</h1><p class="lede">Live notices from eTenders. Solid pins are work sites. Hollow pins are offices. Shaded provinces are not a site.</p></div><button id="map-toggle" class="map-toggle" type="button" aria-expanded="false" aria-controls="map-panel">Show map</button></header>
     <div id="live-note" class="live-note" hidden role="status"></div>
-
-    <button id="filters-toggle" class="filters-toggle" aria-expanded="false" aria-controls="filters-sheet">
-      <span>Filters</span>
-      <span id="filters-count" class="filters-count" hidden>0</span>
-    </button>
-
+    <button id="filters-toggle" class="filters-toggle" aria-expanded="false" aria-controls="filters-sheet"><span>Filters</span><span id="filters-count" class="filters-count" hidden>0</span></button>
     <div class="filters" id="filters-sheet" role="group" aria-label="Tender filters">
       <div class="sheet-handle" aria-hidden="true"></div>
-      <select id="province-filter" class="control" aria-label="Filter by province">
-        <option value="">All provinces</option>
-        <option value="eastern-cape">Eastern Cape</option>
-        <option value="free-state">Free State</option>
-        <option value="gauteng">Gauteng</option>
-        <option value="kwazulu-natal">KwaZulu-Natal</option>
-        <option value="limpopo">Limpopo</option>
-        <option value="mpumalanga">Mpumalanga</option>
-        <option value="north-west">North West</option>
-        <option value="northern-cape">Northern Cape</option>
-        <option value="western-cape">Western Cape</option>
-        <option value="national">National</option>
-      </select>
-      <select id="sector-filter" class="control" aria-label="Filter by sector">
-        <option value="">All sectors</option>
-        <option value="agriculture">Agriculture</option>
-        <option value="catering">Catering</option>
-        <option value="cleaning">Cleaning</option>
-        <option value="construction">Construction</option>
-        <option value="consulting">Consulting</option>
-        <option value="education">Education</option>
-        <option value="energy">Energy</option>
-        <option value="health">Health</option>
-        <option value="ict">ICT</option>
-        <option value="legal">Legal</option>
-        <option value="security">Security</option>
-        <option value="transport">Transport</option>
-      </select>
-      <select id="within-filter" class="control" aria-label="Filter by closing window">
-        <option value="">Any closing date</option>
-        <option value="7">Closes within 7 days</option>
-        <option value="14">Closes within 14 days</option>
-        <option value="30">Closes within 30 days</option>
-      </select>
-      <input type="search" id="search-input" class="control" placeholder="Search tenders…" aria-label="Search tender titles" autocomplete="off" />
+      <select id="province-filter" class="control" aria-label="Filter by province"><option value="">All provinces</option><option value="eastern-cape">Eastern Cape</option><option value="free-state">Free State</option><option value="gauteng">Gauteng</option><option value="kwazulu-natal">KwaZulu-Natal</option><option value="limpopo">Limpopo</option><option value="mpumalanga">Mpumalanga</option><option value="north-west">North West</option><option value="northern-cape">Northern Cape</option><option value="western-cape">Western Cape</option><option value="national">National</option></select>
+      <select id="sector-filter" class="control" aria-label="Filter by sector"><option value="">All sectors</option><option value="agriculture">Agriculture</option><option value="catering">Catering</option><option value="cleaning">Cleaning</option><option value="construction">Construction</option><option value="consulting">Consulting</option><option value="education">Education</option><option value="energy">Energy</option><option value="health">Health</option><option value="ict">ICT</option><option value="legal">Legal</option><option value="security">Security</option><option value="transport">Transport</option></select>
+      <select id="within-filter" class="control" aria-label="Filter by closing window"><option value="">Any closing date</option><option value="7">Closes within 7 days</option><option value="14">Closes within 14 days</option><option value="30">Closes within 30 days</option></select>
+      <input type="search" id="search-input" class="control" placeholder="Search tenders\u2026" aria-label="Search tender titles" autocomplete="off" />
       <button id="search-btn" class="btn-search">Search</button>
       <button id="sheet-apply" class="btn-search sheet-only">Apply</button>
     </div>
-
     <div id="chips" class="chips" aria-live="polite"></div>
     <div id="province-density" class="province-density" aria-label="Tender concentration by province"></div>
-
-    <div class="stats-bar" id="stats-bar" aria-live="polite">
-      {ssrOk ? (
-        <>
-          <span>{ssrTotal.toLocaleString()} open · closes soonest</span>
-          {ssrUpdated && <span class="stats-updated">{ssrUpdated}</span>}
-        </>
-      ) : 'Showing the last good page while the live catalogue catches up.'}
-    </div>
-
+    <div class="stats-bar" id="stats-bar" aria-live="polite">{ssrOk ? <><span>{ssrTotal.toLocaleString()} open \u00b7 closes soonest</span>{ssrUpdated && <span class="stats-updated">{ssrUpdated}</span>}</> : 'Showing the last good page while the live catalogue catches up.'}</div>
     <div class="tenders-split">
-    <div id="tender-list" class="tender-list" aria-live="polite" data-ssr={ssrOk && ssrTenders.length ? '1' : '0'} data-count={ssrTenders.length}>
-      {ssrOk && ssrTenders.length ? ssrTenders.map((t) => {
-        const u = urgency(t.closing_date, t.closing_time);
-        const heading = displayTitle(t);
-        const loc = resolveLocation(t);
-        const ref = bidNumber(t);
-        const weekday = closeWeekdayChip(t.closing_date);
-        const entityBits = [t.procuring_entity, loc.label || provinceLabel(t.province)].filter(Boolean);
-        return (
-          <a href={`/tenders/t/${t.id}`} class="tender-row">
-            <div class="tr-when">
-              {ref && <p class="tr-ref">{ref}</p>}
-              {t.closing_date && (
-                <>
-                  <p class="tr-close-lbl">Closing</p>
-                  <p class="tr-close-date">{fmtCloseLong(t.closing_date)}</p>
-                  {t.closing_time && <p class="tr-close-time">{fmtCloseTime(t.closing_time)}</p>}
-                </>
-              )}
-            </div>
-            <div class="tr-main">
-              <h2 class="tender-title">{heading}</h2>
-              {entityBits.length > 0 && <p class="tender-entity">{entityBits.join(' · ')}</p>}
-              <div class="tender-tags">
-                {t.estimated_value ? <span class="tag tag-value">{fmtValue(t.estimated_value)}</span> : null}
-                {t.cidb_grade ? <span class="tag tag-cidb">CIDB {t.cidb_grade}</span> : null}
-                {weekday ? <span class={`tag tag-deadline ${u.cls}`}>{weekday}</span> : null}
-                {t.bbbee_required ? <span class="tag tag-bbbee">B-BBEE L{t.bbbee_required}</span> : null}
-                {t.briefing_compulsory ? <span class="tag tag-brief">Compulsory briefing</span> : null}
-              </div>
-            </div>
-          </a>
-        );
-      }) : (
-        <div class="loading-state"><div class="spinner" aria-hidden="true"></div><p>Loading tenders…</p></div>
-      )}
-    </div>
-    <aside id="map-panel" class="map-panel" aria-label="Tender map">
-      <div id="tender-map" class="tender-map"></div>
-    </aside>
-    </div>
-
-    <div id="gate-banner" class={`gate-banner ${ssrGated ? '' : 'hidden'}`} role="alert">
-      <div class="gate-inner">
-        <strong>Sign in to see every tender</strong>
-        <p>Free account unlocks the rest of the catalogue, saved searches, and email alerts. Bid documents stay on the tender page after you sign in.</p>
-        <a href="/auth/login" class="btn-primary">Sign in free</a>
+      <div id="tender-list" class="tender-list" aria-live="polite" data-ssr={ssrOk && ssrTenders.length ? '1' : '0'} data-count={ssrTenders.length}>
+        {ssrOk && ssrTenders.length ? ssrTenders.map((t) => {
+          const heading = displayTitle(t);
+          const loc = resolveLocation(t);
+          const ref = bidNumber(t);
+          const weekday = closeWeekdayChip(t.closing_date);
+          const u = urgency(t.closing_date, t.closing_time);
+          const entityBits = [t.procuring_entity, loc.label || provinceLabel(t.province)].filter(Boolean);
+          return <a href={`/tenders/t/${t.id}`} class="tender-row" data-id={t.id}><div class="tr-when">{ref && <p class="tr-ref">{ref}</p>}{t.closing_date && <><p class="tr-close-lbl">Closing</p><p class="tr-close-date">{fmtCloseLong(t.closing_date)}</p>{t.closing_time && <p class="tr-close-time">{fmtCloseTime(t.closing_time)}</p>}</>}</div><div class="tr-main"><h2 class="tender-title">{heading}</h2>{entityBits.length > 0 && <p class="tender-entity">{entityBits.join(' \u00b7 ')}</p>}<div class="tender-tags">{t.estimated_value ? <span class="tag tag-value">{fmtValue(t.estimated_value)}</span> : null}{t.cidb_grade ? <span class="tag tag-cidb">CIDB {t.cidb_grade}</span> : null}{weekday ? <span class={`tag tag-deadline ${u.cls}`}>{weekday}</span> : null}{t.bbbee_required ? <span class="tag tag-bbbee">B-BBEE L{t.bbbee_required}</span> : null}{t.briefing_compulsory ? <span class="tag tag-brief">Compulsory briefing</span> : null}</div></div></a>;
+        }) : <div class="loading-state"><div class="spinner" aria-hidden="true"></div><p>Loading tenders\u2026</p></div>}
       </div>
+      <aside id="map-panel" class="map-panel" aria-label="Tender map"><div id="tender-map" class="tender-map" data-paid={paid ? '1' : '0'}></div></aside>
     </div>
-
-    <div class="load-more-row" id="load-more-row" style="display:none">
-      <button id="load-more-btn" class="btn-load-more">Load more tenders</button>
-    </div>
-  </div>
-  </div>
+    <div id="gate-banner" class={`gate-banner ${ssrGated ? '' : 'hidden'}`} role="alert"><div class="gate-inner"><strong>Sign in to see every tender</strong><p>Free account unlocks the rest of the catalogue, saved searches, and email alerts. Bid documents stay on the tender page after you sign in.</p><a href="/auth/login" class="btn-primary">Sign in free</a></div></div>
+    <div class="load-more-row" id="load-more-row" style="display:none"><button id="load-more-btn" class="btn-load-more">Load more tenders</button></div>
+  </div></div>
 </BaseLayout>
-
-<script>
-  import '../../scripts/tender-list';
-</script>
+<script>import '../../scripts/tender-list';</script>
