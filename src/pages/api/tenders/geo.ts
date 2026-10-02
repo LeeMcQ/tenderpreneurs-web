@@ -12,7 +12,7 @@ export const GET: APIRoute = async (ctx) => {
   const url = new URL(ctx.request.url);
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
-  const cacheKey = new Request(`https://tenderpreneurs.co.za/api/tenders/geo?v=15&sector=${sector || ''}&q=${q || ''}`, { method: 'GET' });
+  const cacheKey = new Request(`https://tenderpreneurs.co.za/api/tenders/geo?v=16&sector=${sector || ''}&q=${q || ''}`, { method: 'GET' });
   try { const cache = (globalThis as any).caches?.default; if (cache) { const hit = await cache.match(cacheKey); if (hit) return hit; } } catch { /* optional */ }
   const env = peekEnv(ctx);
   if (!env?.DB) return json({ ok: false, error: 'Tender database is not bound on this deployment.' }, 503);
@@ -24,7 +24,7 @@ export const GET: APIRoute = async (ctx) => {
     const like = `%${q.trim()}%`; binds.push(like, like, like, like);
   }
   try {
-    const rows = await env.DB.prepare(`SELECT id, title, description, procuring_entity, briefing_location, province, sector, contact_phone FROM tenders WHERE ${where.join(' AND ')} LIMIT 2000`).bind(...binds).all<any>();
+    const rows = await env.DB.prepare(`SELECT id, title, description, procuring_entity, briefing_location, province, sector, contact_phone, closing_date FROM tenders WHERE ${where.join(' AND ')} LIMIT 2000`).bind(...binds).all<any>();
     const pins = [];
     const provCount = new Map<string, number>();
     const themeCount = new Map<string, number>();
@@ -35,7 +35,19 @@ export const GET: APIRoute = async (ctx) => {
       provCount.set(slug, (provCount.get(slug) ?? 0) + 1);
       if (row.sector) themeCount.set(row.sector, (themeCount.get(row.sector) ?? 0) + 1);
       if (!pin) continue;
-      pins.push({ id: pin.id, lat: Math.round(pin.lat * 1e5) / 1e5, lng: Math.round(pin.lng * 1e5) / 1e5, sector: pin.sector, precision: pin.precision, label: pin.label, basis: pin.basis });
+      pins.push({
+        id: pin.id,
+        lat: Math.round(pin.lat * 1e5) / 1e5,
+        lng: Math.round(pin.lng * 1e5) / 1e5,
+        sector: pin.sector,
+        precision: pin.precision,
+        label: pin.label,
+        basis: pin.basis,
+        title: String(row.title || '').slice(0, 140),
+        entity: String(row.procuring_entity || '').slice(0, 80),
+        closing: row.closing_date || null,
+        province: slug,
+      });
       if (pin.basis !== 'province' && pin.label) {
         const key = pin.label.toLowerCase();
         const t = townCount.get(key);
