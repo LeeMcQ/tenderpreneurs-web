@@ -1,4 +1,4 @@
-/** One pin per open tender + province/theme counts. Cached at the edge. */
+/** One pin per open tender. Every row is placed by pinFromTender before it is drawn. */
 import type { APIRoute } from 'astro';
 import { peekEnv, d1Fail } from '../../../lib/db.js';
 import { PROVINCE_CENTROIDS } from '../../../lib/tender-location.js';
@@ -12,7 +12,7 @@ export const GET: APIRoute = async (ctx) => {
   const url = new URL(ctx.request.url);
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
-  const cacheKey = new Request(`https://tenderpreneurs.co.za/api/tenders/geo?v=14&sector=${sector || ''}&q=${q || ''}`, { method: 'GET' });
+  const cacheKey = new Request(`https://tenderpreneurs.co.za/api/tenders/geo?v=15&sector=${sector || ''}&q=${q || ''}`, { method: 'GET' });
   try { const cache = (globalThis as any).caches?.default; if (cache) { const hit = await cache.match(cacheKey); if (hit) return hit; } } catch { /* optional */ }
   const env = peekEnv(ctx);
   if (!env?.DB) return json({ ok: false, error: 'Tender database is not bound on this deployment.' }, 503);
@@ -24,7 +24,7 @@ export const GET: APIRoute = async (ctx) => {
     const like = `%${q.trim()}%`; binds.push(like, like, like, like);
   }
   try {
-    const rows = await env.DB.prepare(`SELECT id, title, description, procuring_entity, briefing_location, province, sector FROM tenders WHERE ${where.join(' AND ')} LIMIT 2000`).bind(...binds).all<any>();
+    const rows = await env.DB.prepare(`SELECT id, title, description, procuring_entity, briefing_location, province, sector, contact_phone FROM tenders WHERE ${where.join(' AND ')} LIMIT 2000`).bind(...binds).all<any>();
     const pins = [];
     const provCount = new Map<string, number>();
     const themeCount = new Map<string, number>();
