@@ -23,7 +23,7 @@ export const GET: APIRoute = async (ctx) => {
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
   const cacheKey = new Request(
-    `https://tenderpreneurs.co.za/api/tenders/geo?v=7&sector=${sector || ''}&q=${q || ''}`,
+    `https://tenderpreneurs.co.za/api/tenders/geo?v=8&sector=${sector || ''}&q=${q || ''}`,
     { method: 'GET' },
   );
 
