@@ -23,7 +23,7 @@ export const GET: APIRoute = async (ctx) => {
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
   const cacheKey = new Request(
-    `https://tenderpreneurs.co.za/api/tenders/geo?v=4&sector=${sector || ''}&q=${q || ''}`,
+    `https://tenderpreneurs.co.za/api/tenders/geo?v=6&sector=${sector || ''}&q=${q || ''}`,
     { method: 'GET' },
   );
 
@@ -51,9 +51,9 @@ export const GET: APIRoute = async (ctx) => {
     binds.push(sector);
   }
   if (q && q.trim().length >= 2) {
-    where.push('(title LIKE ? OR procuring_entity LIKE ? OR briefing_location LIKE ?)');
+    where.push('(title LIKE ? OR procuring_entity LIKE ? OR briefing_location LIKE ? OR description LIKE ?)');
     const like = `%${q.trim()}%`;
-    binds.push(like, like, like);
+    binds.push(like, like, like, like);
   }
 
   try {
@@ -81,8 +81,9 @@ export const GET: APIRoute = async (ctx) => {
         sector: pin.sector,
         precision: pin.precision,
         label: pin.label,
+        basis: pin.basis,
       });
-      if (pin.label && pin.precision !== 'province' && pin.precision !== 'national' && pin.precision !== 'unknown') {
+      if (pin.basis === 'work' && pin.label) {
         const key = pin.label.toLowerCase();
         const t = townCount.get(key);
         if (t) {
@@ -90,7 +91,7 @@ export const GET: APIRoute = async (ctx) => {
           if (t.ids.length < 40) t.ids.push(pin.id);
         } else {
           townCount.set(key, {
-            name: pin.label.split(',')[0],
+            name: pin.label.split('\u00b7')[0].trim(),
             province: slug === 'national' ? null : slug,
             lat: pin.lat,
             lng: pin.lng,
