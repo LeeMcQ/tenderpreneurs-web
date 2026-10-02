@@ -1,17 +1,7 @@
 /**
- * src/pages/api/cron/ingest.ts
- *
- * SCHEMA-CORRECT version — column names exactly match D1 tenders table:
- *   id, source_id, source_ref, source_url, canonical_ref,
- *   title, description, procuring_entity, province, sector, category,
- *   closing_date, closing_time, published_date,
- *   briefing_date, briefing_compulsory, briefing_location,
- *   contact_name, contact_email, contact_phone,
- *   cidb_grade, estimated_value (ZAR cents), raw_html, documents_json,
- *   fingerprint, status (default 'open'),
- *   first_seen_at, last_seen_at, llm_extracted_at, llm_classified_at
+ * Ingest. New and updated notices are placed with pinFromTender before storage.
+ * Column names match the D1 tenders table.
  */
-
 import type { APIRoute } from 'astro';
 import { getAllAdapters, getAdapter } from '../../../lib/adapters/index.js';
 import { getEnv, ulid, now, sha256, normaliseForFingerprint, cronSecretMatches, d1Fail } from '../../../lib/db.js';
@@ -19,9 +9,9 @@ import { bbbeeLevelNumber, cidbFromText, clockFromIso } from '../../../lib/tende
 import { closeExpired } from '../../../lib/tender-similar.js';
 import { ensureReferenceSchema } from '../../../lib/tender-schema.js';
 import { archiveTender } from '../../../lib/tender-archive.js';
+import { pinFromTender } from '../../../lib/tender-geo-pin.js';
 
 export const prerender = false;
-
 const MAX_PER_RUN = 400;
 const ARCHIVE_CAP = 8;
 const OPEN_STATUSES = new Set(['', 'active', 'open', 'planning', 'planned', 'tender']);
@@ -33,21 +23,21 @@ function filenameFromUrl(url: string): string {
   } catch {}
   return 'Document';
 }
-
 function toOpenStatus(raw: unknown): string {
   const s = String(raw ?? '').toLowerCase();
   if (!s || OPEN_STATUSES.has(s)) return 'open';
   return String(raw);
 }
-
 function isQuota(err: unknown): boolean {
   return /row read limit|free tier daily|d1_quota/i.test(String(err ?? ''));
 }
+function json(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+}
 
 export const POST: APIRoute = async (ctx) => {
-  try {
-    return await handleIngest(ctx);
-  } catch (err) {
+  try { return await handleIngest(ctx); }
+  catch (err) {
     console.error('[ingest]', err);
     const fail = d1Fail(err);
     return json(fail.body, fail.status);
@@ -56,313 +46,178 @@ export const POST: APIRoute = async (ctx) => {
 
 async function handleIngest(ctx: Parameters<APIRoute>[0]): Promise<Response> {
   const env = getEnv(ctx);
-
   const secret = ctx.request.headers.get('x-cron-secret');
-  if (!cronSecretMatches(env, secret)) {
-    return json({ error: 'Unauthorised' }, 401);
-  }
-
+  if (!cronSecretMatches(env, secret)) return json({ error: 'Unauthorised' }, 401);
   const db = env.DB;
   const url = new URL(ctx.request.url);
   const sourceParam = url.searchParams.get('source');
   const fetchMode = url.searchParams.get('fetch') === '1';
   const migrate = url.searchParams.get('migrate') === '1';
   const contentType = ctx.request.headers.get('content-type') ?? '';
-
-  // JSON dump pushes hit this endpoint many times per cron.
-  // Schema ensure (~25 D1 statements) only on adapter/migrate runs.
-  if (migrate || fetchMode || !contentType.includes('application/json')) {
-    await ensureReferenceSchema(db);
-  }
-
+  if (migrate || fetchMode || !contentType.includes('application/json')) await ensureReferenceSchema(db);
   if (contentType.includes('application/json') && !fetchMode) {
     let body: any;
-    try {
-      body = await ctx.request.json();
-    } catch {
-      return json({ error: 'Invalid JSON body' }, 400);
-    }
-
+    try { body = await ctx.request.json(); } catch { return json({ error: 'Invalid JSON body' }, 400); }
     const sourceId: string = body.source;
     const rawTenders: any[] = body.tenders ?? [];
-
-    if (!sourceId || !rawTenders.length) {
-      return json({ error: 'Body must have source and tenders[]' }, 400);
-    }
-
+    if (!sourceId || !rawTenders.length) return json({ error: 'Body must have source and tenders[]' }, 400);
     const result = await writeTenders(db, sourceId, rawTenders);
     await logRun(db, sourceId, result, result.quota ? 'd1_quota' : null, 0);
     return json({ ok: !result.quota, source: sourceId, closed_expired: 0, ...result }, result.quota ? 503 : 200);
   }
-
-  const adapters = sourceParam
-    ? [getAdapter(sourceParam)].filter(Boolean) as any[]
-    : getAllAdapters();
-
-  if (adapters.length === 0) {
-    return json({ error: `No adapter: ${sourceParam}` }, 400);
-  }
-
+  const adapters = sourceParam ? [getAdapter(sourceParam)].filter(Boolean) as any[] : getAllAdapters();
+  if (adapters.length === 0) return json({ error: `No adapter: ${sourceParam}` }, 400);
   const results: Record<string, unknown> = {};
   const globalStart = Date.now();
-
   for (const adapter of adapters) {
     let tenders: any[] = [];
     let errorMessage: string | null = null;
     const adapterStart = Date.now();
-
-    try {
-      tenders = await adapter.fetch();
-    } catch (err) {
-      errorMessage = String(err);
-      console.error(`[ingest] ${adapter.sourceId} fetch failed:`, err);
-    }
-
+    try { tenders = await adapter.fetch(); }
+    catch (err) { errorMessage = String(err); console.error(`[ingest] ${adapter.sourceId} fetch failed:`, err); }
     let writeResult = { items_found: 0, items_new: 0, items_updated: 0, quota: false };
     if (!errorMessage) {
-      try {
-        writeResult = await writeTenders(db, adapter.sourceId, tenders.slice(0, MAX_PER_RUN));
-      } catch (err) {
-        if (isQuota(err)) {
-          errorMessage = 'd1_quota';
-          writeResult.quota = true;
-        } else {
-          errorMessage = String(err);
-        }
+      try { writeResult = await writeTenders(db, adapter.sourceId, tenders.slice(0, MAX_PER_RUN)); }
+      catch (err) {
+        if (isQuota(err)) { errorMessage = 'd1_quota'; writeResult.quota = true; }
+        else errorMessage = String(err);
       }
     }
-
     const duration = Date.now() - adapterStart;
     await logRun(db, adapter.sourceId, writeResult, errorMessage, duration);
-
-    results[adapter.sourceId] = {
-      ...writeResult,
-      duration_ms: duration,
-      error: errorMessage,
-    };
-
+    results[adapter.sourceId] = { ...writeResult, duration_ms: duration, error: errorMessage };
     if (writeResult.quota || errorMessage === 'd1_quota') break;
   }
-
   let closed = 0;
-  try {
-    closed = await closeExpired(db);
-  } catch (err) {
-    if (!isQuota(err)) console.error('[ingest] closeExpired', err);
-  }
+  try { closed = await closeExpired(db); } catch (err) { if (!isQuota(err)) console.error('[ingest] closeExpired', err); }
   return json({ ok: true, results, closed_expired: closed, total_ms: Date.now() - globalStart }, 200);
+}
+
+async function storePlaces(db: D1Database, rows: Array<{ id: string; t: any }>) {
+  const stmts = rows.map(({ id, t }) => {
+    const pin = pinFromTender({
+      id,
+      title: t.title,
+      description: t.description ? String(t.description).slice(0, 4000) : null,
+      procuring_entity: t.buyer ?? '',
+      briefing_location: t.briefingVenue ?? null,
+      province: t.province ?? 'national',
+      contact_phone: t.contactPhone ?? null,
+    });
+    if (!pin) return null;
+    return db.prepare(
+      `UPDATE tenders SET locality = ?, locality_precision = ?, locality_lat = ?, locality_lng = ?, locality_source = ? WHERE id = ?`
+    ).bind(pin.label, pin.precision, pin.lat, pin.lng, pin.basis, id);
+  }).filter(Boolean) as D1PreparedStatement[];
+  if (!stmts.length) return;
+  try {
+    for (let i = 0; i < stmts.length; i += 40) await db.batch(stmts.slice(i, i + 40));
+  } catch {
+    /* locality columns are optional until schema ensure runs */
+  }
 }
 
 async function writeTenders(db: D1Database, sourceId: string, tenders: any[]) {
   if (tenders.length === 0) return { items_found: 0, items_new: 0, items_updated: 0, quota: false };
-
   const itemsFound = tenders.length;
   let itemsNew = 0;
   let itemsUpdated = 0;
   let quota = false;
-
-  const withFp = await Promise.all(
-    tenders.map(async (t) => ({
-      t,
-      fp: await sha256(normaliseForFingerprint(`${t.title}|${t.externalId}|${t.buyer ?? ''}`)),
-    }))
-  );
-
+  const withFp = await Promise.all(tenders.map(async (t) => ({ t, fp: await sha256(normaliseForFingerprint(`${t.title}|${t.externalId}|${t.buyer ?? ''}`)) })));
   const refs = tenders.map(t => t.externalId);
   const existingMap = new Map<string, { id: string; fingerprint: string }>();
   try {
     for (let i = 0; i < refs.length; i += 50) {
       const chunk = refs.slice(i, i + 50);
       const ph = chunk.map(() => '?').join(',');
-      const rows = await db
-        .prepare(`SELECT id, source_ref, fingerprint FROM tenders WHERE source_id=? AND source_ref IN (${ph})`)
-        .bind(sourceId, ...chunk)
-        .all<{ id: string; source_ref: string; fingerprint: string }>();
+      const rows = await db.prepare(`SELECT id, source_ref, fingerprint FROM tenders WHERE source_id=? AND source_ref IN (${ph})`).bind(sourceId, ...chunk).all<{ id: string; source_ref: string; fingerprint: string }>();
       for (const r of rows.results ?? []) existingMap.set(r.source_ref, r);
     }
   } catch (err) {
     if (isQuota(err)) return { items_found: itemsFound, items_new: 0, items_updated: 0, quota: true };
     throw err;
   }
-
   const toInsert = withFp.filter(({ t }) => !existingMap.has(t.externalId));
-  const toUpdate = withFp.filter(({ t, fp }) => {
-    const ex = existingMap.get(t.externalId);
-    return ex && ex.fingerprint !== fp;
-  });
-
+  const toUpdate = withFp.filter(({ t, fp }) => { const ex = existingMap.get(t.externalId); return ex && ex.fingerprint !== fp; });
+  const placed: Array<{ id: string; t: any }> = [];
   const archived: Array<{ id: string; t: any }> = [];
-
   if (toInsert.length > 0) {
     const stmts = toInsert.map(({ t, fp }) => {
       const id = ulid();
       const status = toOpenStatus(t.status);
       const estimatedValue = t.value ? Math.round(t.value * 100) : null;
-      const docsJson = t.documentUrls?.length
-        ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u, filename: filenameFromUrl(u) })))
-        : null;
+      const docsJson = t.documentUrls?.length ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u, filename: filenameFromUrl(u) }))) : null;
       archived.push({ id, t: { ...t, documents_json: docsJson } });
-      return db.prepare(
-        `INSERT INTO tenders (
-           id, source_id, source_ref, source_url,
-           title, description, procuring_entity,
-           province, sector,
-           closing_date, closing_time, published_date,
-           briefing_date, briefing_compulsory, briefing_location,
-           contact_name, contact_email, contact_phone,
-           cidb_grade, estimated_value, documents_json,
-           fingerprint, status, bbbee_required,
-           first_seen_at, last_seen_at
-         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-      ).bind(
-        id, sourceId, t.externalId, t.sourceUrl ?? null,
-        t.title,
-        t.description ? String(t.description).slice(0, 4000) : null,
-        t.buyer ?? '',
-        t.province ?? 'national',
-        t.sector ?? 'consulting',
-        (t.closingDate || '').slice(0, 10) || null,
-        clockFromIso(t.closingDate),
-        t.openingDate ?? null,
-        t.briefingDate ?? null,
-        t.briefingCompulsory ? 1 : 0,
-        t.briefingVenue ?? null,
-        t.contactName ?? null,
-        t.contactEmail ?? null,
-        t.contactPhone ?? null,
-        cidbFromText(t.title, t.description),
-        estimatedValue,
-        docsJson,
-        fp, status, bbbeeLevelNumber(t.title, t.description),
-        now(), now(),
+      placed.push({ id, t });
+      return db.prepare(`INSERT INTO tenders (
+           id, source_id, source_ref, source_url, title, description, procuring_entity, province, sector,
+           closing_date, closing_time, published_date, briefing_date, briefing_compulsory, briefing_location,
+           contact_name, contact_email, contact_phone, cidb_grade, estimated_value, documents_json,
+           fingerprint, status, bbbee_required, first_seen_at, last_seen_at
+         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(
+        id, sourceId, t.externalId, t.sourceUrl ?? null, t.title,
+        t.description ? String(t.description).slice(0, 4000) : null, t.buyer ?? '', t.province ?? 'national', t.sector ?? 'consulting',
+        (t.closingDate || '').slice(0, 10) || null, clockFromIso(t.closingDate), t.openingDate ?? null,
+        t.briefingDate ?? null, t.briefingCompulsory ? 1 : 0, t.briefingVenue ?? null,
+        t.contactName ?? null, t.contactEmail ?? null, t.contactPhone ?? null,
+        cidbFromText(t.title, t.description), estimatedValue, docsJson, fp, status, bbbeeLevelNumber(t.title, t.description), now(), now(),
       );
     });
     try {
-      for (let i = 0; i < stmts.length; i += 50) {
-        await db.batch(stmts.slice(i, i + 50));
-      }
+      for (let i = 0; i < stmts.length; i += 50) await db.batch(stmts.slice(i, i + 50));
       itemsNew = toInsert.length;
-    } catch (err) {
-      if (isQuota(err)) quota = true;
-      else throw err;
-    }
+    } catch (err) { if (isQuota(err)) quota = true; else throw err; }
   }
-
   if (!quota && toUpdate.length > 0) {
     const stmts = toUpdate.map(({ t, fp }) => {
       const ex = existingMap.get(t.externalId)!;
       const status = toOpenStatus(t.status);
       const estimatedValue = t.value ? Math.round(t.value * 100) : null;
-      const docsJson = t.documentUrls?.length
-        ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u, filename: filenameFromUrl(u) })))
-        : null;
+      const docsJson = t.documentUrls?.length ? JSON.stringify(t.documentUrls.map((u: string) => ({ url: u, filename: filenameFromUrl(u) }))) : null;
       archived.push({ id: ex.id, t: { ...t, documents_json: docsJson } });
-      return db.prepare(
-        `UPDATE tenders SET
-           title = ?, description = ?, procuring_entity = ?,
-           closing_date = ?, closing_time = COALESCE(?, closing_time), status = ?,
+      placed.push({ id: ex.id, t });
+      return db.prepare(`UPDATE tenders SET
+           title = ?, description = ?, procuring_entity = ?, closing_date = ?, closing_time = COALESCE(?, closing_time), status = ?,
            briefing_date = COALESCE(?, briefing_date),
            briefing_compulsory = CASE WHEN ? IS NOT NULL THEN ? ELSE briefing_compulsory END,
            briefing_location = COALESCE(?, briefing_location),
-           contact_name = COALESCE(?, contact_name),
-           contact_email = COALESCE(?, contact_email),
-           contact_phone = COALESCE(?, contact_phone),
-           cidb_grade = COALESCE(?, cidb_grade),
-           estimated_value = COALESCE(?, estimated_value),
-           documents_json = COALESCE(?, documents_json),
-           bbbee_required = COALESCE(?, bbbee_required),
-           fingerprint = ?,
-           last_seen_at = ?
-         WHERE id = ?`
-      ).bind(
-        t.title,
-        t.description ? String(t.description).slice(0, 4000) : null,
-        t.buyer ?? '',
-        (t.closingDate || '').slice(0, 10) || null,
-        clockFromIso(t.closingDate),
-        status,
-        t.briefingDate ?? null,
-        t.briefingCompulsory ? 1 : null,
-        t.briefingCompulsory ? 1 : null,
-        t.briefingVenue ?? null,
-        t.contactName ?? null,
-        t.contactEmail ?? null,
-        t.contactPhone ?? null,
-        cidbFromText(t.title, t.description),
-        estimatedValue,
-        docsJson,
-        bbbeeLevelNumber(t.title, t.description),
-        fp, now(), ex.id,
+           contact_name = COALESCE(?, contact_name), contact_email = COALESCE(?, contact_email), contact_phone = COALESCE(?, contact_phone),
+           cidb_grade = COALESCE(?, cidb_grade), estimated_value = COALESCE(?, estimated_value),
+           documents_json = COALESCE(?, documents_json), bbbee_required = COALESCE(?, bbbee_required),
+           fingerprint = ?, last_seen_at = ? WHERE id = ?`).bind(
+        t.title, t.description ? String(t.description).slice(0, 4000) : null, t.buyer ?? '',
+        (t.closingDate || '').slice(0, 10) || null, clockFromIso(t.closingDate), status,
+        t.briefingDate ?? null, t.briefingCompulsory ? 1 : null, t.briefingCompulsory ? 1 : null, t.briefingVenue ?? null,
+        t.contactName ?? null, t.contactEmail ?? null, t.contactPhone ?? null,
+        cidbFromText(t.title, t.description), estimatedValue, docsJson, bbbeeLevelNumber(t.title, t.description), fp, now(), ex.id,
       );
     });
     try {
-      for (let i = 0; i < stmts.length; i += 50) {
-        await db.batch(stmts.slice(i, i + 50));
-      }
+      for (let i = 0; i < stmts.length; i += 50) await db.batch(stmts.slice(i, i + 50));
       itemsUpdated = toUpdate.length;
-    } catch (err) {
-      if (isQuota(err)) quota = true;
-      else throw err;
-    }
+    } catch (err) { if (isQuota(err)) quota = true; else throw err; }
   }
-
+  if (!quota && placed.length) await storePlaces(db, placed);
   if (!quota) {
     for (const row of archived.slice(0, ARCHIVE_CAP)) {
       try {
         await archiveTender(db, {
-          id: row.id,
-          title: row.t.title,
-          description: row.t.description ?? null,
-          procuring_entity: row.t.buyer ?? null,
-          briefing_location: row.t.briefingVenue ?? null,
-          province: row.t.province ?? null,
-          source_ref: row.t.externalId ?? null,
-          source_url: row.t.sourceUrl ?? null,
-          sector: row.t.sector ?? null,
-          published_date: row.t.openingDate ?? null,
-          closing_date: (row.t.closingDate || '').slice(0, 10) || null,
-          closing_time: clockFromIso(row.t.closingDate),
-          briefing_date: row.t.briefingDate ?? null,
-          briefing_compulsory: row.t.briefingCompulsory ? 1 : 0,
-          documents_json: row.t.documents_json ?? null,
+          id: row.id, title: row.t.title, description: row.t.description ?? null, procuring_entity: row.t.buyer ?? null,
+          briefing_location: row.t.briefingVenue ?? null, province: row.t.province ?? null, source_ref: row.t.externalId ?? null,
+          source_url: row.t.sourceUrl ?? null, sector: row.t.sector ?? null, published_date: row.t.openingDate ?? null,
+          closing_date: (row.t.closingDate || '').slice(0, 10) || null, closing_time: clockFromIso(row.t.closingDate),
+          briefing_date: row.t.briefingDate ?? null, briefing_compulsory: row.t.briefingCompulsory ? 1 : 0, documents_json: row.t.documents_json ?? null,
         });
-      } catch (err) {
-        if (isQuota(err)) {
-          quota = true;
-          break;
-        }
-        break;
-      }
+      } catch (err) { if (isQuota(err)) quota = true; break; }
     }
   }
-
   return { items_found: itemsFound, items_new: itemsNew, items_updated: itemsUpdated, quota };
 }
 
-async function logRun(
-  db: D1Database,
-  sourceId: string,
-  result: { items_found: number; items_new: number },
-  errorMessage: string | null,
-  duration: number
-) {
+async function logRun(db: D1Database, sourceId: string, result: { items_found: number; items_new: number }, errorMessage: string | null, duration: number) {
   try {
-    await db.prepare(
-      `INSERT INTO ingestion_runs (source_id, status, items_found, items_new, error_message, duration_ms)
-       VALUES (?,?,?,?,?,?)`
-    ).bind(
-      sourceId,
-      errorMessage ? 'failed' : 'success',
-      result.items_found, result.items_new,
-      errorMessage, duration,
+    await db.prepare(`INSERT INTO ingestion_runs (source_id, status, items_found, items_new, error_message, duration_ms) VALUES (?,?,?,?,?,?)`).bind(
+      sourceId, errorMessage ? 'failed' : 'success', result.items_found, result.items_new, errorMessage, duration,
     ).run();
-  } catch (e) {
-    console.error('[ingest] log failed:', e);
-  }
-}
-
-function json(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status, headers: { 'Content-Type': 'application/json' },
-  });
+  } catch (e) { console.error('[ingest] log failed:', e); }
 }
