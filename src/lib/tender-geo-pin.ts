@@ -1,51 +1,26 @@
 import { PLACES, PROVINCE_CENTROIDS, type LocationFields, type Place, type PlacePrecision } from './tender-location';
+import { issuerOffice } from './issuer-offices';
 
 const GPS = /(-2[2-9]\.\d{2,7})\s*[,\s]\s*(1[6-9]|2[0-9]|3[0-3])\.(\d{2,7})/;
 const WORK_CUE = /\b(at|in|for|within|site|situated|delivery|deliver|supply to|works?|municipality|ward|hospital|clinic|school|port|dam|campus|depot|village|township)\b/;
 
-/** Places named on notices that the core gazetteer folds into a metro or misses. */
 const WORK_PLACES: Place[] = [
-  { slug: 'st-lucia', name: 'St Lucia', province: 'kwazulu-natal', lat: -28.376, lng: 32.412, precision: 'town', aliases: ['isimangaliso', 'i simangaliso'] },
+  { slug: 'st-lucia', name: 'St Lucia', province: 'kwazulu-natal', lat: -28.376, lng: 32.412, precision: 'town', aliases: ['isimangaliso'] },
   { slug: 'hermanus', name: 'Hermanus', province: 'western-cape', lat: -34.419, lng: 19.243, precision: 'town', aliases: ['overstrand'] },
   { slug: 'malmesbury', name: 'Malmesbury', province: 'western-cape', lat: -33.461, lng: 18.727, precision: 'town', aliases: ['swartland'] },
-  { slug: 'wellington', name: 'Wellington', province: 'western-cape', lat: -33.640, lng: 19.010, precision: 'town' },
-  { slug: 'caledon', name: 'Caledon', province: 'western-cape', lat: -34.230, lng: 19.428, precision: 'town', aliases: ['theewaterskloof'] },
-  { slug: 'ceres', name: 'Ceres', province: 'western-cape', lat: -33.369, lng: 19.311, precision: 'town', aliases: ['witzenberg'] },
-  { slug: 'vredendal', name: 'Vredendal', province: 'western-cape', lat: -31.668, lng: 18.501, precision: 'town', aliases: ['matzikama'] },
+  { slug: 'piketberg', name: 'Piketberg', province: 'western-cape', lat: -32.776, lng: 18.759, precision: 'town', aliases: ['bergrivier'] },
   { slug: 'khayelitsha', name: 'Khayelitsha', province: 'western-cape', lat: -34.040, lng: 18.678, precision: 'town' },
   { slug: 'mitchells-plain', name: 'Mitchells Plain', province: 'western-cape', lat: -34.051, lng: 18.622, precision: 'town' },
   { slug: 'bellville', name: 'Bellville', province: 'western-cape', lat: -33.901, lng: 18.629, precision: 'town' },
-  { slug: 'ngqura', name: 'Ngqura', province: 'eastern-cape', lat: -33.805, lng: 25.686, precision: 'town', aliases: ['coega', 'port of ngqura'] },
-  { slug: 'graaff-reinet', name: 'Graaff-Reinet', province: 'eastern-cape', lat: -32.252, lng: 24.541, precision: 'town', aliases: ['dr beylers naude'] },
-  { slug: 'cradock', name: 'Cradock', province: 'eastern-cape', lat: -32.164, lng: 25.619, precision: 'town', aliases: ['nxuba', 'inxuba yethemba'] },
-  { slug: 'aliwal', name: 'Aliwal North', province: 'eastern-cape', lat: -30.694, lng: 26.711, precision: 'town', aliases: ['maletswai'] },
-  { slug: 'queenstown-town', name: 'Komani', province: 'eastern-cape', lat: -31.897, lng: 26.875, precision: 'town', aliases: ['enocht mgijima'] },
+  { slug: 'ngqura', name: 'Ngqura', province: 'eastern-cape', lat: -33.805, lng: 25.686, precision: 'town', aliases: ['coega'] },
   { slug: 'kathu', name: 'Kathu', province: 'northern-cape', lat: -27.696, lng: 23.049, precision: 'town', aliases: ['gamagara'] },
-  { slug: 'postmasburg', name: 'Postmasburg', province: 'northern-cape', lat: -28.329, lng: 23.066, precision: 'town', aliases: ['tsantsabane'] },
-  { slug: 'sasolburg', name: 'Sasolburg', province: 'free-state', lat: -26.814, lng: 27.829, precision: 'town', aliases: ['metsimaholo'] },
-  { slug: 'harrismith', name: 'Harrismith', province: 'free-state', lat: -28.272, lng: 29.130, precision: 'town', aliases: ['maluti a phofung'] },
-  { slug: 'phuthaditjhaba', name: 'Phuthaditjhaba', province: 'free-state', lat: -28.524, lng: 28.816, precision: 'town' },
-  { slug: 'ulundi', name: 'Ulundi', province: 'kwazulu-natal', lat: -28.335, lng: 31.416, precision: 'town' },
-  { slug: 'vryheid', name: 'Vryheid', province: 'kwazulu-natal', lat: -27.769, lng: 30.791, precision: 'town', aliases: ['abaqulusi'] },
-  { slug: 'kokstad', name: 'Kokstad', province: 'kwazulu-natal', lat: -30.547, lng: 29.424, precision: 'town', aliases: ['greater kokstad'] },
-  { slug: 'howick', name: 'Howick', province: 'kwazulu-natal', lat: -29.477, lng: 30.231, precision: 'town', aliases: ['umngeni'] },
-  { slug: 'mandeni', name: 'Mandeni', province: 'kwazulu-natal', lat: -29.148, lng: 31.408, precision: 'town', aliases: ['sundumbili'] },
   { slug: 'soweto', name: 'Soweto', province: 'gauteng', lat: -26.268, lng: 27.858, precision: 'town' },
   { slug: 'sandton', name: 'Sandton', province: 'gauteng', lat: -26.107, lng: 28.056, precision: 'town' },
-  { slug: 'midrand', name: 'Midrand', province: 'gauteng', lat: -25.989, lng: 28.127, precision: 'town' },
   { slug: 'centurion', name: 'Centurion', province: 'gauteng', lat: -25.860, lng: 28.189, precision: 'town' },
-  { slug: 'kempton', name: 'Kempton Park', province: 'gauteng', lat: -26.101, lng: 28.230, precision: 'town' },
-  { slug: 'ortambo', name: 'OR Tambo', province: 'gauteng', lat: -26.136, lng: 28.241, precision: 'town', aliases: ['or tambo airport', 'o r tambo'] },
-  { slug: 'standerton', name: 'Standerton', province: 'mpumalanga', lat: -26.944, lng: 29.241, precision: 'town', aliases: ['lekw a'] },
-  { slug: 'barberton', name: 'Barberton', province: 'mpumalanga', lat: -25.788, lng: 31.053, precision: 'town', aliases: ['umjindi'] },
-  { slug: 'white-river', name: 'White River', province: 'mpumalanga', lat: -25.332, lng: 31.012, precision: 'town' },
-  { slug: 'giyani', name: 'Giyani', province: 'limpopo', lat: -23.302, lng: 30.718, precision: 'town', aliases: ['greater giyani'] },
-  { slug: 'musina', name: 'Musina', province: 'limpopo', lat: -22.338, lng: 30.041, precision: 'town', aliases: ['messina'] },
-  { slug: 'modimolle', name: 'Modimolle', province: 'limpopo', lat: -24.700, lng: 28.406, precision: 'town', aliases: ['nylstroom'] },
-  { slug: 'phalaborwa', name: 'Phalaborwa', province: 'limpopo', lat: -23.943, lng: 31.141, precision: 'town', aliases: ['ba phalaborwa'] },
-  { slug: 'lichtenburg', name: 'Lichtenburg', province: 'north-west', lat: -26.152, lng: 26.160, precision: 'town', aliases: ['ditsobotla'] },
+  { slug: 'pretoria', name: 'Pretoria', province: 'gauteng', lat: -25.746, lng: 28.188, precision: 'metro', aliases: ['arcadia', 'hatfield'] },
+  { slug: 'giyani', name: 'Giyani', province: 'limpopo', lat: -23.302, lng: 30.718, precision: 'town' },
+  { slug: 'musina', name: 'Musina', province: 'limpopo', lat: -22.338, lng: 30.041, precision: 'town' },
   { slug: 'brits', name: 'Brits', province: 'north-west', lat: -25.634, lng: 27.781, precision: 'town', aliases: ['madibeng'] },
-  { slug: 'vryburg', name: 'Vryburg', province: 'north-west', lat: -26.957, lng: 24.730, precision: 'town', aliases: ['naledi'] },
 ];
 
 const GAZETTEER = [...PLACES, ...WORK_PLACES].sort((a, b) => longest(b) - longest(a));
@@ -115,17 +90,10 @@ function findPlaces(text: string, province?: string | null): Place[] {
   return hits;
 }
 
-function workSentences(text: string): string[] {
-  return text.split(/[\n.;]/).map((s) => s.trim()).filter((s) => s.length > 8);
-}
-
 function pickWorkPlace(title: string, description: string, province?: string | null): Place | null {
   const blob = `${title}\n${description}`;
-  const cued = workSentences(blob).filter((s) => WORK_CUE.test(norm(s)));
-  const fromCue = findPlaces(cued.join(' '), province);
-  if (fromCue.length) return fromCue[0];
-  const fromAll = findPlaces(blob, province);
-  return fromAll[0] ?? null;
+  const cued = blob.split(/[\n.;]/).map((s) => s.trim()).filter((s) => s.length > 8 && WORK_CUE.test(norm(s)));
+  return findPlaces(cued.join(' '), province)[0] || findPlaces(blob, province)[0] || null;
 }
 
 export function pinFromTender(row: LocationFields & { id: string; sector?: string | null }): TenderPin | null {
@@ -133,20 +101,23 @@ export function pinFromTender(row: LocationFields & { id: string; sector?: strin
   const gps = parseGps(workText);
   const province = row.province && PROVINCE_CENTROIDS[row.province] ? row.province : null;
   const work = pickWorkPlace(row.title || '', row.description || '', province);
-  const office = !work ? (findPlaces(row.briefing_location || '', province)[0] || findPlaces(row.procuring_entity || '', province)[0]) : null;
-  const place = work || office;
-  const basis: TenderPin['basis'] = work || gps ? 'work' : office ? 'office' : 'province';
+  const namedOffice = !work
+    ? findPlaces([row.briefing_location, row.procuring_entity].filter(Boolean).join(' '), province)[0]
+    : null;
+  const knownOffice = !work && !namedOffice
+    ? issuerOffice(row.procuring_entity, row.briefing_location, province)
+    : null;
 
-  let lat = gps?.lat ?? place?.lat ?? null;
-  let lng = gps?.lng ?? place?.lng ?? null;
-  let precision: TenderPin['precision'] = gps ? 'gps' : place?.precision ?? 'unknown';
-  let label = place?.name ?? '';
+  const basis: TenderPin['basis'] = work || gps ? 'work' : namedOffice || knownOffice ? 'office' : 'province';
+  let lat = gps?.lat ?? work?.lat ?? namedOffice?.lat ?? knownOffice?.lat ?? null;
+  let lng = gps?.lng ?? work?.lng ?? namedOffice?.lng ?? knownOffice?.lng ?? null;
+  let precision: TenderPin['precision'] = gps ? 'gps' : (work || namedOffice)?.precision ?? knownOffice?.precision ?? 'unknown';
+  let label = work?.name ?? namedOffice?.name ?? knownOffice?.name ?? '';
 
   if (lat == null || lng == null) {
     if (!province) return null;
     const c = PROVINCE_CENTROIDS[province];
-    lat = c.lat;
-    lng = c.lng;
+    lat = c.lat; lng = c.lng;
     precision = province === 'national' ? 'national' : 'province';
     label = c.name;
   }
