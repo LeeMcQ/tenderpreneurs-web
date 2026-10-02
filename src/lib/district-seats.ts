@@ -3,6 +3,9 @@
 export type Seat = { name: string; lat: number; lng: number; keys: string[]; province: string };
 
 export const DISTRICT_SEATS: Seat[] = [
+  { name: 'Ugu', lat: -30.741, lng: 30.455, province: 'kwazulu-natal', keys: ['ugu district', 'ugu municip'] },
+  { name: 'Cape Winelands', lat: -33.646, lng: 19.449, province: 'western-cape', keys: ['cape winelands'] },
+  { name: 'West Coast', lat: -32.181, lng: 18.894, province: 'western-cape', keys: ['west coast district', 'cederberg'] },
   { name: 'OR Tambo', lat: -31.589, lng: 28.790, province: 'eastern-cape', keys: ['or tambo', 'o r tambo'] },
   { name: 'Chris Hani', lat: -31.898, lng: 26.875, province: 'eastern-cape', keys: ['chris hani'] },
   { name: 'Amathole', lat: -32.790, lng: 26.830, province: 'eastern-cape', keys: ['amathole'] },
@@ -16,12 +19,9 @@ export const DISTRICT_SEATS: Seat[] = [
   { name: 'Zululand', lat: -28.335, lng: 31.416, province: 'kwazulu-natal', keys: ['zululand'] },
   { name: 'uMkhanyakude', lat: -27.620, lng: 32.040, province: 'kwazulu-natal', keys: ['umkhanyakude'] },
   { name: 'iLembe', lat: -29.328, lng: 31.290, province: 'kwazulu-natal', keys: ['ilembe'] },
-  { name: 'Ugu', lat: -30.741, lng: 30.455, province: 'kwazulu-natal', keys: ['ugu district', 'ugu municip'] },
   { name: 'Harry Gwala', lat: -30.160, lng: 30.060, province: 'kwazulu-natal', keys: ['harry gwala', 'sisonke'] },
   { name: 'uMzinyathi', lat: -28.166, lng: 30.234, province: 'kwazulu-natal', keys: ['umzinyathi'] },
-  { name: 'Cape Winelands', lat: -33.646, lng: 19.449, province: 'western-cape', keys: ['cape winelands', 'cederberg'] },
   { name: 'Garden Route', lat: -33.963, lng: 22.462, province: 'western-cape', keys: ['garden route', 'eden district'] },
-  { name: 'West Coast', lat: -32.776, lng: 18.759, province: 'western-cape', keys: ['west coast district'] },
   { name: 'Overberg', lat: -34.230, lng: 19.428, province: 'western-cape', keys: ['overberg'] },
   { name: 'Central Karoo', lat: -32.357, lng: 22.583, province: 'western-cape', keys: ['central karoo'] },
   { name: 'Fezile Dabi', lat: -26.814, lng: 27.829, province: 'free-state', keys: ['fezile dabi'] },
