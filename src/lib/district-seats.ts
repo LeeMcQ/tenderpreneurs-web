@@ -16,10 +16,10 @@ export const DISTRICT_SEATS: Seat[] = [
   { name: 'Zululand', lat: -28.335, lng: 31.416, province: 'kwazulu-natal', keys: ['zululand'] },
   { name: 'uMkhanyakude', lat: -27.620, lng: 32.040, province: 'kwazulu-natal', keys: ['umkhanyakude'] },
   { name: 'iLembe', lat: -29.328, lng: 31.290, province: 'kwazulu-natal', keys: ['ilembe'] },
-  { name: 'Ugu', lat: -30.741, lng: 30.455, province: 'kwazulu-natal', keys: ['ugu district'] },
+  { name: 'Ugu', lat: -30.741, lng: 30.455, province: 'kwazulu-natal', keys: ['ugu district', 'ugu municip'] },
   { name: 'Harry Gwala', lat: -30.160, lng: 30.060, province: 'kwazulu-natal', keys: ['harry gwala', 'sisonke'] },
   { name: 'uMzinyathi', lat: -28.166, lng: 30.234, province: 'kwazulu-natal', keys: ['umzinyathi'] },
-  { name: 'Cape Winelands', lat: -33.646, lng: 19.449, province: 'western-cape', keys: ['cape winelands'] },
+  { name: 'Cape Winelands', lat: -33.646, lng: 19.449, province: 'western-cape', keys: ['cape winelands', 'cederberg'] },
   { name: 'Garden Route', lat: -33.963, lng: 22.462, province: 'western-cape', keys: ['garden route', 'eden district'] },
   { name: 'West Coast', lat: -32.776, lng: 18.759, province: 'western-cape', keys: ['west coast district'] },
   { name: 'Overberg', lat: -34.230, lng: 19.428, province: 'western-cape', keys: ['overberg'] },
@@ -56,10 +56,8 @@ function norm(s: string): string {
 export function districtSeat(text: string, province?: string | null): Seat | null {
   const blob = ` ${norm(text)} `;
   if (blob.trim().length < 4) return null;
-  const hits = DISTRICT_SEATS.filter((d) => d.keys.some((k) => blob.includes(` ${k} `) || blob.includes(k)));
+  const hits = DISTRICT_SEATS.filter((d) => d.keys.some((k) => blob.includes(k)));
   if (!hits.length) return null;
-  if (province && province !== 'national') {
-    return hits.find((d) => d.province === province) || hits[0];
-  }
+  if (province && province !== 'national') return hits.find((d) => d.province === province) || hits[0];
   return hits[0];
 }
