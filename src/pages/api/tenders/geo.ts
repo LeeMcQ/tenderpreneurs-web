@@ -5,52 +5,27 @@ import { PROVINCE_CENTROIDS } from '../../../lib/tender-location.js';
 import { pinFromTender } from '../../../lib/tender-geo-pin.js';
 
 export const prerender = false;
-
-const VALID_SECTORS = new Set([
-  'construction','ict','health','education','transport','agriculture',
-  'energy','security','consulting','cleaning','catering','legal',
-]);
-
+const VALID_SECTORS = new Set(['construction','ict','health','education','transport','agriculture','energy','security','consulting','cleaning','catering','legal']);
 function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=180' },
-  });
+  return new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=180' } });
 }
-
 export const GET: APIRoute = async (ctx) => {
   const url = new URL(ctx.request.url);
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
-  const cacheKey = new Request(
-    `https://tenderpreneurs.co.za/api/tenders/geo?v=8&sector=${sector || ''}&q=${q || ''}`,
-    { method: 'GET' },
-  );
-
-  try {
-    const cache = (globalThis as any).caches?.default;
-    if (cache) {
-      const hit = await cache.match(cacheKey);
-      if (hit) return hit;
-    }
-  } catch { /* optional */ }
-
+  const cacheKey = new Request(`https://tenderpreneurs.co.za/api/tenders/geo?v=9&sector=${sector || ''}&q=${q || ''}`, { method: 'GET' });
+  try { const cache = (globalThis as any).caches?.default; if (cache) { const hit = await cache.match(cacheKey); if (hit) return hit; } } catch { /* optional */ }
   const env = peekEnv(ctx);
   if (!env?.DB) return json({ ok: false, error: 'Tender database is not bound on this deployment.' }, 503);
-
   const where = ["status = 'open'", 'canonical_ref IS NULL', "(closing_date IS NULL OR date(closing_date) >= date('now'))"];
   const binds: unknown[] = [];
   if (sector && VALID_SECTORS.has(sector)) { where.push('sector = ?'); binds.push(sector); }
   if (q && q.trim().length >= 2) {
     where.push('(title LIKE ? OR procuring_entity LIKE ? OR briefing_location LIKE ? OR description LIKE ?)');
-    const like = `%${q.trim()}%`;
-    binds.push(like, like, like, like);
+    const like = `%${q.trim()}%`; binds.push(like, like, like, like);
   }
-
   try {
-    const rows = await env.DB.prepare(
-      `SELECT id, title, description, procuring_entity, briefing_location, province, sector FROM tenders WHERE ${where.join(' AND ')} LIMIT 2000`,
-    ).bind(...binds).all<any>();
+    const rows = await env.DB.prepare(`SELECT id, title, description, procuring_entity, briefing_location, province, sector FROM tenders WHERE ${where.join(' AND ')} LIMIT 2000`).bind(...binds).all<any>();
     const pins = [];
     const provCount = new Map<string, number>();
     const themeCount = new Map<string, number>();
