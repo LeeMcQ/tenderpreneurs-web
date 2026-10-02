@@ -21,9 +21,24 @@ const WORK_PLACES: Place[] = [
   { slug: 'giyani', name: 'Giyani', province: 'limpopo', lat: -23.302, lng: 30.718, precision: 'town' },
   { slug: 'musina', name: 'Musina', province: 'limpopo', lat: -22.338, lng: 30.041, precision: 'town' },
   { slug: 'brits', name: 'Brits', province: 'north-west', lat: -25.634, lng: 27.781, precision: 'town', aliases: ['madibeng'] },
+  { slug: 'ulundi', name: 'Ulundi', province: 'kwazulu-natal', lat: -28.335, lng: 31.416, precision: 'town' },
+  { slug: 'vryheid', name: 'Vryheid', province: 'kwazulu-natal', lat: -27.769, lng: 30.791, precision: 'town' },
+  { slug: 'kokstad', name: 'Kokstad', province: 'kwazulu-natal', lat: -30.547, lng: 29.424, precision: 'town' },
+  { slug: 'harrismith', name: 'Harrismith', province: 'free-state', lat: -28.272, lng: 29.130, precision: 'town' },
+  { slug: 'sasolburg', name: 'Sasolburg', province: 'free-state', lat: -26.814, lng: 27.829, precision: 'town' },
+  { slug: 'phalaborwa', name: 'Phalaborwa', province: 'limpopo', lat: -23.943, lng: 31.141, precision: 'town' },
 ];
 
 const GAZETTEER = [...PLACES, ...WORK_PLACES].sort((a, b) => longest(b) - longest(a));
+const NOTES = {
+  gps: 'printed coordinates',
+  work: 'where the work is',
+  briefing: 'briefing venue',
+  office: 'issuing office',
+  province: 'province only',
+} as const;
+
+export type PinBasis = keyof typeof NOTES;
 
 function longest(p: Place): number {
   return [p.name, ...(p.aliases ?? [])].reduce((m, s) => Math.max(m, s.length), 0);
@@ -40,7 +55,7 @@ export type TenderPin = {
   sector: string | null;
   precision: PlacePrecision | 'gps';
   label: string;
-  basis: 'work' | 'office' | 'province';
+  basis: PinBasis;
 };
 
 export function parseGps(text: string | null | undefined): { lat: number; lng: number } | null {
@@ -97,40 +112,42 @@ function pickWorkPlace(title: string, description: string, province?: string | n
 }
 
 export function pinFromTender(row: LocationFields & { id: string; sector?: string | null }): TenderPin | null {
+  const province = row.province && PROVINCE_CENTROIDS[row.province] ? row.province : null;
   const workText = [row.title, row.description].filter(Boolean).join('\n');
   const gps = parseGps(workText);
-  const province = row.province && PROVINCE_CENTROIDS[row.province] ? row.province : null;
   const work = pickWorkPlace(row.title || '', row.description || '', province);
-  const namedOffice = !work
-    ? findPlaces([row.briefing_location, row.procuring_entity].filter(Boolean).join(' '), province)[0]
-    : null;
-  const knownOffice = !work && !namedOffice
-    ? issuerOffice(row.procuring_entity, row.briefing_location, province)
-    : null;
+  const briefing = findPlaces(row.briefing_location || '', province)[0] || null;
+  const office = issuerOffice(row.procuring_entity, null, province);
 
-  const basis: TenderPin['basis'] = work || gps ? 'work' : namedOffice || knownOffice ? 'office' : 'province';
-  let lat = gps?.lat ?? work?.lat ?? namedOffice?.lat ?? knownOffice?.lat ?? null;
-  let lng = gps?.lng ?? work?.lng ?? namedOffice?.lng ?? knownOffice?.lng ?? null;
-  let precision: TenderPin['precision'] = gps ? 'gps' : (work || namedOffice)?.precision ?? knownOffice?.precision ?? 'unknown';
-  let label = work?.name ?? namedOffice?.name ?? knownOffice?.name ?? '';
+  let basis: PinBasis = 'province';
+  let lat: number | null = null;
+  let lng: number | null = null;
+  let precision: TenderPin['precision'] = 'unknown';
+  let label = '';
 
-  if (lat == null || lng == null) {
-    if (!province) return null;
+  if (gps) {
+    basis = 'gps'; lat = gps.lat; lng = gps.lng; precision = 'gps'; label = work?.name || briefing?.name || 'GPS';
+  } else if (work) {
+    basis = 'work'; lat = work.lat; lng = work.lng; precision = work.precision; label = work.name;
+  } else if (briefing) {
+    basis = 'briefing'; lat = briefing.lat; lng = briefing.lng; precision = briefing.precision; label = briefing.name;
+  } else if (office) {
+    basis = 'office'; lat = office.lat; lng = office.lng; precision = office.precision; label = office.name;
+  } else if (province) {
     const c = PROVINCE_CENTROIDS[province];
-    lat = c.lat; lng = c.lng;
+    basis = 'province'; lat = c.lat; lng = c.lng;
     precision = province === 'national' ? 'national' : 'province';
     label = c.name;
-  }
+  } else return null;
 
   const spread = spreadPin(row.id, lat, lng, precision);
-  const note = basis === 'work' ? 'where the work is' : basis === 'office' ? 'issuing office' : 'province only';
   return {
     id: row.id,
     lat: spread.lat,
     lng: spread.lng,
     sector: row.sector ?? null,
     precision,
-    label: label ? `${label} \u00b7 ${note}` : note,
+    label: `${label} \u00b7 ${NOTES[basis]}`,
     basis,
   };
 }
