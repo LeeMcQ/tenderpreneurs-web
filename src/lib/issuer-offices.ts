@@ -1,11 +1,6 @@
 /** Public offices of buyers, used only when the notice does not name the work site. */
 
-export type OfficeHit = {
-  name: string;
-  lat: number;
-  lng: number;
-  precision: 'town' | 'metro';
-};
+export type OfficeHit = { name: string; lat: number; lng: number; precision: 'town' | 'metro' };
 
 const SEATS: Record<string, OfficeHit> = {
   'western-cape': { name: 'Cape Town', lat: -33.9258, lng: 18.4232, precision: 'metro' },
@@ -20,72 +15,54 @@ const SEATS: Record<string, OfficeHit> = {
   national: { name: 'Pretoria', lat: -25.7461, lng: 28.1881, precision: 'metro' },
 };
 
-const PREFIX: Array<[RegExp, string]> = [
-  [/\bwestern cape\b/, 'western-cape'],
-  [/\beastern cape\b/, 'eastern-cape'],
-  [/\bnorthern cape\b/, 'northern-cape'],
-  [/\bfree state\b/, 'free-state'],
-  [/\bkwa ?zulu\b/, 'kwazulu-natal'],
-  [/\bgauteng\b/, 'gauteng'],
-  [/\bmpumalanga\b/, 'mpumalanga'],
-  [/\blimpopo\b/, 'limpopo'],
-  [/\bnorth west\b/, 'north-west'],
-];
-
 type Org = { keys: string[]; name: string; lat: number; lng: number; regions?: Record<string, OfficeHit> };
 
 const ORGS: Org[] = [
-  { keys: ['eskom'], name: 'Eskom Megawatt Park', lat: -26.035, lng: 28.068, regions: {
-    'western-cape': { name: 'Eskom Western Cape', lat: -33.894, lng: 18.636, precision: 'town' },
-    'eastern-cape': { name: 'Eskom Eastern Cape', lat: -33.961, lng: 25.602, precision: 'town' },
-    'kwazulu-natal': { name: 'Eskom KwaZulu-Natal', lat: -29.835, lng: 30.925, precision: 'town' },
-    mpumalanga: { name: 'Eskom Mpumalanga', lat: -25.877, lng: 29.233, precision: 'town' },
-    gauteng: { name: 'Eskom Megawatt Park', lat: -26.035, lng: 28.068, precision: 'town' },
+  { keys: ['city of cape town', 'iziko'], name: 'Cape Town', lat: -33.929, lng: 18.415 },
+  { keys: ['city of tshwane', 'tshwane automotive', 'tasez'], name: 'Tshwane', lat: -25.735, lng: 28.308 },
+  { keys: ['city of johannesburg'], name: 'Johannesburg', lat: -26.204, lng: 28.047 },
+  { keys: ['city of ekurhuleni', 'ekurhuleni'], name: 'Ekurhuleni', lat: -26.178, lng: 28.221 },
+  { keys: ['ethekwini'], name: 'eThekwini', lat: -29.858, lng: 31.021 },
+  { keys: ['mandela bay theatre', 'nelson mandela bay'], name: 'Gqeberha', lat: -33.961, lng: 25.602 },
+  { keys: ['mathibestad'], name: 'Mathibestad', lat: -25.208, lng: 28.128 },
+  { keys: ['king shaka'], name: 'King Shaka', lat: -29.614, lng: 31.120 },
+  { keys: ['sabs', 'bureau of standards'], name: 'SABS Groenkloof', lat: -25.772, lng: 28.209 },
+  { keys: ['statistics south africa', 'stats sa'], name: 'Stats SA', lat: -25.746, lng: 28.232 },
+  { keys: ['south african airways', 'saa '], name: 'SAA Airways Park', lat: -26.136, lng: 28.241 },
+  { keys: ['freedom park'], name: 'Freedom Park', lat: -25.767, lng: 28.187 },
+  { keys: ['airports company', 'acsa'], name: 'ACSA', lat: -26.136, lng: 28.241, regions: {
+    'kwazulu-natal': { name: 'King Shaka', lat: -29.614, lng: 31.120, precision: 'town' },
+    'western-cape': { name: 'Cape Town Airport', lat: -33.970, lng: 18.602, precision: 'town' },
   } },
-  { keys: ['transnet', 'tfr'], name: 'Transnet', lat: -26.205, lng: 28.047, regions: {
-    'western-cape': { name: 'Transnet Cape Town', lat: -33.906, lng: 18.436, precision: 'town' },
-    'eastern-cape': { name: 'Transnet Gqeberha', lat: -33.958, lng: 25.636, precision: 'town' },
-    'kwazulu-natal': { name: 'Transnet Durban', lat: -29.868, lng: 31.027, precision: 'town' },
-    gauteng: { name: 'Transnet Park', lat: -26.205, lng: 28.047, precision: 'metro' },
-  } },
-  { keys: ['city of cape town'], name: 'City of Cape Town', lat: -33.9258, lng: 18.4232 },
-  { keys: ['city of tshwane', 'city of pretoria'], name: 'City of Tshwane', lat: -25.746, lng: 28.188 },
-  { keys: ['city of johannesburg', 'city of joburg'], name: 'City of Johannesburg', lat: -26.204, lng: 28.047 },
-  { keys: ['ethekwini', 'city of durban'], name: 'eThekwini', lat: -29.858, lng: 31.021 },
-  { keys: ['electoral commission', ' iec'], name: 'IEC', lat: -25.746, lng: 28.188 },
-  { keys: ['national research', 'saasta', 'nrf'], name: 'NRF', lat: -25.755, lng: 28.277 },
-  { keys: ['film and video', 'nfvf'], name: 'NFVF', lat: -26.146, lng: 28.041 },
-  { keys: ['science & technology', 'science and technology'], name: 'DSI', lat: -25.746, lng: 28.188 },
-  { keys: ['eastcape midlands', 'tvet college'], name: 'Eastcape Midlands College', lat: -33.768, lng: 25.405 },
-  { keys: ['sanral', 'roads agency'], name: 'SANRAL', lat: -25.786, lng: 28.277 },
-  { keys: ['sars', 'revenue service'], name: 'SARS', lat: -25.770, lng: 28.235 },
+  { keys: ['air traffic', 'atns'], name: 'ATNS', lat: -26.143, lng: 28.198 },
+  { keys: ['south african tourism'], name: 'SA Tourism', lat: -26.128, lng: 28.053 },
+  { keys: ['water and sanitation'], name: 'Water and Sanitation', lat: -25.746, lng: 28.188 },
+  { keys: ['independent development trust', 'idt'], name: 'IDT', lat: -25.747, lng: 28.229 },
+  { keys: ['eskom'], name: 'Eskom Megawatt Park', lat: -26.035, lng: 28.068 },
+  { keys: ['transnet', 'tfr'], name: 'Transnet', lat: -26.205, lng: 28.047 },
+  { keys: ['sanral'], name: 'SANRAL', lat: -25.786, lng: 28.277 },
+  { keys: ['sars'], name: 'SARS', lat: -25.770, lng: 28.235 },
   { keys: ['sita'], name: 'SITA', lat: -25.832, lng: 28.247 },
-  { keys: ['prasa', 'passenger rail'], name: 'PRASA', lat: -26.194, lng: 28.036 },
-  { keys: ['sentech'], name: 'Sentech', lat: -26.089, lng: 27.921 },
-  { keys: ['rand water'], name: 'Rand Water', lat: -26.283, lng: 28.048 },
+  { keys: ['prasa'], name: 'PRASA', lat: -26.194, lng: 28.036 },
 ];
 
 function norm(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  return ` ${s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `;
 }
 
-export function issuerOffice(entity: string | null | undefined, briefing: string | null | undefined, province: string | null): OfficeHit | null {
-  const blob = norm(`${entity || ''} ${briefing || ''}`);
-  if (!blob) return null;
+export function issuerOffice(entity: string | null | undefined, extra: string | null | undefined, province: string | null): OfficeHit | null {
+  const blob = norm(`${entity || ''} ${extra || ''}`);
+  if (blob.trim().length < 3) return null;
   for (const org of ORGS) {
-    if (!org.keys.some((k) => blob.includes(k.trim()))) continue;
+    if (!org.keys.some((k) => blob.includes(k))) continue;
     if (province && org.regions?.[province]) return org.regions[province];
-    if (province && SEATS[province] && province !== 'national' && !org.keys.some((k) => k.includes('city of') || k.includes('ethekwini'))) {
+    if (province && SEATS[province] && province !== 'national' && /water and sanitation|independent development|idt/.test(blob)) {
       return { ...SEATS[province], name: org.name };
     }
     return { name: org.name, lat: org.lat, lng: org.lng, precision: 'town' };
   }
-  for (const [re, slug] of PREFIX) {
-    if (re.test(blob) && SEATS[slug]) return { ...SEATS[slug], name: entity?.split('-')[0]?.trim() || SEATS[slug].name };
-  }
-  if (province && SEATS[province] && /department|municipality|premier|metro|district|agency|authority|board|council|soc|hospital|college|fund/.test(blob)) {
+  if (province && SEATS[province] && /department|municipality|premier|metro|district|agency|authority|board|council|soc|hospital|college|fund|eastern cape|western cape|gauteng|kwazulu/.test(blob)) {
     return SEATS[province];
   }
-  if ((!province || province === 'national') && /national|department|soc|agency|authority|foundation/.test(blob)) return SEATS.national;
   return null;
 }
