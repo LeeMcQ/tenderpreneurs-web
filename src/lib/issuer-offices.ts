@@ -47,17 +47,26 @@ const ORGS: Org[] = [
     mpumalanga: { name: 'Transnet eMalahleni', lat: -25.877, lng: 29.233, precision: 'town' },
     gauteng: { name: 'Transnet Park', lat: -26.205, lng: 28.047, precision: 'metro' },
   } },
-  { keys: ['prasa', 'passenger rail'], name: 'PRASA', lat: -26.194, lng: 28.036, regions: {
-    'western-cape': { name: 'PRASA Cape Town', lat: -33.924, lng: 18.424, precision: 'town' },
-    'kwazulu-natal': { name: 'PRASA Durban', lat: -29.857, lng: 31.022, precision: 'town' },
-    gauteng: { name: 'PRASA Braamfontein', lat: -26.194, lng: 28.036, precision: 'town' },
+  { keys: ['sanral', 'roads agency'], name: 'SANRAL', lat: -25.786, lng: 28.277, regions: {
+    'western-cape': { name: 'SANRAL Western Cape', lat: -33.932, lng: 18.860, precision: 'town' },
+    'eastern-cape': { name: 'SANRAL Eastern Cape', lat: -33.961, lng: 25.602, precision: 'town' },
+    'kwazulu-natal': { name: 'SANRAL KwaZulu-Natal', lat: -29.801, lng: 30.818, precision: 'town' },
+    'free-state': { name: 'SANRAL Free State', lat: -29.118, lng: 26.214, precision: 'town' },
+    'northern-cape': { name: 'SANRAL Northern Cape', lat: -28.738, lng: 24.764, precision: 'town' },
+    gauteng: { name: 'SANRAL Northern Region', lat: -25.786, lng: 28.277, precision: 'town' },
   } },
+  { keys: ['prasa', 'passenger rail'], name: 'PRASA', lat: -26.194, lng: 28.036 },
   { keys: ['sentech'], name: 'Sentech', lat: -26.089, lng: 27.921 },
   { keys: ['rand water'], name: 'Rand Water', lat: -26.283, lng: 28.048 },
   { keys: ['sabs', 'bureau of standards'], name: 'SABS Groenkloof', lat: -25.772, lng: 28.209 },
   { keys: ['nyda', 'youth development'], name: 'NYDA', lat: -26.055, lng: 28.091 },
   { keys: ['border management'], name: 'Border Management Authority', lat: -25.747, lng: 28.229 },
   { keys: ['cross-border', 'cross border road'], name: 'C-BRTA', lat: -25.783, lng: 28.277 },
+  { keys: ['sars', 'revenue service'], name: 'SARS', lat: -25.770, lng: 28.235 },
+  { keys: ['sita', 'state information'], name: 'SITA', lat: -25.832, lng: 28.247 },
+  { keys: ['airports company', 'acsa'], name: 'ACSA', lat: -26.136, lng: 28.241 },
+  { keys: ['south african post', 'sapo'], name: 'SA Post Office', lat: -25.747, lng: 28.229 },
+  { keys: ['telkom'], name: 'Telkom', lat: -25.786, lng: 28.277 },
   { keys: ['trade and investment', 'tikzn'], name: 'Trade & Investment KZN', lat: -29.858, lng: 31.021 },
   { keys: ['isimangaliso', 'i simangaliso'], name: 'iSimangaliso', lat: -28.376, lng: 32.412 },
   { keys: ['bergrivier', 'piketberg'], name: 'Bergrivier', lat: -32.776, lng: 18.759 },
@@ -79,12 +88,13 @@ export function issuerOffice(
   for (const org of ORGS) {
     if (!org.keys.some((k) => blob.includes(k))) continue;
     if (province && org.regions?.[province]) return org.regions[province];
+    if (province && SEATS[province] && province !== 'national') return { ...SEATS[province], name: org.name };
     return { name: org.name, lat: org.lat, lng: org.lng, precision: 'town' };
   }
-  if (province && SEATS[province] && /province|department|municipality|premier|metro|district/.test(blob)) {
+  if (province && SEATS[province] && /province|department|municipality|premier|metro|district|agency|authority|board|council|soc|hospital|water board/.test(blob)) {
     return SEATS[province];
   }
-  if ((!province || province === 'national') && /national|department|soc ltd|agency/.test(blob)) {
+  if ((!province || province === 'national') && /national|department|soc ltd|agency|authority/.test(blob)) {
     return SEATS.national;
   }
   return null;
