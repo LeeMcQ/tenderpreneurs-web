@@ -152,7 +152,7 @@ export async function renderMap(el: HTMLElement, geo: GeoPayload, selectedProvin
   if (!mapNode) return;
   if (!map) {
     map = L.map(mapNode, { zoomControl: true, attributionControl: true, minZoom: 5, maxZoom: 17, maxBounds: SA_BOUNDS, maxBoundsViscosity: 0.8 });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 }).addTo(map);
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
     map.setView([-28.5, 24.7], 5);
     clusterLayer = L.markerClusterGroup({
