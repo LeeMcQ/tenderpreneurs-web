@@ -1,8 +1,8 @@
-/** One pin per open tender. Every row is placed by pinFromTender before it is drawn. */
+/** Every open notice is placed by the shared pin order before it is drawn. */
 import type { APIRoute } from 'astro';
 import { peekEnv, d1Fail } from '../../../lib/db.js';
 import { PROVINCE_CENTROIDS } from '../../../lib/tender-location.js';
-import { pinFromTender } from '../../../lib/tender-geo-pin.js';
+import { pinsFromTender } from '../../../lib/tender-geo-pin.js';
 export const prerender = false;
 const VALID_SECTORS = new Set(['construction','ict','health','education','transport','agriculture','energy','security','consulting','cleaning','catering','legal']);
 function json(data: unknown, status = 200) {
@@ -12,7 +12,7 @@ export const GET: APIRoute = async (ctx) => {
   const url = new URL(ctx.request.url);
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
-  const cacheKey = new Request(`https://tenderpreneurs.co.za/api/tenders/geo?v=16&sector=${sector || ''}&q=${q || ''}`, { method: 'GET' });
+  const cacheKey = new Request(`https://tenderpreneurs.co.za/api/tenders/geo?v=17&sector=${sector || ''}&q=${q || ''}`, { method: 'GET' });
   try { const cache = (globalThis as any).caches?.default; if (cache) { const hit = await cache.match(cacheKey); if (hit) return hit; } } catch { /* optional */ }
   const env = peekEnv(ctx);
   if (!env?.DB) return json({ ok: false, error: 'Tender database is not bound on this deployment.' }, 503);
@@ -26,37 +26,33 @@ export const GET: APIRoute = async (ctx) => {
   try {
     const rows = await env.DB.prepare(`SELECT id, title, description, procuring_entity, briefing_location, province, sector, contact_phone, closing_date FROM tenders WHERE ${where.join(' AND ')} LIMIT 2000`).bind(...binds).all<any>();
     const pins = [];
+    const issues = [];
     const provCount = new Map<string, number>();
     const themeCount = new Map<string, number>();
     const townCount = new Map<string, { name: string; province: string | null; lat: number; lng: number; count: number; ids: string[] }>();
     for (const row of rows.results ?? []) {
-      const pin = pinFromTender(row);
       const slug = row.province && PROVINCE_CENTROIDS[row.province] ? row.province : 'national';
       provCount.set(slug, (provCount.get(slug) ?? 0) + 1);
       if (row.sector) themeCount.set(row.sector, (themeCount.get(row.sector) ?? 0) + 1);
-      if (!pin) continue;
-      pins.push({
-        id: pin.id,
-        lat: Math.round(pin.lat * 1e5) / 1e5,
-        lng: Math.round(pin.lng * 1e5) / 1e5,
-        sector: pin.sector,
-        precision: pin.precision,
-        label: pin.label,
-        basis: pin.basis,
-        title: String(row.title || '').slice(0, 140),
-        entity: String(row.procuring_entity || '').slice(0, 80),
-        closing: row.closing_date || null,
-        province: slug,
-      });
-      if (pin.basis !== 'province' && pin.label) {
-        const key = pin.label.toLowerCase();
-        const t = townCount.get(key);
-        if (t) { t.count += 1; if (t.ids.length < 40) t.ids.push(pin.id); }
-        else townCount.set(key, { name: pin.label.split('\u00b7')[0].trim(), province: slug === 'national' ? null : slug, lat: pin.lat, lng: pin.lng, count: 1, ids: [pin.id] });
+      const placed = pinsFromTender(row);
+      for (const pin of placed) {
+        pins.push({
+          id: pin.id, lat: Math.round(pin.lat * 1e5) / 1e5, lng: Math.round(pin.lng * 1e5) / 1e5,
+          sector: pin.sector, precision: pin.precision, label: pin.label, basis: pin.basis, note: pin.note || null,
+          title: String(row.title || '').slice(0, 140), entity: String(row.procuring_entity || '').slice(0, 80),
+          closing: row.closing_date || null, province: slug,
+        });
+        if (pin.note && issues.length < 40) issues.push({ id: pin.id, title: String(row.title || '').slice(0, 120), note: pin.note, label: pin.label });
+        if (pin.basis !== 'province' && pin.label) {
+          const key = pin.label.toLowerCase();
+          const t = townCount.get(key);
+          if (t) { t.count += 1; if (t.ids.length < 40) t.ids.push(pin.id); }
+          else townCount.set(key, { name: pin.label.split('\u00b7')[0].trim(), province: slug === 'national' ? null : slug, lat: pin.lat, lng: pin.lng, count: 1, ids: [pin.id] });
+        }
       }
     }
     const provinces = Object.keys(PROVINCE_CENTROIDS).map((slug) => ({ slug, name: PROVINCE_CENTROIDS[slug].name, count: provCount.get(slug) ?? 0, valueZar: 0 })).sort((a, b) => b.count - a.count);
-    const res = json({ ok: true, total: pins.length, provinces, towns: [...townCount.values()].sort((a, b) => b.count - a.count).slice(0, 80), themes: [...themeCount.entries()].map(([slug, count]) => ({ slug, count })).sort((a, b) => b.count - a.count), pins });
+    const res = json({ ok: true, total: pins.length, issues, provinces, towns: [...townCount.values()].sort((a, b) => b.count - a.count).slice(0, 80), themes: [...themeCount.entries()].map(([slug, count]) => ({ slug, count })).sort((a, b) => b.count - a.count), pins });
     try { const cache = (globalThis as any).caches?.default; if (cache) await cache.put(cacheKey, res.clone()); } catch { /* ignore */ }
     return res;
   } catch (err) {
