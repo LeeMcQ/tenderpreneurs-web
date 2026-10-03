@@ -4,24 +4,22 @@ import { peekEnv } from '../../lib/db';
 import { getSessionUser } from '../../lib/auth/magic-link';
 import { isAdminEmail } from '../../lib/admin';
 import { coverageSentence } from '../../lib/coverage';
+import { pinsFromTender } from '../../lib/tender-geo-pin';
 
 export const prerender = false;
-
 const env = peekEnv(Astro);
 let user: any = null;
 try { if (env?.DB) user = await getSessionUser(env.DB, Astro.request.headers.get('cookie')); } catch {}
 const admin = isAdminEmail(user?.email, env);
-
 let events: any[] = [];
 let health: any[] = [];
 let thin = 0;
 let searches = 0;
 let digests = 0;
+let pinAlerts: Array<{ id: string; title: string; note: string }> = [];
 if (admin && env?.DB) {
   try {
-    events = (await env.DB.prepare(
-      `SELECT name, COUNT(*) AS n FROM usage_events WHERE at >= datetime('now','-7 days') GROUP BY name ORDER BY n DESC LIMIT 20`,
-    ).all()).results ?? [];
+    events = (await env.DB.prepare(`SELECT name, COUNT(*) AS n FROM usage_events WHERE at >= datetime('now','-7 days') GROUP BY name ORDER BY n DESC LIMIT 20`).all()).results ?? [];
   } catch {}
   try {
     health = (await env.DB.prepare(`SELECT source, last_ok_at, last_fail_at, last_error, items_ok FROM source_health`).all()).results ?? [];
@@ -29,22 +27,32 @@ if (admin && env?.DB) {
   try { thin = Number((await env.DB.prepare(`SELECT COUNT(*) AS n FROM thin_notices`).first<{ n: number }>())?.n ?? 0); } catch {}
   try { searches = Number((await env.DB.prepare(`SELECT COUNT(*) AS n FROM saved_searches`).first<{ n: number }>())?.n ?? 0); } catch {}
   try { digests = Number((await env.DB.prepare(`SELECT COUNT(*) AS n FROM digest_log WHERE sent_at >= datetime('now','-7 days')`).first<{ n: number }>())?.n ?? 0); } catch {}
+  try {
+    const rows = await env.DB.prepare(`SELECT id, title, description, procuring_entity, briefing_location, province, sector, contact_phone FROM tenders WHERE status = 'open' AND canonical_ref IS NULL LIMIT 2000`).all<any>();
+    for (const row of rows.results ?? []) {
+      for (const pin of pinsFromTender(row)) {
+        if (pin.note) pinAlerts.push({ id: row.id, title: String(row.title || '').slice(0, 110), note: pin.note });
+      }
+    }
+    const note = pinAlerts.length ? `${pinAlerts.length} pin discrepancies` : null;
+    await env.DB.prepare(`INSERT INTO source_health (source, last_ok_at, last_fail_at, last_error, items_ok, items_fail, note) VALUES ('pin-check', ?, ?, ?, ?, ?, ?) ON CONFLICT(source) DO UPDATE SET last_ok_at=excluded.last_ok_at, last_fail_at=excluded.last_fail_at, last_error=excluded.last_error, items_fail=excluded.items_fail, note=excluded.note`).bind(new Date().toISOString(), note ? new Date().toISOString() : null, note, (rows.results ?? []).length, pinAlerts.length, note).run();
+  } catch {}
 }
 ---
 <BaseLayout title="Usage | Tenderpreneurs" description="First-party usage and source health.">
   <div style="max-width:840px;margin:0 auto;padding:28px 20px 80px">
-    {!admin ? (
-      <p>Admin access required.</p>
-    ) : (
+    {!admin ? <p>Admin access required.</p> : (
       <>
         <h1>Usage</h1>
-        <p>{coverageSentence(health)} · {searches} saved searches · {digests} digests / 7d · {thin} thin notices</p>
+        <p>{coverageSentence(health)} \u00b7 {searches} saved searches \u00b7 {digests} digests / 7d \u00b7 {thin} thin notices</p>
+        {pinAlerts.length > 0 ? (
+          <div style="border:1px solid #b45309;background:#fff7ed;border-radius:12px;padding:12px 14px;margin:16px 0">
+            <strong>Pin alert: {pinAlerts.length} discrepancies</strong>
+            <ul>{pinAlerts.slice(0, 12).map((a) => <li><a href={`/tenders/t/${a.id}`}>{a.title}</a> \u2014 {a.note}</li>)}</ul>
+          </div>
+        ) : <p>No pin discrepancies on the open catalogue.</p>}
         <h2>Events last 7 days</h2>
-        {events.length === 0 ? <p>No events yet.</p> : (
-          <ul>
-            {events.map((e) => <li>{e.name}: {e.n}</li>)}
-          </ul>
-        )}
+        {events.length === 0 ? <p>No events yet.</p> : <ul>{events.map((e) => <li>{e.name}: {e.n}</li>)}</ul>}
       </>
     )}
   </div>
