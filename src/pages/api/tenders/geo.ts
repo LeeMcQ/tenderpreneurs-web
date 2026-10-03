@@ -12,7 +12,7 @@ export const GET: APIRoute = async (ctx) => {
   const url = new URL(ctx.request.url);
   const sector = url.searchParams.get('sector');
   const q = url.searchParams.get('q');
-  const cacheKey = new Request(`https://tenderpreneurs.co.za/api/tenders/geo?v=17&sector=${sector || ''}&q=${q || ''}`, { method: 'GET' });
+  const cacheKey = new Request(`https://tenderpreneurs.co.za/api/tenders/geo?v=18&sector=${sector || ''}&q=${q || ''}`, { method: 'GET' });
   try { const cache = (globalThis as any).caches?.default; if (cache) { const hit = await cache.match(cacheKey); if (hit) return hit; } } catch { /* optional */ }
   const env = peekEnv(ctx);
   if (!env?.DB) return json({ ok: false, error: 'Tender database is not bound on this deployment.' }, 503);
